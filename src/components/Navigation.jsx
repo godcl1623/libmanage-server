@@ -5,17 +5,22 @@ const menu = value => {
   const music = <p>music</p>;
   const series = <p>series</p>;
   const movie = <p>movie</p>;
-  const displayMenu = (...params) => {
-    params.map(param => (
-      <>
+  const displayMenu = (...params) => params.map(param => (
+      <div>
         {param}
-      </>
-    ));
-  }
+      </div>
+    ))
   switch (value) {
+    case 'game':
+      return displayMenu(game);
+    case 'music':
+      return displayMenu(music);
+    case 'series':
+      return displayMenu(series);
+    case 'movie':
+      return displayMenu(movie);
     default:
-      displayMenu(game, music, series, movie);
-      break;
+      return displayMenu(game, music, series, movie);
   }
 };
 
