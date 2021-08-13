@@ -1,6 +1,7 @@
 import React from 'react';
 import Header from './Header';
 import Library from './Library';
+import Meta from './Meta';
 import Navigation from './Navigation';
 
 const Main = () => (
@@ -9,6 +10,7 @@ const Main = () => (
     <Header />
     <Navigation />
     <Library />
+    <Meta />
   </section>
 );
 

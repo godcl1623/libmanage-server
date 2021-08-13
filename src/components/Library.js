@@ -11,7 +11,7 @@ const Options = () => (
 );
 
 const Library = () => (
-  <section className="library">
+  <section id="library">
     <button>옵션</button>
     <Balloon contents={<Options />} />
     <ul id="contents-lists">
