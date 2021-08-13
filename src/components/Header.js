@@ -9,7 +9,14 @@ const Options = () => (
 );
 
 const Header = () => (
-  <header id="header">
+  <header
+    id="header"
+    style={{
+      'display': 'flex',
+      'justify-content': 'space-between',
+      'align-content': 'center'
+    }}
+  >
     <button>옵션</button>
     <Balloon contents={<Options />}/>
     <form>

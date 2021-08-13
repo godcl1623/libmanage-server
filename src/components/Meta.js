@@ -1,7 +1,12 @@
 import React from 'react';
 
 const Meta = () => (
-  <section id="meta">
+  <section
+    id="meta"
+    style={{
+      'flex': '2'
+    }}
+  >
     <article className="meta-wrapper-top">
       <h3>메타데이터 표시</h3>
       <article className="meta-wrapper-tab">

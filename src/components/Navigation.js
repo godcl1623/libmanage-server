@@ -28,7 +28,12 @@ const Navigation = () => {
   const [selectedMenu, setSelectedMenu] = useState('all');
 
   return (
-    <nav id="navigation">
+    <nav
+      id="navigation"
+      style={{
+        'flex': '1'
+      }}
+    >
       <select
         name="content-type"
         className="dropdown"

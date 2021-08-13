@@ -11,7 +11,12 @@ const Options = () => (
 );
 
 const Library = () => (
-  <section id="library">
+  <section
+    id="library"
+    style={{
+      'flex': '2'
+    }}
+  >
     <button>옵션</button>
     <Balloon contents={<Options />} />
     <ul id="contents-lists">
