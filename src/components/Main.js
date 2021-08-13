@@ -1,5 +1,6 @@
 import React from 'react';
 import Header from './Header';
+import Library from './Library';
 import Navigation from './Navigation';
 
 const Main = () => (
@@ -7,6 +8,7 @@ const Main = () => (
     <h1>Main</h1>
     <Header />
     <Navigation />
+    <Library />
   </section>
 );
 
