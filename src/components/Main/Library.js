@@ -1,5 +1,5 @@
 import React from 'react';
-import Balloon from './Balloon';
+import Balloon from '../Modal/Balloon';
 
 const Options = () => (
   <>

@@ -5,7 +5,7 @@ import Meta from './Meta';
 import Navigation from './Navigation';
 
 const Main = () => (
-  <section
+  <main
     id="main"
     style={{
       'width': '100%',
@@ -31,7 +31,7 @@ const Main = () => (
       <Library />
       <Meta />
     </div>
-  </section>
+  </main>
 );
 
 export default Main;
