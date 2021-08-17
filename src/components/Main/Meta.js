@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Meta = () => (
-  <section
+  <article
     id="meta"
     style={{
       'flex': '2'
@@ -19,7 +19,7 @@ const Meta = () => (
         </article>
       </article>
     </article>
-  </section>
+  </article>
 );
 
 export default Meta;

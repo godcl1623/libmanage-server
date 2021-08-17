@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Register = () => (
-  <section
+  <article
     id="register"
     style={{
       'display': 'flex',
@@ -44,7 +44,7 @@ const Register = () => (
       <button name="cancel">취소</button>
       <button type="submit" name="confirm">확인</button>
     </form>
-  </section>
+  </article>
 );
 
 export default Register;

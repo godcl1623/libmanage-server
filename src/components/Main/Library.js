@@ -11,7 +11,7 @@ const Options = () => (
 );
 
 const Library = () => (
-  <section
+  <article
     id="library"
     style={{
       'flex': '2'
@@ -26,7 +26,7 @@ const Library = () => (
       <li>라이브러리 4</li>
       <li>라이브러리 5</li>
     </ul>
-  </section>
+  </article>
 );
 
 export default Library;

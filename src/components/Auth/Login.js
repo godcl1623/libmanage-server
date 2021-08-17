@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Login = () => (
-  <section
+  <article
     id="login"
     style={{
       'display': 'flex',
@@ -28,7 +28,7 @@ const Login = () => (
     </form>
     <button>ID/PW 찾기</button>
     <button>오프라인으로 접속</button>
-  </section>
+  </article>
 );
 
 export default Login;

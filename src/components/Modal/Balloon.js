@@ -1,9 +1,9 @@
 import React from 'react';
 
 const Balloon = ({contents}) => (
-  <section id="balloon">
+  <article id="balloon">
     {contents}
-  </section>
+  </article>
 );
 
 export default Balloon;
