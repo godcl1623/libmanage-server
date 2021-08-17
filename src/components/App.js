@@ -4,12 +4,14 @@ import '../styles/temp.css';
 import Login from './Auth/Login';
 import Register from './Auth/Register';
 import AddStore from './Options/AddStore';
+import AddLib from './Options/AddLib';
 
 const App = () => (
   // <Main />
   // <Login />
   // <Register />
-  <AddStore />
+  // <AddStore />
+  <AddLib />
 );
 
 export default App;
