@@ -6,6 +6,7 @@ import Register from './Auth/Register';
 import AddStore from './Options/AddStore';
 import AddLib from './Options/AddLib';
 import MetaMod from './Options/MetaMod';
+import MetaModExp from './Options/MetaModExp';
 
 const App = () => (
   // <Main />
@@ -13,7 +14,8 @@ const App = () => (
   // <Register />
   // <AddStore />
   // <AddLib />
-  <MetaMod />
+  // <MetaMod />
+  <MetaModExp />
 );
 
 export default App;

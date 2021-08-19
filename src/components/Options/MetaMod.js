@@ -33,10 +33,6 @@ const MetaMod = () => (
       </div>
     </section>
     <section className="wrapper-contents">
-      <section className="wrapper-tab">
-        <button>정보</button>
-        <button>미디어</button>
-      </section>
       <form
         onSubmit={e => {
           e.preventDefault();
@@ -69,11 +65,14 @@ const MetaMod = () => (
           className="wrapper-btn"
           style={{
             'display': 'flex',
-            'justify-content': 'flex-end'
+            'justify-content': 'space-between'
           }}
         >
-          <button type="submit">취소</button>
-          <button type="submit">확인</button>
+          <button>확장</button>
+          <div className="wrapper-btn-submit">
+            <button type="submit">확인</button>
+            <button type="submit">닫기</button>
+          </div>
         </div>
       </form>
     </section>
