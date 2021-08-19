@@ -7,15 +7,17 @@ import AddStore from './Options/AddStore';
 import AddLib from './Options/AddLib';
 import MetaMod from './Options/MetaMod';
 import MetaModExp from './Options/MetaModExp';
+import ManageStore from './Options/Store/ManageStore';
 
 const App = () => (
-  // <Main />
+  <Main />
   // <Login />
   // <Register />
   // <AddStore />
   // <AddLib />
   // <MetaMod />
-  <MetaModExp />
+  // <MetaModExp />
+  // <ManageStore />
 );
 
 export default App;
