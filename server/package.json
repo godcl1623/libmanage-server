@@ -1,0 +1,26 @@
+{
+  "name": "libmanage_server",
+  "version": "0.1.0",
+  "description": "back-end server for managing libmanage project",
+  "main": "index.js",
+  "repository": "https://github.com/godcl1623/libmanage",
+  "author": "lch",
+  "license": "MIT",
+  "private": false,
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.24.1",
+    "eslint-plugin-prettier": "^3.4.1",
+    "prettier": "2.3.2"
+  },
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "helmet": "^4.6.0",
+    "mysql": "^2.18.1"
+  }
+}
