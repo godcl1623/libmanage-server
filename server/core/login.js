@@ -1,4 +1,10 @@
 const express = require('express');
+const http = require('http');
+const path = require('path');
+const bodyParser = require('body-parser');
+const servestatic = require('serve-static');
+const cookieParser = require('cookie-parser');
+const exSession = require('express-session');
 
 const app = express();
 const port = 3002;
