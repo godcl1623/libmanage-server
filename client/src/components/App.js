@@ -10,8 +10,8 @@ import MetaModExp from './Options/MetaModExp';
 import ManageStore from './Options/Store/ManageStore';
 
 const App = () => (
-  <Main />
-  // <Login />
+  // <Main />
+  <Login />
   // <Register />
   // <AddStore />
   // <AddLib />
