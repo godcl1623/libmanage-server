@@ -5,28 +5,35 @@ const Login = () => (
     id="login"
     style={{
       'display': 'flex',
-      'flex-direction': 'column',
-      'justify-content': 'center',
-      'align-content': 'center'
+      'flexDirection': 'column',
+      'justifyContent': 'center',
+      'alignContent': 'center'
     }}
   >
     <h2>libmanage</h2>
     <form
-      action=""
+      action="/login_process"
       style={{
         'display': 'flex',
-        'flex-direction': 'column',
-        'justify-content': 'center',
-        'align-content': 'center'
+        'flexDirection': 'column',
+        'justifyContent': 'center',
+        'alignContent': 'center'
+      }}
+      onSubmit={e => {
+        e.preventDefault();
+        fetch()
       }}
     >
-      <label for="ID">ID: </label>
+      <label htmlFor="ID">ID: </label>
       <input type="text" name="ID" />
-      <label for="PWD">PW: </label>
+      <label htmlFor="PWD">PW: </label>
       <input type="password" name="PWD" />
       <button type="submit" name="login">LOGIN</button>
     </form>
-    <button>ID/PW 찾기</button>
+    <div className="member">
+      <button>회원가입</button>
+      <button>ID/PW 찾기</button>
+    </div>
     <button>오프라인으로 접속</button>
   </article>
 );
