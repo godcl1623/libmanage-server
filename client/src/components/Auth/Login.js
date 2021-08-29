@@ -1,8 +1,10 @@
 import React from 'react';
+import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 
 const Login = () => {
   const [formData, setFormData] = React.useState({});
+  const history = useHistory();
 
   const handleChange = e => {
     const {name, value} = e.target;
@@ -33,9 +35,14 @@ const Login = () => {
         }}
         onSubmit={e => {
           e.preventDefault();
-          axios.post('http://localhost:3002/login_process', formData)
-          .then(res => alert(res.data))
-          .catch(err => console.log(err));
+          axios.post('http://localhost:3002/login_process', formData, { withCredentials: true })
+          .then(res => {
+            if (res.data.status) {
+              alert(res.data.msg);
+              history.push('/main');
+            }
+          })
+          .catch(err => alert(err));
         }}
       >
         <label htmlFor="ID">ID: </label>
