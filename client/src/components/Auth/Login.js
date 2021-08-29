@@ -33,14 +33,9 @@ const Login = () => {
         }}
         onSubmit={e => {
           e.preventDefault();
-          axios.post('http://localhost:3002/test', formData)
-          .then(res => console.log(res))
+          axios.post('http://localhost:3002/login_process', formData)
+          .then(res => alert(res.data))
           .catch(err => console.log(err));
-          // axios.post('http://localhost:3002/test', loginInfo)
-          // .then(() => console.log('foo'))
-          // .catch(err => console.log(err));
-          // console.log(e.target.elements.ID.value)
-          // console.log(e.target.elements.PWD.value)
         }}
       >
         <label htmlFor="ID">ID: </label>
