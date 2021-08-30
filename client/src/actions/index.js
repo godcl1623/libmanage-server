@@ -1,6 +1,9 @@
-const loginStatusCreator = boolean => ({
+export const loginStatusCreator = boolean => ({
   type: 'LOGIN_STATUS',
   payload: boolean  
 });
 
-export default loginStatusCreator;
+export const logoutClickedCreator = boolean => ({
+  type: 'LOGOUT_CLICKED',
+  payload: boolean
+});

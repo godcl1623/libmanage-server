@@ -1,6 +1,7 @@
 import { combineReducers } from 'redux';
-import loginStatusReducer from './reducer';
+import tempStore from './reducer';
 
 export default combineReducers({
-  loginStatus: loginStatusReducer
+  loginStatus:tempStore.loginStatusReducer,
+  logoutClicked: tempStore.logoutClickedReducer
 });

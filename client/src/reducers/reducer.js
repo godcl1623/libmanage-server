@@ -5,4 +5,15 @@ const loginStatusReducer = (status = '', action) => {
   return status;
 }
 
-export default loginStatusReducer;
+const logoutClickedReducer = (status = false, action) => {
+  if (action.type === 'LOGOUT_CLICKED') {
+    return action.payload;
+  }
+  return status;
+}
+
+const tempStore = {
+  loginStatusReducer, logoutClickedReducer
+}
+
+export default tempStore;

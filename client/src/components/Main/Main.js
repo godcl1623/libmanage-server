@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { Link, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import Header from './Header';
 import Library from './Library';
 import Meta from './Meta';
@@ -8,12 +8,14 @@ import Navigation from './Navigation';
 
 const Main = () => {
   const loginStatus = useSelector(state => state.loginStatus);
+  const logoutClicked = useSelector(state => state.logoutClicked);
   const history = useHistory();
 
-  if (loginStatus === '') {
+  if (loginStatus === '' && logoutClicked === false) {
     alert('로그인이 필요합니다');
     history.push('/');
-  }
+    return(<></>);
+  } 
   return (
     <main
       id="main"

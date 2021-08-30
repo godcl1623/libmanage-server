@@ -1,9 +1,13 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
+import { loginStatusCreator } from '../../actions';
 
 const Login = () => {
+  const loginStatus = useSelector(state => state.loginStatus);
   const [formData, setFormData] = React.useState({});
+  const dispatch = useDispatch();
   const history = useHistory();
 
   const handleChange = e => {
@@ -12,6 +16,18 @@ const Login = () => {
       ...prevValue,
       [name]: value
     }));
+  };
+
+  const getCookie = () => {
+    const { cookie } = document;
+    const temp = {};
+    const rawcookie = cookie.split('; ');
+    const foo = rawcookie.map(cook => cook.split('='));
+    foo.forEach(doh => {
+      // eslint-disable-next-line prefer-destructuring
+      temp[doh[0]] = doh[1];
+    })
+    return temp.id;
   };
 
   return (
@@ -38,6 +54,8 @@ const Login = () => {
           axios.post('http://localhost:3002/login_process', formData, { withCredentials: true })
           .then(res => {
             if (res.data.status) {
+              dispatch(loginStatusCreator(getCookie()));
+              // console.log(res.data)
               alert(res.data.msg);
               history.push('/main');
             }
