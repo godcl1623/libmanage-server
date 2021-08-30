@@ -24,22 +24,22 @@ const Options = () => (
 
 
 const Header = () => {
-  const cookieId = useSelector(state => state.loginStatus);
+  const loginStatus = useSelector(state => state.loginStatus);
   const [balloonState, setBalloonState] = useState('none');
   const history = useHistory();
   const dispatch = useDispatch();
 
   const memberStatus = (
-    cookieId !== ''
+    loginStatus === true
       ?
         <button
         onClick={() => {
             dispatch(logoutClickedCreator(true));
             axios.post('http://localhost:3002/logout_process', {message: 'foo'}, { withCredentials: true })
               .then(res => {
-                dispatch(loginStatusCreator(''));
+                dispatch(loginStatusCreator(res.data.isLoginSuccessful));
                 setTimeout(() => {
-                  alert(res.data);
+                  alert('Logout Success !');
                   history.push('/');
                 }, 10);
               })

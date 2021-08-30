@@ -11,7 +11,7 @@ const Main = () => {
   const logoutClicked = useSelector(state => state.logoutClicked);
   const history = useHistory();
 
-  if (loginStatus === '' && logoutClicked === false) {
+  if (loginStatus === false && logoutClicked === false) {
     alert('로그인이 필요합니다');
     history.push('/');
     return(<></>);

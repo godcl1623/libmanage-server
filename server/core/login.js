@@ -1,21 +1,16 @@
 const express = require('express');
-const http = require('http');
-const path = require('path');
 const bodyParser = require('body-parser');
-const servestatic = require('serve-static');
-const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const FileStore = require('session-file-store')(session);
 
 const app = express();
 const port = 3002;
 const loginInfo = {
   ID: 'test',
   PWD: '0000'
-}
-const loginSuccess = {
-  msg: 'login success !',
-  status: true
 }
 
 app.use(cors({
@@ -24,6 +19,14 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded());
+app.use(helmet(), compression());
+app.use(session({
+  secret: 'piano',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { samesite: 'none' },
+  store: new FileStore()
+}));
 
 app.get('/', (req, res) => {
   res.send('login server');
@@ -35,16 +38,22 @@ app.get('/test_get', (req, res) => {
 });
 
 app.post('/test_post', (req, res) => {
-  console.log(req.body);
-  res.send('foo');
+  console.log(req);
+  const foo = req.session;
+  foo.isLogined = true;
+  foo.nickname = 'bar';
+  res.send(foo);
 });
 
 app.post('/login_process', (req, res) => {
   if (req.body.ID === loginInfo.ID && req.body.PWD === loginInfo.PWD) {
-    res.cookie('id', req.body.ID);
-    res.cookie('pwd', req.body.PWD);
-    res.send(loginSuccess);
-    // res.end();
+    console.log(req)
+    const loginInfo = {
+      isLoginSuccessful: true,
+      nickname: 'tester',
+      sessionInfo: req.session
+    }
+    res.send(loginInfo);
   } else {
     res.send('login fail');
   }
@@ -52,9 +61,14 @@ app.post('/login_process', (req, res) => {
 
 app.post('/logout_process', (req, res) => {
   if (req.body.message === 'foo') {
-    res.cookie('id', '');
-    res.cookie('pwd', '');
-    res.send('logout success !');
+    const logoutInfo = {
+      isLoginSuccessful: false,
+      nickname: ''
+    }
+    req.session.destroy(() => {
+      res.send(logoutInfo);
+    });
+    // res.send('logout success !');
   }
 });
 

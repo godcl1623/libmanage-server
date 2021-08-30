@@ -1,4 +1,4 @@
-const loginStatusReducer = (status = '', action) => {
+const loginStatusReducer = (status = false, action) => {
   if (action.type === 'LOGIN_STATUS') {
     return action.payload;
   }

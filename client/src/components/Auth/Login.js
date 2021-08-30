@@ -53,10 +53,9 @@ const Login = () => {
           e.preventDefault();
           axios.post('http://localhost:3002/login_process', formData, { withCredentials: true })
           .then(res => {
-            if (res.data.status) {
-              dispatch(loginStatusCreator(getCookie()));
-              // console.log(res.data)
-              alert(res.data.msg);
+            if (res.data.isLoginSuccessful) {
+              dispatch(loginStatusCreator(res.data.isLoginSuccessful));
+              alert('Login Successful !');
               history.push('/main');
             }
           })
