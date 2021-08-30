@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import Balloon from '../Modal/Balloon';
+import loginStatusCreator from '../../actions';
 
 const Options = () => (
   <>
@@ -22,11 +24,13 @@ const Options = () => (
 
 
 const Header = () => {
-  const [balloonState, setBalloonState] = React.useState('none');
-  const [cookieId, setCookieId] = React.useState('');
+  // const [cookieId, setCookieId] = React.useState('');
+  const cookieId = useSelector(state => state.loginStatus);
+  const [balloonState, setBalloonState] = useState('none');
   const history = useHistory();
+  const dispatch = useDispatch();
   
-  React.useEffect(() => {
+  useEffect(() => {
     const { cookie } = document;
     const temp = {};
     const rawcookie = cookie.split('; ');
@@ -35,7 +39,9 @@ const Header = () => {
       // eslint-disable-next-line prefer-destructuring
       temp[doh[0]] = doh[1];
     })
-    setCookieId(temp.id);
+    console.log(temp.id);
+    // setCookieId(temp.id);
+    dispatch(loginStatusCreator(temp.id));
   }, []);
 
   const memberStatus = (
@@ -45,7 +51,8 @@ const Header = () => {
           onClick={() => {
             axios.post('http://localhost:3002/logout_process', {message: 'foo'}, { withCredentials: true })
               .then(res => {
-                setCookieId('');
+                // setCookieId('');
+                dispatch(loginStatusCreator(''));
                 setTimeout(() => {
                   alert(res.data);
                   history.push('/');
