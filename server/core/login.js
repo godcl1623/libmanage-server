@@ -24,7 +24,10 @@ app.use(session({
   secret: 'piano',
   resave: false,
   saveUninitialized: true,
-  cookie: { samesite: 'none' },
+  cookie: {
+    samesite: 'none',
+    maxAge: 60 * 60 * 24 * 7 * 30
+  },
   store: new FileStore()
 }));
 
