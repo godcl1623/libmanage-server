@@ -25,8 +25,7 @@ app.use(session({
   resave: false,
   saveUninitialized: true,
   cookie: {
-    samesite: 'none',
-    maxAge: 60 * 60 * 24 * 7 * 30
+    samesite: 'none'
   },
   store: new FileStore()
 }));
@@ -50,13 +49,11 @@ app.post('/test_post', (req, res) => {
 
 app.post('/login_process', (req, res) => {
   if (req.body.ID === loginInfo.ID && req.body.PWD === loginInfo.PWD) {
-    console.log(req)
-    const loginInfo = {
+    req.session.loginInfo = {
       isLoginSuccessful: true,
-      nickname: 'tester',
-      sessionInfo: req.session
+      nickname: 'tester'
     }
-    res.send(loginInfo);
+    req.session.save(() => res.send(req.session.loginInfo));
   } else {
     res.send('login fail');
   }
@@ -71,8 +68,15 @@ app.post('/logout_process', (req, res) => {
     req.session.destroy(() => {
       res.send(logoutInfo);
     });
-    // res.send('logout success !');
   }
 });
 
-app.listen(port, () => console.log(`server is running at port${port}`));
+app.post('/check_login', (req, res) => {
+  if (req.session.loginInfo) {
+    res.send(req.session.loginInfo);
+  } else {
+    res.send('');
+  }
+});
+
+app.listen(port, () => console.log(`server is running at port ${port}`));

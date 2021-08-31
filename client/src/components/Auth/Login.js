@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -18,17 +19,23 @@ const Login = () => {
     }));
   };
 
-  const getCookie = () => {
-    const { cookie } = document;
-    const temp = {};
-    const rawcookie = cookie.split('; ');
-    const foo = rawcookie.map(cook => cook.split('='));
-    foo.forEach(doh => {
-      // eslint-disable-next-line prefer-destructuring
-      temp[doh[0]] = doh[1];
+  React.useEffect(() => {
+    axios.post('http://localhost:3002/check_login', { message: 'isLoginSuccessful' }, { withCredentials: true })
+    .then(res => {
+      if (res.data.isLoginSuccessful) {
+        dispatch(loginStatusCreator(res.data.isLoginSuccessful));
+        history.push('/main');
+      } else {
+        alert('로그인이 필요합니다');
+        history.push('/');
+      }
     })
-    return temp.id;
-  };
+    .catch(err => console.log(err));
+  }, []);
+
+  if (loginStatus) {
+    return <></>;
+  }
 
   return (
     <article
@@ -53,13 +60,14 @@ const Login = () => {
           e.preventDefault();
           axios.post('http://localhost:3002/login_process', formData, { withCredentials: true })
           .then(res => {
+            console.log(res)
             if (res.data.isLoginSuccessful) {
               dispatch(loginStatusCreator(res.data.isLoginSuccessful));
               alert('Login Successful !');
               history.push('/main');
             }
           })
-          .catch(err => alert(err));
+          .catch(err => console.log(err));
         }}
       >
         <label htmlFor="ID">ID: </label>
