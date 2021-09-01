@@ -25,9 +25,6 @@ const Login = () => {
       if (res.data.isLoginSuccessful) {
         dispatch(loginStatusCreator(res.data.isLoginSuccessful));
         history.push('/main');
-      } else {
-        alert('로그인이 필요합니다');
-        history.push('/');
       }
     })
     .catch(err => console.log(err));

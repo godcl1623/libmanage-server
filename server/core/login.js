@@ -25,7 +25,8 @@ app.use(session({
   resave: false,
   saveUninitialized: true,
   cookie: {
-    samesite: 'none'
+    samesite: 'none',
+    // secure: true
   },
   store: new FileStore()
 }));
@@ -48,6 +49,7 @@ app.post('/test_post', (req, res) => {
 });
 
 app.post('/login_process', (req, res) => {
+  console.log(req)
   if (req.body.ID === loginInfo.ID && req.body.PWD === loginInfo.PWD) {
     req.session.loginInfo = {
       isLoginSuccessful: true,
