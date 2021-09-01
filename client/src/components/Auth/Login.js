@@ -1,25 +1,17 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import { loginStatusCreator } from '../../actions';
+import { hasher, salter } from '../../custom_modules/hasher';
 
 const Login = () => {
   const loginStatus = useSelector(state => state.loginStatus);
-  const [formData, setFormData] = React.useState({});
   const dispatch = useDispatch();
   const history = useHistory();
 
-  const handleChange = e => {
-    const {name, value} = e.target;
-    setFormData(prevValue => ({
-      ...prevValue,
-      [name]: value
-    }));
-  };
-
-  React.useEffect(() => {
+  useEffect(() => {
     axios.post('http://localhost:3002/check_login', { message: 'isLoginSuccessful' }, { withCredentials: true })
     .then(res => {
       if (res.data.isLoginSuccessful) {
@@ -27,7 +19,7 @@ const Login = () => {
         history.push('/main');
       }
     })
-    .catch(err => console.log(err));
+    .catch(err => alert(err));
   }, []);
 
   if (loginStatus) {
@@ -55,22 +47,25 @@ const Login = () => {
         }}
         onSubmit={e => {
           e.preventDefault();
+          const formData = {
+            ID: e.target.ID.value,
+            PWD: salter(hasher(e.target.PWD.value))
+          }
           axios.post('http://localhost:3002/login_process', formData, { withCredentials: true })
           .then(res => {
-            console.log(res)
             if (res.data.isLoginSuccessful) {
               dispatch(loginStatusCreator(res.data.isLoginSuccessful));
               alert('Login Successful !');
               history.push('/main');
             }
           })
-          .catch(err => console.log(err));
+          .catch(err => alert(err));
         }}
       >
         <label htmlFor="ID">ID: </label>
-        <input type="text" name="ID" onChange={handleChange} />
+        <input type="text" name="ID" />
         <label htmlFor="PWD">PW: </label>
-        <input type="password" name="PWD" onChange={handleChange} />
+        <input type="password" name="PWD" />
         <button type="submit" name="login">LOGIN</button>
       </form>
       <div className="member">

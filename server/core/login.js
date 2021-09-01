@@ -5,12 +5,13 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const FileStore = require('session-file-store')(session);
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const port = 3002;
 const loginInfo = {
   ID: 'test',
-  PWD: '0000'
+  PWD: '2aed7860fb0641cb3414971c6ca52c452265c8a0dab3853175b1127ce040022e'
 }
 
 app.use(cors({
@@ -49,8 +50,8 @@ app.post('/test_post', (req, res) => {
 });
 
 app.post('/login_process', (req, res) => {
-  console.log(req)
-  if (req.body.ID === loginInfo.ID && req.body.PWD === loginInfo.PWD) {
+  const transmittedPwd = bcrypt.hashSync(loginInfo.PWD, bcrypt.getSalt(req.body.PWD));
+  if (req.body.ID === loginInfo.ID && req.body.PWD === transmittedPwd) {
     req.session.loginInfo = {
       isLoginSuccessful: true,
       nickname: 'tester'
