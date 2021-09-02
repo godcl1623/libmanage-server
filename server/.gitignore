@@ -41,6 +41,7 @@ build/Release
 node_modules/
 jspm_packages/
 sessions/
+security/
 
 # TypeScript v1 declaration files
 typings/
@@ -126,3 +127,6 @@ dist
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+hasher.js
+aeser.js

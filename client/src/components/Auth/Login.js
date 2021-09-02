@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import { loginStatusCreator } from '../../actions';
 import { hasher, salter } from '../../custom_modules/hasher';
+import { encryptor, decryptor } from '../../custom_modules/aeser';
 
 const Login = () => {
   const loginStatus = useSelector(state => state.loginStatus);
@@ -12,7 +13,7 @@ const Login = () => {
   const history = useHistory();
 
   useEffect(() => {
-    axios.post('http://localhost:3002/check_login', { message: 'isLoginSuccessful' }, { withCredentials: true })
+    axios.post('http://localhost:3002/check_login', {}, { withCredentials: true })
     .then(res => {
       if (res.data.isLoginSuccessful) {
         dispatch(loginStatusCreator(res.data.isLoginSuccessful));
@@ -48,8 +49,8 @@ const Login = () => {
         onSubmit={e => {
           e.preventDefault();
           const formData = {
-            ID: e.target.ID.value,
-            PWD: salter(hasher(e.target.PWD.value))
+            ID: encryptor(e.target.ID.value),
+            PWD: encryptor(salter(hasher(e.target.PWD.value)))
           }
           axios.post('http://localhost:3002/login_process', formData, { withCredentials: true })
           .then(res => {
@@ -60,6 +61,8 @@ const Login = () => {
             }
           })
           .catch(err => alert(err));
+          console.log(decryptor(formData.ID));
+          console.log(decryptor(formData.PWD));
         }}
       >
         <label htmlFor="ID">ID: </label>

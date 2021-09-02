@@ -40,6 +40,7 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
+security/
 
 # TypeScript v1 declaration files
 typings/
@@ -127,4 +128,4 @@ yarn-debug.log*
 yarn-error.log*
 
 hasher.js
-encryptor.js
+aeser.js
