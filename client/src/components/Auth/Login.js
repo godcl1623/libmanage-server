@@ -49,8 +49,8 @@ const Login = () => {
         onSubmit={e => {
           e.preventDefault();
           const formData = {
-            ID: encryptor(e.target.ID.value),
-            PWD: encryptor(salter(hasher(e.target.PWD.value)))
+            ID: e.target.ID.value,
+            PWD: salter(hasher(e.target.PWD.value))
           }
           axios.post('http://localhost:3002/login_process', formData, { withCredentials: true })
           .then(res => {
@@ -61,8 +61,6 @@ const Login = () => {
             }
           })
           .catch(err => alert(err));
-          console.log(decryptor(formData.ID));
-          console.log(decryptor(formData.PWD));
         }}
       >
         <label htmlFor="ID">ID: </label>

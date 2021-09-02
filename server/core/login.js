@@ -6,7 +6,6 @@ const helmet = require('helmet');
 const compression = require('compression');
 const FileStore = require('session-file-store')(session);
 const bcrypt = require('bcryptjs');
-const { decryptor } = require('../custom_modules/aeser');
 
 const app = express();
 const port = 3002;
@@ -51,12 +50,8 @@ app.post('/test_post', (req, res) => {
 });
 
 app.post('/login_process', (req, res) => {
-  const decryptedID = decryptor(req.body.ID);
-  const decryptedPWD = decryptor(req.body.PWD);
-  const resultPWD = bcrypt.hashSync(loginInfo.PWD, bcrypt.getSalt(decryptedPWD));
-  // // const transmittedPwd = bcrypt.hashSync(loginInfo.PWD, bcrypt.getSalt(req.body.PWD));
-  // // if (req.body.ID === loginInfo.ID && req.body.PWD === transmittedPwd) {
-  if (decryptedID === loginInfo.ID && decryptedPWD === resultPWD) {
+  const transmittedPwd = bcrypt.hashSync(loginInfo.PWD, bcrypt.getSalt(req.body.PWD));
+  if (req.body.ID === loginInfo.ID && req.body.PWD === transmittedPwd) {
     req.session.loginInfo = {
       isLoginSuccessful: true,
       nickname: 'tester'
