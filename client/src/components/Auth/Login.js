@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import { loginStatusCreator } from '../../actions';
@@ -77,7 +77,7 @@ const Login = () => {
         <button type="submit" name="login">LOGIN</button>
       </form>
       <div className="member">
-        <button>회원가입</button>
+        <Link to="/member/register">회원가입</Link>
         <button>ID/PW 찾기</button>
       </div>
       <button>오프라인으로 접속</button>

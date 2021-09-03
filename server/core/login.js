@@ -46,12 +46,17 @@ app.get('/', (req, res) => {
   res.send('login server');
 });
 
-// app.get('/test_get', (req, res) => {
-//   db.query('select user_id, user_pwd, user_nick from user_info', (error, result) => {
-//     if (error) throw error;
-//     console.log(decryptor(result[0].user_pwd, frost));
-//   });
-// });
+app.get('/test_get', (req, res) => {
+  db.query('select user_id, user_nick, user_email from user_info', (error, result) => {
+    if (error) throw error;
+    const formData = {
+      id: result[0].user_id,
+      nick: result[0].user_nick,
+      email: result[0].user_email
+    }
+    res.send(encryptor(JSON.stringify(formData), tracer));
+  });
+});
 
 // app.post('/test_post', (req, res) => {
 //   console.log(req);

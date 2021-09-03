@@ -19,6 +19,9 @@ const App = () => (
       <Route path="/main" exact>
         <Main />
       </Route>
+      <Route path="/member/register" exact>
+        <Register />
+      </Route>
     </Switch>
   </Router>
 );
