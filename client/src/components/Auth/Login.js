@@ -13,14 +13,16 @@ const Login = () => {
   const history = useHistory();
 
   useEffect(() => {
-    axios.post('http://localhost:3002/check_login', {}, { withCredentials: true })
-    .then(res => {
-      if (res.data.isLoginSuccessful) {
-        dispatch(loginStatusCreator(res.data.isLoginSuccessful));
-        history.push('/main');
-      }
-    })
-    .catch(err => alert(err));
+    // axios.post('http://localhost:3002/check_login', {}, { withCredentials: true })
+    // .then(res => {
+    //   if (res.data.isLoginSuccessful) {
+    //     dispatch(loginStatusCreator(res.data.isLoginSuccessful));
+    //     history.push('/main');
+    //   }
+    // })
+    // .catch(err => alert(err));
+    axios.get('http://localhost:3002/test_get')
+      .then(res => console.log(res));
   }, []);
 
   if (loginStatus) {

@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const FileStore = require('session-file-store')(session);
 const bcrypt = require('bcryptjs');
+const db = require('../custom_modules/db');
 
 const app = express();
 const port = 3002;
@@ -37,8 +38,11 @@ app.get('/', (req, res) => {
 });
 
 app.get('/test_get', (req, res) => {
-  console.log(req.body);
-  res.send('foo');
+  // db.query('select * from user_info', (error, result) => {
+  //   if (error) throw error;
+  //   console.log(result);
+  //   res.send(result);
+  // });
 });
 
 app.post('/test_post', (req, res) => {
