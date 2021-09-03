@@ -39,7 +39,7 @@ const Header = () => {
               .then(res => {
                 dispatch(loginStatusCreator(res.data.isLoginSuccessful));
                 setTimeout(() => {
-                  alert('Logout Success !');
+                  alert('로그아웃 했습니다.');
                   history.push('/');
                 }, 10);
               })

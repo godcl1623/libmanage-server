@@ -6,6 +6,7 @@ import axios from 'axios';
 import { loginStatusCreator } from '../../actions';
 import { hasher, salter } from '../../custom_modules/hasher';
 import { encryptor, decryptor } from '../../custom_modules/aeser';
+import { tracer, frost } from '../../custom_modules/security/fes';
 
 const Login = () => {
   const loginStatus = useSelector(state => state.loginStatus);
@@ -13,16 +14,14 @@ const Login = () => {
   const history = useHistory();
 
   useEffect(() => {
-    // axios.post('http://localhost:3002/check_login', {}, { withCredentials: true })
-    // .then(res => {
-    //   if (res.data.isLoginSuccessful) {
-    //     dispatch(loginStatusCreator(res.data.isLoginSuccessful));
-    //     history.push('/main');
-    //   }
-    // })
-    // .catch(err => alert(err));
-    axios.get('http://localhost:3002/test_get')
-      .then(res => console.log(res));
+    axios.post('http://localhost:3002/check_login', {}, { withCredentials: true })
+    .then(res => {
+      if (res.data.isLoginSuccessful) {
+        dispatch(loginStatusCreator(res.data.isLoginSuccessful));
+        history.push('/main');
+      }
+    })
+    .catch(err => alert(err));
   }, []);
 
   if (loginStatus) {
@@ -51,15 +50,21 @@ const Login = () => {
         onSubmit={e => {
           e.preventDefault();
           const formData = {
-            ID: e.target.ID.value,
-            PWD: salter(hasher(e.target.PWD.value))
+            ID: '',
+            PWD: ''
+          }
+          if (e.target.ID.value !== '' && e.target.PWD.value !== '') {
+            formData.ID =  encryptor(e.target.ID.value, tracer);
+            formData.PWD = encryptor(salter(hasher(e.target.PWD.value)), tracer);
           }
           axios.post('http://localhost:3002/login_process', formData, { withCredentials: true })
           .then(res => {
             if (res.data.isLoginSuccessful) {
               dispatch(loginStatusCreator(res.data.isLoginSuccessful));
-              alert('Login Successful !');
+              alert(`${res.data.nickname}님, 로그인에 성공했습니다.`);
               history.push('/main');
+            } else {
+              alert(res.data);
             }
           })
           .catch(err => alert(err));
