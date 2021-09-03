@@ -1,5 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import axios from 'axios';
 import Balloon from '../Modal/Balloon';
+import { loginStatusCreator, logoutClickedCreator } from '../../actions';
 
 const Options = () => (
   <>
@@ -18,9 +22,42 @@ const Options = () => (
   </>
 );
 
-const Header = () => {
-  const [balloonState, setBalloonState] = React.useState('none');
 
+const Header = () => {
+  const loginStatus = useSelector(state => state.loginStatus);
+  const [balloonState, setBalloonState] = useState('none');
+  const history = useHistory();
+  const dispatch = useDispatch();
+
+  const memberStatus = (
+    loginStatus === true
+      ?
+        <button
+        onClick={() => {
+            dispatch(logoutClickedCreator(true));
+            axios.post('http://localhost:3002/logout_process', {message: 'foo'}, { withCredentials: true })
+              .then(res => {
+                dispatch(loginStatusCreator(res.data.isLoginSuccessful));
+                setTimeout(() => {
+                  alert('로그아웃 했습니다.');
+                  history.push('/');
+                }, 10);
+              })
+              .catch(err => alert(err));
+          }}
+        >
+          로그아웃
+        </button>
+      :
+        <button
+          onClick={() => {
+            history.push('/');
+          }}
+        >
+          로그인
+        </button>
+  );
+  
   const wrapper = {
     'display': balloonState,
     'position': 'absolute',
@@ -77,7 +114,8 @@ const Header = () => {
         <button>검색</button>
         <button>검색옵션</button>
       </form>
-      <button>로그인</button>
+      {/* <button>로그인</button> */}
+      { memberStatus }
     </header>
   );
 };
