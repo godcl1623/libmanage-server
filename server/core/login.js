@@ -67,29 +67,31 @@ app.get('/test_get', (req, res) => {
 // });
 
 app.post('/login_process', (req, res) => {
-  if (req.body.ID !== '' && req.body.PWD !== '') {
-    loginInfo.ID = decryptor(req.body.ID, tracer);
-    loginInfo.PWD = decryptor(req.body.PWD, tracer);
-    loginInfo.salt = bcrypt.getSalt(loginInfo.PWD);
-    db.query('select user_id, user_pwd, user_nick from user_info', (error, result) => {
-      if (error) throw error;
-      dbInfo.ID = decryptor(result[0].user_id, frost);
-      dbInfo.PWD = decryptor(result[0].user_pwd, frost);
-      dbInfo.nick = decryptor(result[0].user_nick, frost);
-      const comparison = bcrypt.hashSync(dbInfo.PWD, loginInfo.salt);
-      if (loginInfo.ID === dbInfo.ID && loginInfo.PWD === comparison) {
-        req.session.loginInfo = {
-          isLoginSuccessful: true,
-          nickname: dbInfo.nick
-        }
-        req.session.save(() => res.send(req.session.loginInfo));
-      } else {
-        res.send('ID 혹은 비밀번호가 잘못됐습니다.');
-      }
-    });
-  } else {
-    res.send('ID와 비밀번호를 입력해주세요.');
-  }
+  console.log(req.body);
+  // if (req.body.ID !== '' && req.body.PWD !== '') {
+  //   loginInfo.ID = decryptor(req.body.ID, tracer);
+  //   loginInfo.PWD = decryptor(req.body.PWD, tracer);
+  //   loginInfo.salt = bcrypt.getSalt(loginInfo.PWD);
+  //   db.query('select user_id, user_pwd, user_nick from user_info', (error, result) => {
+  //     if (error) throw error;
+  //     dbInfo.ID = decryptor(result[0].user_id, frost);
+  //     dbInfo.PWD = decryptor(result[0].user_pwd, frost);
+  //     dbInfo.nick = decryptor(result[0].user_nick, frost);
+  //     const comparison = bcrypt.hashSync(dbInfo.PWD, loginInfo.salt);
+  //     if (loginInfo.ID === dbInfo.ID && loginInfo.PWD === comparison) {
+  //       req.session.loginInfo = {
+  //         isLoginSuccessful: true,
+  //         nickname: dbInfo.nick
+  //       }
+  //       req.session.save(() => res.send(req.session.loginInfo));
+  //     } else {
+  //       res.send('ID 혹은 비밀번호가 잘못됐습니다.');
+  //     }
+  //   });
+  // } else {
+  //   res.send('ID와 비밀번호를 입력해주세요.');
+  // }
+  db.query('select user_id from user_info where user_id like ?')
 });
 
 app.post('/logout_process', (req, res) => {
