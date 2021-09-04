@@ -12,16 +12,18 @@ const { tracer, frost } = require('../custom_modules/security/fes');
 
 const app = express();
 const port = 3002;
-const loginInfo = {
-  ID: '',
-  PWD: '',
-  salt: ''
-}
-const dbInfo = {
-  ID: '',
-  PWD: '',
-  nick: ''
-}
+// const loginInfo = {
+//   ID: '',
+//   PWD: '',
+//   salt: ''
+// }
+// const dbInfo = {
+//   ID: '',
+//   PWD: '',
+//   nick: ''
+// }
+let loginInfo = {};
+let dbInfo = {};
 
 app.use(cors({
   origin: true,
@@ -46,16 +48,22 @@ app.get('/', (req, res) => {
   res.send('login server');
 });
 
-app.get('/test_get', (req, res) => {
-  db.query('select user_id, user_nick, user_email from user_info', (error, result) => {
-    if (error) throw error;
-    const formData = {
-      id: result[0].user_id,
-      nick: result[0].user_nick,
-      email: result[0].user_email
-    }
-    res.send(encryptor(JSON.stringify(formData), tracer));
-  });
+app.post('/test_get', (req, res) => {
+  const temp = {};
+  // console.log(req.body.foo)
+  console.log(decryptor(req.body.foo, tracer));
+  // db.query('select * from user_info where user_id=?', [decryptor(req.body.id, tracer)], (error, result) => {
+  //   if (error) throw error;
+  //   if (result[0] === undefined) {
+  //     res.send('유효한 정보입니다');
+  //   } else {
+  //     temp.id = result[0].user_id;
+  //     temp.nick = result[0].user_nick;
+  //     temp.email = result[0].user_email;
+  //     console.log(temp)
+  //     res.send(encryptor(JSON.stringify(temp), tracer));
+  //   }
+  // });
 });
 
 // app.post('/test_post', (req, res) => {
@@ -67,10 +75,9 @@ app.get('/test_get', (req, res) => {
 // });
 
 app.post('/login_process', (req, res) => {
-  if (req.body.ID !== '' && req.body.PWD !== '') {
-    loginInfo.ID = decryptor(req.body.ID, tracer);
-    loginInfo.PWD = decryptor(req.body.PWD, tracer);
-    loginInfo.salt = bcrypt.getSalt(loginInfo.PWD);
+  loginInfo = decryptor(req.body.sofo, tracer);
+  loginInfo.salt = bcrypt.getSalt(loginInfo.PWD);
+  if (loginInfo.ID !== '' && loginInfo.PWD !== '') {
     db.query('select * from user_info where user_id=?', [loginInfo.ID], (error, result) => {
       if (error) throw error;
       if (result[0] === undefined) {

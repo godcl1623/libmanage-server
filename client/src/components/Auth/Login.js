@@ -54,10 +54,10 @@ const Login = () => {
             PWD: ''
           }
           if (e.target.ID.value !== '' && e.target.PWD.value !== '') {
-            formData.ID =  encryptor(e.target.ID.value, tracer);
-            formData.PWD = encryptor(salter(hasher(e.target.PWD.value)), tracer);
+            formData.ID =  e.target.ID.value;
+            formData.PWD = salter(hasher(e.target.PWD.value));
           }
-          axios.post('http://localhost:3002/login_process', formData, { withCredentials: true })
+          axios.post('http://localhost:3002/login_process', {sofo: encryptor(formData, tracer)}, { withCredentials: true })
           .then(res => {
             if (res.data.isLoginSuccessful) {
               dispatch(loginStatusCreator(res.data.isLoginSuccessful));

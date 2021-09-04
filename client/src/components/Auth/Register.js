@@ -20,6 +20,7 @@ const customOption = (state, func) => {
 const Register = () => {
   const [pwdMatch, setPwdMatch] = React.useState(true);
   const [emailState, setEmailState] = React.useState('');
+  const [tempData, setTempData] = React.useState('');
 
   return (
     <article
@@ -48,18 +49,22 @@ const Register = () => {
             temp.shift();
             e.target.email_provider.value = temp.join('');
           }
+          const inputs = Array.from(document.querySelectorAll('input'));
+          const isEmpty = inputs.find(input => input.value === '');
+          const select = document.querySelector('select');
           const formData = {
             id: e.target.ID.value,
             pwd: e.target.PWD.value,
             nick: e.target.nickname.value,
             email: `${e.target.email_id.value}@${e.target.email_provider.value}`
           }
-          if (formData.id !== '' && formData.pwd !== '' && formData.nick !== '' && e.target.email_id.value !== '' && e.target.email_provider.value !== '') {
-            axios.get('http://localhost:3002/test_get')
+          if (isEmpty === undefined && select.value !== '') {
+            axios.post('http://localhost:3002/test_get', {foo: encryptor(formData, tracer)}, { withCredentials: true })
               .then(res => {
                 const tempObj = JSON.parse(decryptor(res.data, tracer));
-                console.log(decryptor(tempObj.id, frost));
-              });
+                console.log(tempObj);
+              })
+              .catch(err => alert(err));
           } else {
             alert('정보를 전부 입력해주세요');
           }
@@ -67,6 +72,7 @@ const Register = () => {
       >
         <label htmlFor="ID">아이디: </label>
         <input type="text" name="ID" />
+        <p>※ 이미 사용중인 ID입니다.</p>
         <label htmlFor="PWD">비밀번호: </label>
         <input type="password" name="PWD" onChange={() => setPwdMatch(true)} />
         <label htmlFor="PWD_check">비밀번호 확인: </label>
@@ -80,10 +86,12 @@ const Register = () => {
         >※ 비밀번호가 일치하지 않습니다.</p>
         <label htmlFor="nickname">별명: </label>
         <input type="text" name="nickname" />
+        <p>※ 이미 사용중인 별명입니다.</p>
         <label htmlFor="email_id">이메일: </label>
         <input type="text" name="email_id" />
         <p>@</p>
         { customOption(emailState, setEmailState) }
+        <p>※ 이미 사용중인 이메일 주소입니다.</p>
         <button name="cancel">취소</button>
         <button type="submit" name="confirm">확인</button>
       </form>
