@@ -49,21 +49,21 @@ app.get('/', (req, res) => {
 });
 
 app.post('/test_get', (req, res) => {
+  const transmitted = decryptor(req.body.foo, tracer);
   const temp = {};
-  // console.log(req.body.foo)
-  console.log(decryptor(req.body.foo, tracer));
-  // db.query('select * from user_info where user_id=?', [decryptor(req.body.id, tracer)], (error, result) => {
-  //   if (error) throw error;
-  //   if (result[0] === undefined) {
-  //     res.send('유효한 정보입니다');
-  //   } else {
-  //     temp.id = result[0].user_id;
-  //     temp.nick = result[0].user_nick;
-  //     temp.email = result[0].user_email;
-  //     console.log(temp)
-  //     res.send(encryptor(JSON.stringify(temp), tracer));
-  //   }
-  // });
+  db.query('select * from user_info where user_id=?', [transmitted.id], (error, result) => {
+    if (error) throw error;
+    if (result[0] === undefined) {
+      // 등록 쿼리문 작성
+      res.send(encryptor(JSON.stringify(transmitted, tracer)));
+    } else {
+      temp.id = result[0].user_id;
+      temp.nick = result[0].user_nick;
+      temp.email = result[0].user_email;
+      console.log(temp)
+      res.send(encryptor(JSON.stringify(temp), tracer));
+    }
+  });
 });
 
 // app.post('/test_post', (req, res) => {
@@ -83,14 +83,12 @@ app.post('/login_process', (req, res) => {
       if (result[0] === undefined) {
         res.send('등록되지 않은 ID입니다.');
       } else {
-        dbInfo.ID = result[0].user_id;
-        dbInfo.PWD = result[0].user_pwd;
-        dbInfo.nick = result[0].user_nick;
-        const comparison = bcrypt.hashSync(dbInfo.PWD, loginInfo.salt);
-        if (loginInfo.ID === dbInfo.ID && loginInfo.PWD === comparison) {
+        [dbInfo] = result;
+        const comparison = bcrypt.hashSync(dbInfo.user_pwd, loginInfo.salt);
+        if (loginInfo.ID === dbInfo.user_id && loginInfo.PWD === comparison) {
           req.session.loginInfo = {
             isLoginSuccessful: true,
-            nickname: dbInfo.nick
+            nickname: dbInfo.user_nick
           }
           req.session.save(() => res.send(req.session.loginInfo));
         } else {
