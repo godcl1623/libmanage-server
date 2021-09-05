@@ -9,7 +9,7 @@ const customOption = (state, func) => {
   return (
     <select name="email_provider" onChange={e => func(e.target.value)} >
       <option value="">선택</option>
-      <option value="google.com">@google.com</option>
+      <option value="gmail.com">@gmail.com</option>
       <option value="naver.com">@naver.com</option>
       <option value="hanmail.net">@hanmail.net</option>
       <option value="others">직접 입력</option>
@@ -70,7 +70,7 @@ const Register = () => {
                 setIdState(tempObj.id);
                 setNickState(tempObj.nick);
                 setEmailAuth(tempObj.email);
-                console.log(tempObj);
+                // console.log(tempObj);
               })
               .catch(err => alert(err));
           } else {

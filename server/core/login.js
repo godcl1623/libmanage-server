@@ -51,16 +51,40 @@ app.get('/', (req, res) => {
 app.post('/test_get', (req, res) => {
   const transmitted = decryptor(req.body.foo, tracer);
   const temp = {};
-  db.query('select * from user_info where user_id=?', [transmitted.id], (error, result) => {
+  db.query(
+    'select * from user_info where user_id=? or user_nick=? or user_email=?',
+    [transmitted.id, transmitted.nick, transmitted.email],
+    (error, result) => {
+    console.log(result)
     if (error) throw error;
     if (result[0] === undefined) {
       // 등록 쿼리문 작성
       res.send(encryptor(JSON.stringify(transmitted, tracer)));
     } else {
-      temp.id = result[0].user_id;
-      temp.nick = result[0].user_nick;
-      temp.email = result[0].user_email;
-      console.log(temp)
+      const checkResult = {};
+      result.forEach(userData => {
+        if (userData.user_id === transmitted.id) {
+          checkResult.isIDExist = true;
+        } else {
+          checkResult.isIDExist = false;
+        }
+        if (userData.user_nick === transmitted.nick) {
+          checkResult.isNickExist = true;
+        } else {
+          checkResult.isNickExist = false;
+        }
+        if (userData.user_email === transmitted.email) {
+          checkResult.isEmailExist = true;
+        } else {
+          checkResult.isEmailExist = false;
+        }
+      });
+      console.log(transmitted);
+      console.log(checkResult);
+      // temp.id = result[0].user_id;
+      // temp.nick = result[0].user_nick;
+      // temp.email = result[0].user_email;
+      // console.log(temp)
       res.send(encryptor(JSON.stringify(temp), tracer));
     }
   });
