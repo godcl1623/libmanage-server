@@ -6,22 +6,13 @@ const helmet = require('helmet');
 const compression = require('compression');
 const FileStore = require('session-file-store')(session);
 const bcrypt = require('bcryptjs');
+const axios = require('axios');
 const db = require('../custom_modules/db');
 const { encryptor, decryptor } = require('../custom_modules/aeser');
 const { tracer, frost } = require('../custom_modules/security/fes');
 
 const app = express();
 const port = 3002;
-// const loginInfo = {
-//   ID: '',
-//   PWD: '',
-//   salt: ''
-// }
-// const dbInfo = {
-//   ID: '',
-//   PWD: '',
-//   nick: ''
-// }
 let loginInfo = {};
 let dbInfo = {};
 
@@ -51,40 +42,25 @@ app.get('/', (req, res) => {
 app.post('/test_get', (req, res) => {
   const transmitted = decryptor(req.body.foo, tracer);
   const temp = {};
+  const genQueryString = string => `select mid from user_info where ${string}=?`;
+  const genExists = qString => `select exists (${qString} limit 1) as isExist`;
   db.query(
-    'select * from user_info where user_id=? or user_nick=? or user_email=?',
+    `
+      ${genExists(genQueryString('user_id'))};
+      ${genExists(genQueryString('user_nick'))};
+      ${genExists(genQueryString('user_email'))};
+    `,
     [transmitted.id, transmitted.nick, transmitted.email],
     (error, result) => {
-    console.log(result)
+    const checkResult = result.map(packet => packet[0].isExist);
     if (error) throw error;
-    if (result[0] === undefined) {
+    if (!checkResult.includes(1)) {
       // 등록 쿼리문 작성
-      res.send(encryptor(JSON.stringify(transmitted, tracer)));
+      console.log('doh!');
+      res.send(encryptor(transmitted, tracer));
     } else {
-      const checkResult = {};
-      result.forEach(userData => {
-        if (userData.user_id === transmitted.id) {
-          checkResult.isIDExist = true;
-        } else {
-          checkResult.isIDExist = false;
-        }
-        if (userData.user_nick === transmitted.nick) {
-          checkResult.isNickExist = true;
-        } else {
-          checkResult.isNickExist = false;
-        }
-        if (userData.user_email === transmitted.email) {
-          checkResult.isEmailExist = true;
-        } else {
-          checkResult.isEmailExist = false;
-        }
-      });
-      console.log(transmitted);
-      console.log(checkResult);
-      // temp.id = result[0].user_id;
-      // temp.nick = result[0].user_nick;
-      // temp.email = result[0].user_email;
-      // console.log(temp)
+      [temp.id, temp.nick, temp.email] = checkResult;
+      console.log(temp)
       res.send(encryptor(JSON.stringify(temp), tracer));
     }
   });
@@ -143,6 +119,38 @@ app.post('/check_login', (req, res) => {
   } else {
     res.send('로그인 정보가 만료됐습니다. 다시 로그인 해주세요.');
   }
+});
+
+app.post('/member/register', (req, res) => {
+  const transmitted = decryptor(req.body.foo, tracer);
+  const temp = {};
+  const genQueryString = string => `select mid from user_info where ${string}=?`;
+  const genExists = qString => `select exists (${qString} limit 1) as isExist`;
+  db.query(
+    `
+      ${genExists(genQueryString('user_id'))};
+      ${genExists(genQueryString('user_nick'))};
+      ${genExists(genQueryString('user_email'))};
+    `,
+    [transmitted.id, transmitted.nick, transmitted.email],
+    (error, result) => {
+    const checkResult = result.map(packet => packet[0].isExist);
+    if (error) throw error;
+    if (!checkResult.includes(1)) {
+      // 등록 쿼리문 작성
+      // res.send(encryptor(transmitted, tracer));
+      const column = 'user_id, user_pwd, user_nick, user_email, created'
+      const queryString = `insert into user_info (${column}) values(?, ?, ?, ?, now())`
+      const values = [transmitted.id, transmitted.pwd, transmitted.nick, transmitted.email];
+      db.query(queryString, values, (err, result) => {
+        if (err) throw err;
+        console.log(result);
+      });
+    } else {
+      [temp.id, temp.nick, temp.email] = checkResult;
+      res.send(encryptor(temp, tracer));
+    }
+  });
 });
 
 app.listen(port, () => console.log(`server is running at port ${port}`));
