@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import Main from './Main/Main';
 import Login from './Auth/Login';
 import Register from './Auth/Register';
+import Find from './Auth/Find';
 import AddStore from './Options/AddStore';
 import AddLib from './Options/AddLib';
 import MetaMod from './Options/MetaMod';
@@ -21,6 +22,9 @@ const App = () => (
       </Route>
       <Route path="/member/register" exact>
         <Register />
+      </Route>
+      <Route path="/member/find" exact>
+        <Find />
       </Route>
     </Switch>
   </Router>

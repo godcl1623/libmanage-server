@@ -78,7 +78,7 @@ const Login = () => {
       </form>
       <div className="member">
         <Link to="/member/register">회원가입</Link>
-        <button>ID/PW 찾기</button>
+        <Link to="/member/find">ID/PW 찾기</Link>
       </div>
       <button>오프라인으로 접속</button>
     </article>

@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import { Link, useHistory } from 'react-router-dom';
 import { encryptor, decryptor } from '../../custom_modules/aeser';
 import { hasher } from '../../custom_modules/hasher';
 import { tracer } from '../../custom_modules/security/fes';
@@ -10,6 +11,7 @@ const Register = () => {
   const [idState, setIdState] = React.useState('');
   const [nickState, setNickState] = React.useState('');
   const [emailAuth, setEmailAuth] = React.useState('');
+  const history = useHistory();
 
   const customOption = (state, func) => {
     if (state === 'others') {
@@ -128,7 +130,14 @@ const Register = () => {
             'opacity': emailAuth !== 1 ? '0' : '100%'
           }}
         >※ 이미 사용중인 이메일 주소입니다.</p>
-        <button name="cancel">취소</button>
+        <button
+          name="cancel"
+          onClick={e => {
+            e.preventDefault();
+            if (window.confirm(`정말 취소하시겠습니까?\n작성한 데이터가 전부 삭제됩니다.`)) {
+              history.push('/');
+            }
+          }}>취소</button>
         <button type="submit" name="confirm">확인</button>
       </form>
     </article>
