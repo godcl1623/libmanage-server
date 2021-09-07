@@ -19,6 +19,8 @@ const Login = () => {
       if (res.data.isLoginSuccessful) {
         dispatch(loginStatusCreator(res.data.isLoginSuccessful));
         history.push('/main');
+      } else {
+        // alert(res.data);
       }
     })
     .catch(err => alert(err));
