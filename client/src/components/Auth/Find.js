@@ -1,4 +1,5 @@
 import React from 'react';
+import axios from 'axios';
 import FormSubmit from './module/FormSubmit';
 import InputTemplate from './module/InputTemplate';
 
@@ -51,7 +52,27 @@ const Find = () => {
           <form
             onSubmit={e => {
               e.preventDefault();
-              console.log(e.target.ID.value, e.target.nickname.value, e.target.email.value)
+              const inputs = Array.from(document.querySelectorAll('input'));
+              const emptyInputCheck = inputs.filter(input => input.value === '');
+              const formData = {};
+              const infoCheck = async infoObj => {
+                await axios.post(`http://localhost:3002/member/find/${tabState}`, infoObj, { withCredentials: true })
+                  .then(res => alert(res.data))
+                  .catch(err => alert(err));
+              };
+              if (emptyInputCheck.length !== 0) alert('정보를 입력해주세요.');
+              if (tabState === 'id') {
+                formData.nick = e.target.nickname.value;
+                formData.email = e.target.email.value;
+                console.log(formData)
+                infoCheck(formData);
+              } else {
+                formData.id = e.target.ID.value;
+                formData.nick = e.target.nickname.value;
+                formData.email = e.target.email.value;
+                console.log(formData)
+                infoCheck(formData);
+              }
             }}
           >
             { findRequested(tabState) }

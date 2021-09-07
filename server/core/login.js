@@ -153,4 +153,51 @@ app.post('/member/register', (req, res) => {
   });
 });
 
+app.post('/member/find/id', (req, res) => {
+  db.query(
+    'select user_nick from user_info where user_email=?',
+    [req.body.email],
+    (error, result) => {
+      if (error) throw error;
+      if (result[0] !== undefined) {
+        const nickMatchesWithEmail = result[0].user_nick;
+        if (req.body.nick === nickMatchesWithEmail) {
+          res.send('correct');
+        } else {
+          res.send('가입된 정보와 일치하지 않습니다.');
+        }
+      } else {
+        res.send('가입되지 않은 이메일 주소입니다.');
+      }
+    }
+  );
+});
+
+app.post('/member/find/pwd', (req, res) => {
+  const genQueryString = string => `select user_nick from user_info where ${string}=?`;
+  db.query(
+    `
+      ${genQueryString('user_id')};
+      ${genQueryString('user_email')};
+    `,
+    [req.body.id, req.body.email],
+    (error, result) => {
+      if (error) throw error;
+      console.log(result[1][0])
+      if (result[0][0] !== undefined && result[1][0] !== undefined) {
+        const nickFromId = result[0][0].user_nick;
+        const nickFromEmail = result[1][0].user_nick;
+        console.log(nickFromId, nickFromEmail);
+        if (nickFromId === nickFromEmail) {
+          res.send('correct');
+        } else {
+          res.send('가입된 정보와 일치하지 않습니다.');
+        }
+      } else {
+        res.send('입력된 정보를 다시 확인해주세요.');
+      }
+    }
+  );
+});
+
 app.listen(port, () => console.log(`server is running at port ${port}`));
