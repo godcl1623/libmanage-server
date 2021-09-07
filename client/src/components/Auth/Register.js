@@ -5,6 +5,7 @@ import { encryptor, decryptor } from '../../custom_modules/aeser';
 import { hasher } from '../../custom_modules/hasher';
 import { tracer } from '../../custom_modules/security/fes';
 import FormSubmit from './module/FormSubmit';
+import InputTemplate from './module/InputTemplate';
 
 const Register = () => {
   const [pwdMatch, setPwdMatch] = React.useState(true);
@@ -91,8 +92,9 @@ const Register = () => {
           }
         }}
       >
-        <label htmlFor="ID">아이디: </label>
-        <input type="text" name="ID" onChange={() => setIdState('')} />
+        {/* <label htmlFor="ID">아이디: </label>
+        <input type="text" name="ID" onChange={() => setIdState('')} /> */}
+        <InputTemplate inputType="text" labelText="아이디: " inputFor="ID" handler={() => setIdState('')}/>
         <p
           style={{
             'color': 'red',
@@ -100,10 +102,12 @@ const Register = () => {
             'opacity': idState !== 1 ? '0' : '100%'
           }}
         >※ 이미 사용중인 ID입니다.</p>
-        <label htmlFor="PWD">비밀번호: </label>
-        <input type="password" name="PWD" onChange={() => setPwdMatch(true)} />
-        <label htmlFor="PWD_check">비밀번호 확인: </label>
-        <input type="password" name="PWD_check" onChange={() => setPwdMatch(true)} />
+        {/* <label htmlFor="PWD">비밀번호: </label>
+        <input type="password" name="PWD" onChange={() => setPwdMatch(true)} /> */}
+        <InputTemplate inputType="password" labelText="비밀번호: " inputFor="PWD" handler={() => setPwdMatch(true)}/>
+        {/* <label htmlFor="PWD_check">비밀번호 확인: </label>
+        <input type="password" name="PWD_check" onChange={() => setPwdMatch(true)} /> */}
+        <InputTemplate inputType="password" labelText="비밀번호 확인: " inputFor="PWD_check" handler={() => setPwdMatch(true)}/>
         <p
           style={{
             'color': 'red',
@@ -111,8 +115,9 @@ const Register = () => {
             'opacity': pwdMatch ? '0' : '100%'
           }}
         >※ 비밀번호가 일치하지 않습니다.</p>
-        <label htmlFor="nickname">별명: </label>
-        <input type="text" name="nickname" onChange={() => setNickState('')}/>
+        {/* <label htmlFor="nickname">별명: </label>
+        <input type="text" name="nickname" onChange={() => setNickState('')}/> */}
+        <InputTemplate inputType="text" labelText="별명: " inputFor="nickname" handler={() => setNickState('')} />
         <p
           style={{
             'color': 'red',
@@ -120,8 +125,9 @@ const Register = () => {
             'opacity': nickState !== 1 ? '0' : '100%'
           }}
         >※ 이미 사용중인 별명입니다.</p>
-        <label htmlFor="email_id">이메일: </label>
-        <input type="text" name="email_id" onChange={() => setEmailAuth('')} />
+        {/* <label htmlFor="email_id">이메일: </label>
+        <input type="text" name="email_id" onChange={() => setEmailAuth('')} /> */}
+        <InputTemplate inputType="text" labelText="이메일: " inputFor="email_id" handler={() => setEmailAuth('')} />
         <p>@</p>
         { customOption(emailState, setEmailState) }
         <p

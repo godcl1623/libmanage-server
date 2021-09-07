@@ -1,25 +1,21 @@
 import React from 'react';
 import FormSubmit from './module/FormSubmit';
+import InputTemplate from './module/InputTemplate';
 
-const FindRequested = mode => {
+const findRequested = mode => {
   if (mode === 'pwd') {
     return (
       <>
-        <label>가입한 아이디: </label>
-        <input name="ID" />
-        <label>가입한 별명: </label>
-        <input name="nickname" />
-        <label>가입한 이메일 주소: </label>
-        <input />
+        <InputTemplate inputType="text" labelText="가입한 아이디: " inputFor="ID" />
+        <InputTemplate inputType="text" labelText="가입한 별명: " inputFor="nickname" />
+        <InputTemplate inputType="text" labelText="가입한 이메일 주소: " inputFor="email" />
       </>
     );
   } 
   return (
     <>
-      <label htmlFor="nickname">가입한 별명: </label>
-      <input name="nickname" />
-      <label htmlFor="email">가입한 이메일 주소: </label>
-      <input name="email" />
+      <InputTemplate inputType="text" labelText="가입한 별명: " inputFor="nickname" />
+      <InputTemplate inputType="text" labelText="가입한 이메일 주소: " inputFor="email" />
     </>
   );
 }
@@ -28,6 +24,11 @@ const Find = () => {
   const [tabState, setTabState] = React.useState('id');
 
   const tabHandler = str => setTabState(str);
+
+  React.useEffect(() => {
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => {input.value = ''});
+  }, [tabState]);
 
   return (
     <article
@@ -47,7 +48,13 @@ const Find = () => {
             }}>비밀번호 찾기</button>
         </div>
         <div className="form-wrapper">
-          <form>
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              console.log(e.target.ID.value, e.target.nickname.value, e.target.email.value)
+            }}
+          >
+            { findRequested(tabState) }
             <FormSubmit />
           </form>
         </div>
