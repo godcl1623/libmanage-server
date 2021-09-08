@@ -64,13 +64,11 @@ const Find = () => {
               if (tabState === 'id') {
                 formData.nick = e.target.nickname.value;
                 formData.email = e.target.email.value;
-                console.log(formData)
                 infoCheck(formData);
               } else {
                 formData.id = e.target.ID.value;
                 formData.nick = e.target.nickname.value;
                 formData.email = e.target.email.value;
-                console.log(formData)
                 infoCheck(formData);
               }
             }}

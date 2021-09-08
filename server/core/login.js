@@ -6,15 +6,22 @@ const helmet = require('helmet');
 const compression = require('compression');
 const FileStore = require('session-file-store')(session);
 const bcrypt = require('bcryptjs');
-const axios = require('axios');
+const nodemailer = require('nodemailer');
 const db = require('../custom_modules/db');
 const { encryptor, decryptor } = require('../custom_modules/aeser');
-const { tracer, frost } = require('../custom_modules/security/fes');
+const { tracer } = require('../custom_modules/security/fes');
+const swallow = require('../custom_modules/security/swallow');
 
-const app = express();
-const port = 3002;
 let loginInfo = {};
 let dbInfo = {};
+const app = express();
+const port = 3002;
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  port: 465,
+  secure: true,
+  auth: swallow
+});
 
 app.use(cors({
   origin: true,
