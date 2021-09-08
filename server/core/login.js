@@ -20,8 +20,9 @@ const transporter = nodemailer.createTransport({
   service: 'gmail',
   port: 465,
   secure: true,
-  auth: swallow
+  auth: swallow,
 });
+const genEmailOptions = (from, to, subject, html) => ({ from, to, subject, html });
 
 app.use(cors({
   origin: true,
@@ -162,14 +163,31 @@ app.post('/member/register', (req, res) => {
 
 app.post('/member/find/id', (req, res) => {
   db.query(
-    'select user_nick from user_info where user_email=?',
+    'select user_nick, user_id from user_info where user_email=?',
     [req.body.email],
     (error, result) => {
       if (error) throw error;
       if (result[0] !== undefined) {
         const nickMatchesWithEmail = result[0].user_nick;
         if (req.body.nick === nickMatchesWithEmail) {
-          res.send('correct');
+          const subject = '아이디 찾기 요청 결과입니다.';
+          const html = `
+            <p>안녕하세요 ${nickMatchesWithEmail}님,<br>
+            요청하신 아이디는 다음과 같습니다.</p>
+            <p>아이디: ${result[0].user_id}</p>
+            <p>비밀번호를 찾으시려면 아래 링크를 클릭해주세요.</p>
+            <p><a href="http://localhost:3000/member/find/pwd">링크</a></p>
+          `;
+          const successMsg = '메일이 발송되었습니다.\n메세지함을 확인해주세요.'
+          const emailOptions = genEmailOptions(`관리자 <${swallow.user}>`, req.body.email, subject, html);
+          transporter.sendMail(emailOptions, (err, info) => {
+            if (err) {
+              console.log(err);
+              res.send('오류가 발생했습니다')
+            }
+            console.log(info);
+            res.send(successMsg);
+          });
         } else {
           res.send('가입된 정보와 일치하지 않습니다.');
         }
@@ -190,13 +208,27 @@ app.post('/member/find/pwd', (req, res) => {
     [req.body.id, req.body.email],
     (error, result) => {
       if (error) throw error;
-      console.log(result[1][0])
       if (result[0][0] !== undefined && result[1][0] !== undefined) {
         const nickFromId = result[0][0].user_nick;
         const nickFromEmail = result[1][0].user_nick;
-        console.log(nickFromId, nickFromEmail);
         if (nickFromId === nickFromEmail) {
-          res.send('correct');
+          // res.send('correct');
+          const subject = '비밀번호 찾기 요청 결과입니다.';
+          const html = `
+            <p>안녕하세요 ${nickFromId}님,<br>
+            비밀번호 초기화 안내 메일을 보내드립니다.</p>
+            <p>비밀번호를 초기화하시려면 아래 링크를 클릭해주세요.</p>
+            <p><a href="http://localhost:3000/member/find/pwd">링크</a></p>
+          `;
+          const emailOptions = genEmailOptions(`관리자 <${swallow.user}>`, 'delphi5281@gmail.com', subject, html);
+          transporter.sendMail(emailOptions, (err, info) => {
+            if (err) {
+              console.lof(err);
+              res.send('오류가 발생했습니다');
+            }
+            console.log(info);
+            res.send('메일이 발송되었습니다.\n메세지함을 확인해주세요.');
+          });
         } else {
           res.send('가입된 정보와 일치하지 않습니다.');
         }

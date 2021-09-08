@@ -1,9 +1,10 @@
 import React from 'react';
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom';
 import Main from './Main/Main';
 import Login from './Auth/Login';
 import Register from './Auth/Register';
 import Find from './Auth/Find';
+import FindRequested from './Auth/module/FindRequested';
 import AddStore from './Options/AddStore';
 import AddLib from './Options/AddLib';
 import MetaMod from './Options/MetaMod';
@@ -24,7 +25,13 @@ const App = () => (
         <Register />
       </Route>
       <Route path="/member/find" exact>
-        <Find />
+        <Redirect to="/member/find/id" />
+      </Route>
+      <Route path="/member/find/id" exact>
+        <Find mode='id' />
+      </Route>
+      <Route path="/member/find/pwd" exact>
+        <Find mode='pwd' />
       </Route>
     </Switch>
   </Router>

@@ -1,27 +1,10 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import FormSubmit from './module/FormSubmit';
-import InputTemplate from './module/InputTemplate';
+import FindRequested from './module/FindRequested';
 
-const findRequested = mode => {
-  if (mode === 'pwd') {
-    return (
-      <>
-        <InputTemplate inputType="text" labelText="가입한 아이디: " inputFor="ID" />
-        <InputTemplate inputType="text" labelText="가입한 별명: " inputFor="nickname" />
-        <InputTemplate inputType="text" labelText="가입한 이메일 주소: " inputFor="email" />
-      </>
-    );
-  } 
-  return (
-    <>
-      <InputTemplate inputType="text" labelText="가입한 별명: " inputFor="nickname" />
-      <InputTemplate inputType="text" labelText="가입한 이메일 주소: " inputFor="email" />
-    </>
-  );
-}
-
-const Find = () => {
+const Find = ({ mode }) => {
   const [tabState, setTabState] = React.useState('id');
 
   const tabHandler = str => setTabState(str);
@@ -39,14 +22,8 @@ const Find = () => {
         className="contents-wrapper"
       >
         <div className="tab-wrapper">
-          <button name="id" onClick={e => {
-            e.preventDefault();
-            tabHandler('id');
-            }}>아이디 찾기</button>
-          <button name="pwd" onClick={e => {
-            e.preventDefault();
-            tabHandler('pwd');
-            }}>비밀번호 찾기</button>
+          <Link to="/member/find/id" onClick={() => tabHandler('id')}>아이디 찾기</Link>
+          <Link to="/member/find/pwd" onClick={() => tabHandler('pwd')}>비밀번호 찾기</Link>
         </div>
         <div className="form-wrapper">
           <form
@@ -73,7 +50,7 @@ const Find = () => {
               }
             }}
           >
-            { findRequested(tabState) }
+            <FindRequested mode={mode} />
             <FormSubmit />
           </form>
         </div>
