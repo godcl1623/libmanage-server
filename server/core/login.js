@@ -217,30 +217,29 @@ app.post('/member/find/pwd', (req, res) => {
           const token = crypto.randomBytes(64).toString('hex');
           const authData = {
             token,
-            userId: result[0][0].user_id,
-            ttl: 60
+            userId: req.body.id,
+            ttl: 3600
           };
-          // db.query(
-          //   'insert into user_info (user_id, user_pwd, user_nick, user_email, created) values(?, ?, ?, ?, now())',
-          //   ['da', JSON.stringify(authData), 'da', 'da']
-          // )
+          db.query(
+            'insert into user_token (token_body, created) values(?, now())',
+            [JSON.stringify(authData)]
+          )
           const subject = '비밀번호 찾기 요청 결과입니다.';
           const html = `
             <p>안녕하세요 ${nickFromId}님,<br>
             비밀번호 초기화 안내 메일을 보내드립니다.</p>
             <p>비밀번호를 초기화하시려면 아래 링크를 클릭해주세요.</p>
-            <p><a href="http://localhost:3000/member/find/pwd">링크</a></p>
+            <p><a href="http://localhost:3000/member/reset/${token}">링크</a></p>
           `;
           const emailOptions = genEmailOptions(`관리자 <${swallow.user}>`, 'delphi5281@gmail.com', subject, html);
-          // transporter.sendMail(emailOptions, (err, info) => {
-          //   if (err) {
-          //     console.lof(err);
-          //     res.send('오류가 발생했습니다');
-          //   }
-          //   console.log(info);
-          //   res.send('메일이 발송되었습니다.\n메세지함을 확인해주세요.');
-          // });
-          console.log(token.slice(121, 128));
+          transporter.sendMail(emailOptions, (err, info) => {
+            if (err) {
+              console.lof(err);
+              res.send('오류가 발생했습니다');
+            }
+            // console.log(info);
+            res.send('메일이 발송되었습니다.\n메세지함을 확인해주세요.');
+          });
         } else {
           res.send('가입된 정보와 일치하지 않습니다.');
         }
@@ -249,6 +248,53 @@ app.post('/member/find/pwd', (req, res) => {
       }
     }
   );
+});
+
+app.post('/member/reset', (req, res) => {
+  if (req.body.tokenTail && req.body.requestedTime) {
+    db.query(
+      'select token_body, created from user_token where token_body like ?',
+      [`%${req.body.tokenTail}%`],
+      (err, result) => {
+        if (result[0] !== undefined) {
+          const requestedToken = JSON.parse(result[0].token_body);
+          const createdTime = result[0].created;
+          const reqTimeVal = new Date(req.body.requestedTime);
+          const createdTimeVal = new Date(createdTime);
+          const timeDiff = (reqTimeVal - createdTimeVal) / 1000;
+          if (timeDiff <= requestedToken.ttl) {
+            res.send({
+              tokenState: true,
+              token: requestedToken
+            });
+          } else {
+            res.send({
+              tokenState: false
+            });
+          }
+        } else {
+          res.send({
+            tokenState: 'no_token'
+          });
+        }
+      });
+  } else {
+    res.send({
+      tokenState: 'abnormal'
+    });
+  }
+});
+
+app.post('/member/reset/pwd', (req, res) => {
+  const {id: userId, pwd: newPwd} = decryptor(req.body.formData, tracer);
+  if (userId && newPwd) {
+    db.query(
+      'update user_info set user_pwd=? where user_id=?',
+      [newPwd, userId],
+      (err, result) => {
+        console.log(result);
+    })
+  }
 });
 
 app.listen(port, () => console.log(`server is running at port ${port}`));

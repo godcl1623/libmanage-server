@@ -58,7 +58,7 @@ const Register = () => {
             e.target.email_provider.value = temp.join('');
           }
           const inputs = Array.from(document.querySelectorAll('input'));
-          const isEmpty = inputs.find(input => input.value === '');
+          const isEmpty = inputs.filter(input => input.value === '');
           const select = document.querySelector('select');
           const formData = {
             id: e.target.ID.value,
@@ -80,12 +80,12 @@ const Register = () => {
             .catch(err => alert(err));
           }
           if (select) {
-            if (isEmpty === undefined && select.value !== '') {
+            if (isEmpty[0] === undefined && select.value !== '') {
               existCheck();
             } else {
               alert('정보를 전부 입력해주세요');
             }
-          } else if (isEmpty === undefined) {
+          } else if (isEmpty[0] === undefined) {
               existCheck();
           } else {
             alert('정보를 전부 입력해주세요');

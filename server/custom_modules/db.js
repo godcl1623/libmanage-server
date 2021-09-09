@@ -6,7 +6,8 @@ const db = mysql.createConnection({
   user: 'root',
   password: pwd,
   database: 'libmanage',
-  multipleStatements: true
+  multipleStatements: true,
+  dateStrings: true
 });
 db.connect();
 

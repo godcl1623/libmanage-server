@@ -5,7 +5,7 @@ import FormSubmit from './module/FormSubmit';
 import FindRequested from './module/FindRequested';
 
 const Find = ({ mode }) => {
-  const [tabState, setTabState] = React.useState('id');
+  const [tabState, setTabState] = React.useState(mode);
 
   const tabHandler = str => setTabState(str);
 

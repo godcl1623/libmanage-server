@@ -4,6 +4,7 @@ import Main from './Main/Main';
 import Login from './Auth/Login';
 import Register from './Auth/Register';
 import Find from './Auth/Find';
+import Reset from './Auth/Reset';
 import FindRequested from './Auth/module/FindRequested';
 import AddStore from './Options/AddStore';
 import AddLib from './Options/AddLib';
@@ -32,6 +33,9 @@ const App = () => (
       </Route>
       <Route path="/member/find/pwd" exact>
         <Find mode='pwd' />
+      </Route>
+      <Route path="/member/reset/:token" exact>
+        <Reset />
       </Route>
     </Switch>
   </Router>
