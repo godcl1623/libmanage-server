@@ -220,10 +220,10 @@ app.post('/member/find/pwd', (req, res) => {
             userId: result[0][0].user_id,
             ttl: 60
           };
-          db.query(
-            'insert into user_info (user_id, user_pwd, user_nick, user_email, created) values(?, ?, ?, ?, now())',
-            ['da', JSON.stringify(authData), 'da', 'da']
-          )
+          // db.query(
+          //   'insert into user_info (user_id, user_pwd, user_nick, user_email, created) values(?, ?, ?, ?, now())',
+          //   ['da', JSON.stringify(authData), 'da', 'da']
+          // )
           const subject = '비밀번호 찾기 요청 결과입니다.';
           const html = `
             <p>안녕하세요 ${nickFromId}님,<br>
@@ -240,7 +240,7 @@ app.post('/member/find/pwd', (req, res) => {
           //   console.log(info);
           //   res.send('메일이 발송되었습니다.\n메세지함을 확인해주세요.');
           // });
-          console.log(token);
+          console.log(token.slice(121, 128));
         } else {
           res.send('가입된 정보와 일치하지 않습니다.');
         }
