@@ -163,14 +163,15 @@ app.post('/member/register', (req, res) => {
 });
 
 app.post('/member/find/id', (req, res) => {
+  const { nick: queryNick, email: queryEmail } = decryptor(req.body.infoObj, tracer);
   db.query(
     'select user_nick, user_id from user_info where user_email=?',
-    [req.body.email],
+    [queryEmail],
     (error, result) => {
       if (error) throw error;
       if (result[0] !== undefined) {
         const nickMatchesWithEmail = result[0].user_nick;
-        if (req.body.nick === nickMatchesWithEmail) {
+        if (queryNick === nickMatchesWithEmail) {
           const subject = '아이디 찾기 요청 결과입니다.';
           const html = `
             <p>안녕하세요 ${nickMatchesWithEmail}님,<br>
@@ -180,7 +181,7 @@ app.post('/member/find/id', (req, res) => {
             <p><a href="http://localhost:3000/member/find/pwd">링크</a></p>
           `;
           const successMsg = '메일이 발송되었습니다.\n메세지함을 확인해주세요.'
-          const emailOptions = genEmailOptions(`관리자 <${swallow.user}>`, req.body.email, subject, html);
+          const emailOptions = genEmailOptions(`관리자 <${swallow.user}>`, queryEmail, subject, html);
           transporter.sendMail(emailOptions, (err, info) => {
             if (err) {
               console.log(err);
@@ -200,24 +201,24 @@ app.post('/member/find/id', (req, res) => {
 });
 
 app.post('/member/find/pwd', (req, res) => {
+  const {id: queryId, email: queryEmail} = decryptor(req.body.infoObj, tracer);
   const genQueryString = string => `select user_nick from user_info where ${string}=?`;
   db.query(
     `
       ${genQueryString('user_id')};
       ${genQueryString('user_email')};
     `,
-    [req.body.id, req.body.email],
+    [queryId, queryEmail],
     (error, result) => {
       if (error) throw error;
       if (result[0][0] !== undefined && result[1][0] !== undefined) {
         const nickFromId = result[0][0].user_nick;
         const nickFromEmail = result[1][0].user_nick;
         if (nickFromId === nickFromEmail) {
-          // res.send('correct');
           const token = crypto.randomBytes(64).toString('hex');
           const authData = {
             token,
-            userId: req.body.id,
+            userId: queryId,
             ttl: 300
           };
           db.query(
@@ -231,13 +232,13 @@ app.post('/member/find/pwd', (req, res) => {
             <p>비밀번호를 초기화하시려면 아래 링크를 클릭해주세요.</p>
             <p><a href="http://localhost:3000/member/reset/${token}">링크</a></p>
           `;
-          const emailOptions = genEmailOptions(`관리자 <${swallow.user}>`, 'delphi5281@gmail.com', subject, html);
+          const emailOptions = genEmailOptions(`관리자 <${swallow.user}>`, queryEmail, subject, html);
           transporter.sendMail(emailOptions, (err, info) => {
             if (err) {
               console.log(err);
               res.send('오류가 발생했습니다');
             }
-            // console.log(info);
+            console.log(info);
             res.send('메일이 발송되었습니다.\n메세지함을 확인해주세요.');
           });
         } else {

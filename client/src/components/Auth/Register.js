@@ -1,6 +1,5 @@
 import React from 'react';
 import axios from 'axios';
-import { Link, useHistory } from 'react-router-dom';
 import { encryptor, decryptor } from '../../custom_modules/aeser';
 import { hasher } from '../../custom_modules/hasher';
 import { tracer } from '../../custom_modules/security/fes';
@@ -13,7 +12,6 @@ const Register = () => {
   const [idState, setIdState] = React.useState('');
   const [nickState, setNickState] = React.useState('');
   const [emailAuth, setEmailAuth] = React.useState('');
-  const history = useHistory();
 
   const customOption = (state, func) => {
     if (state === 'others') {

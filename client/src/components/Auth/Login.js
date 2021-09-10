@@ -5,8 +5,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import { loginStatusCreator } from '../../actions';
 import { hasher, salter } from '../../custom_modules/hasher';
-import { encryptor, decryptor } from '../../custom_modules/aeser';
-import { tracer, frost } from '../../custom_modules/security/fes';
+import { encryptor } from '../../custom_modules/aeser';
+import { tracer } from '../../custom_modules/security/fes';
 
 const Login = () => {
   const loginStatus = useSelector(state => state.loginStatus);
