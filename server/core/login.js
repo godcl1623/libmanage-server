@@ -292,7 +292,10 @@ app.post('/member/reset/pwd', (req, res) => {
       'update user_info set user_pwd=? where user_id=?',
       [newPwd, userId],
       (err, result) => {
-        console.log(result);
+        if (err) throw err;
+        if (result.changedRows) {
+          db.query()
+        }
     })
   }
 });

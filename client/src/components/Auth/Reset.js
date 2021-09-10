@@ -32,7 +32,7 @@ const Reset = () => {
       })
       .catch(err => alert(err));
   }, []);
-
+  console.log(requestedToken);
   switch(tokenState) {
     case true:
       return (<ChangePwd token={requestedToken} />);
