@@ -23,7 +23,7 @@ const Reset = () => {
   const history = useHistory();
   const tokenTail = history.location.pathname.slice(-7,);
   const requestedTime = now();
-  
+
   useEffect(() => {
     axios.post('http://localhost:3002/member/reset', { tokenTail, requestedTime }, { withCredentials: true })
       .then(res => {
@@ -32,7 +32,7 @@ const Reset = () => {
       })
       .catch(err => alert(err));
   }, []);
-  console.log(requestedToken);
+
   switch(tokenState) {
     case true:
       return (<ChangePwd token={requestedToken} />);

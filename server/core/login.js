@@ -253,11 +253,12 @@ app.post('/member/find/pwd', (req, res) => {
 app.post('/member/reset', (req, res) => {
   if (req.body.tokenTail && req.body.requestedTime) {
     db.query(
-      'select token_body, created from user_token where token_body like ?',
+      'select * from user_token where token_body like ?',
       [`%${req.body.tokenTail}%`],
       (err, result) => {
         if (result[0] !== undefined) {
           const requestedToken = JSON.parse(result[0].token_body);
+          requestedToken.tokenId = result[0].req_id;
           const createdTime = result[0].created;
           const reqTimeVal = new Date(req.body.requestedTime);
           const createdTimeVal = new Date(createdTime);
@@ -286,7 +287,7 @@ app.post('/member/reset', (req, res) => {
 });
 
 app.post('/member/reset/pwd', (req, res) => {
-  const {id: userId, pwd: newPwd} = decryptor(req.body.formData, tracer);
+  const {id: userId, pwd: newPwd, tokenId } = decryptor(req.body.formData, tracer);
   if (userId && newPwd) {
     db.query(
       'update user_info set user_pwd=? where user_id=?',
@@ -294,9 +295,23 @@ app.post('/member/reset/pwd', (req, res) => {
       (err, result) => {
         if (err) throw err;
         if (result.changedRows) {
-          db.query()
+          db.query(
+            'delete from user_token where req_id=?',
+            [tokenId],
+            (err, result) => {
+              if (err) throw err;
+              if (result.affectedRows) {
+                res.send('complete');
+              } else {
+                res.send('error');
+              }
+            }
+          );
         }
-    })
+      }
+    )
+  } else {
+    res.send('error');
   }
 });
 
