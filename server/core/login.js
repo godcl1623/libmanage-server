@@ -218,7 +218,7 @@ app.post('/member/find/pwd', (req, res) => {
           const authData = {
             token,
             userId: req.body.id,
-            ttl: 3600
+            ttl: 300
           };
           db.query(
             'insert into user_token (token_body, created) values(?, now())',
@@ -234,7 +234,7 @@ app.post('/member/find/pwd', (req, res) => {
           const emailOptions = genEmailOptions(`관리자 <${swallow.user}>`, 'delphi5281@gmail.com', subject, html);
           transporter.sendMail(emailOptions, (err, info) => {
             if (err) {
-              console.lof(err);
+              console.log(err);
               res.send('오류가 발생했습니다');
             }
             // console.log(info);
@@ -260,6 +260,7 @@ app.post('/member/reset', (req, res) => {
           const requestedToken = JSON.parse(result[0].token_body);
           requestedToken.tokenId = result[0].req_id;
           const createdTime = result[0].created;
+          requestedToken.originTime = createdTime;
           const reqTimeVal = new Date(req.body.requestedTime);
           const createdTimeVal = new Date(createdTime);
           const timeDiff = (reqTimeVal - createdTimeVal) / 1000;
@@ -287,29 +288,54 @@ app.post('/member/reset', (req, res) => {
 });
 
 app.post('/member/reset/pwd', (req, res) => {
-  const {id: userId, pwd: newPwd, tokenId } = decryptor(req.body.formData, tracer);
+  const {
+    id: userId,
+    pwd: newPwd,
+    tokenId,
+    ttl,
+    reqTime,
+    originTime
+  } = decryptor(req.body.formData, tracer);
+  const reqTimeVal = new Date(reqTime);
+  const createdTimeVal = new Date(originTime);
+  const timeDiff = (reqTimeVal - createdTimeVal) / 1000;;
   if (userId && newPwd) {
-    db.query(
-      'update user_info set user_pwd=? where user_id=?',
-      [newPwd, userId],
-      (err, result) => {
-        if (err) throw err;
-        if (result.changedRows) {
-          db.query(
-            'delete from user_token where req_id=?',
-            [tokenId],
-            (err, result) => {
-              if (err) throw err;
-              if (result.affectedRows) {
-                res.send('complete');
-              } else {
-                res.send('error');
+    if (timeDiff <= ttl) {
+      db.query(
+        'update user_info set user_pwd=? where user_id=?',
+        [newPwd, userId],
+        (err, result) => {
+          if (err) throw err;
+          if (result.changedRows) {
+            db.query(
+              'delete from user_token where req_id=?',
+              [tokenId],
+              (err, result) => {
+                if (err) throw err;
+                if (result.affectedRows) {
+                  res.send('complete');
+                } else {
+                  res.send('error');
+                }
               }
-            }
-          );
+            );
+          }
         }
-      }
-    )
+      )
+    } else {
+      db.query(
+        'delete from user_token where req_id=?',
+        [tokenId],
+        (err, result) => {
+          if (err) throw err;
+          if (result.affectedRows) {
+            res.send('expired');
+          } else {
+            res.send('error');
+          }
+        }
+      )
+    }
   } else {
     res.send('error');
   }

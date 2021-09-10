@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useHistory } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import axios from 'axios';
 import ChangePwd from './module/ChangePwd';
+import { tokenStateCreator as setTokenState } from '../../actions';
 
 const now = () => {
   const date = new Date();
@@ -18,8 +20,10 @@ const now = () => {
 };
 
 const Reset = () => {
-  const [tokenState, setTokenState] = useState('');
+  // const [tokenState, setTokenState] = useState('');
   const [requestedToken, setRequestToken] = useState({});
+  const tokenState = useSelector(state => state.tokenState);
+  const dispatch = useDispatch();
   const history = useHistory();
   const tokenTail = history.location.pathname.slice(-7,);
   const requestedTime = now();
@@ -27,7 +31,7 @@ const Reset = () => {
   useEffect(() => {
     axios.post('http://localhost:3002/member/reset', { tokenTail, requestedTime }, { withCredentials: true })
       .then(res => {
-        setTokenState(res.data.tokenState);
+        dispatch(setTokenState(res.data.tokenState));
         setRequestToken(res.data.token);
       })
       .catch(err => alert(err));
@@ -35,7 +39,7 @@ const Reset = () => {
 
   switch(tokenState) {
     case true:
-      return (<ChangePwd token={requestedToken} />);
+      return (<ChangePwd token={requestedToken} reqTime={now} />);
     case false:
       return(<h1>요청이 만료되었습니다.</h1>);
     case 'abnormal':
