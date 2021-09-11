@@ -3,8 +3,9 @@ import axios from 'axios';
 import { encryptor, decryptor } from '../../custom_modules/aeser';
 import { hasher } from '../../custom_modules/hasher';
 import { tracer } from '../../custom_modules/security/fes';
-import FormSubmit from './module/FormSubmit';
-import InputTemplate from './module/InputTemplate';
+import FormSubmit from './module/components/FormSubmit';
+import InputTemplate from './module/components/InputTemplate';
+import { verifyId, verifyPwd, verifyNick, verifyEmail } from './module/utils';
 
 const Register = () => {
   const [pwdMatch, setPwdMatch] = React.useState(true);
@@ -27,6 +28,16 @@ const Register = () => {
       </select>
     );
   };
+
+  const verifyTest = () => {
+    if (idState === 1) {
+      return '※ 이미 사용중인 ID입니다.';
+    }
+    if (idState === 'wrong') {
+      return 'verifyTest';
+    }
+    return '';
+  }
 
   return (
     <article
@@ -79,33 +90,48 @@ const Register = () => {
           }
           if (select) {
             if (isEmpty[0] === undefined && select.value !== '') {
-              existCheck();
+              // existCheck();
+              if (verifyId(formData.id) === false) {
+                setIdState('wrong');
+              }
             } else {
               alert('정보를 전부 입력해주세요');
             }
           } else if (isEmpty[0] === undefined) {
-              existCheck();
+              // existCheck();
           } else {
             alert('정보를 전부 입력해주세요');
           }
         }}
       >
-        {/* <label htmlFor="ID">아이디: </label>
-        <input type="text" name="ID" onChange={() => setIdState('')} /> */}
-        <InputTemplate inputType="text" labelText="아이디: " inputFor="ID" handler={() => setIdState('')}/>
+        <InputTemplate
+          inputType="text"
+          labelText="아이디: "
+          inputFor="ID"
+          handler={() => setIdState('')}
+          placeholder='아이디 (6~12자 이내, 영문, 숫자 사용 가능)'
+        />
         <p
           style={{
             'color': 'red',
             'fontWeight': 'bold',
-            'opacity': idState !== 1 ? '0' : '100%'
+            'opacity': (idState !== 1 && idState !== 'wrong') ? '0' : '100%'
           }}
-        >※ 이미 사용중인 ID입니다.</p>
-        {/* <label htmlFor="PWD">비밀번호: </label>
-        <input type="password" name="PWD" onChange={() => setPwdMatch(true)} /> */}
-        <InputTemplate inputType="password" labelText="비밀번호: " inputFor="PWD" handler={() => setPwdMatch(true)}/>
-        {/* <label htmlFor="PWD_check">비밀번호 확인: </label>
-        <input type="password" name="PWD_check" onChange={() => setPwdMatch(true)} /> */}
-        <InputTemplate inputType="password" labelText="비밀번호 확인: " inputFor="PWD_check" handler={() => setPwdMatch(true)}/>
+        >{verifyTest()}</p>
+        <InputTemplate
+          inputType="password"
+          labelText="비밀번호: "
+          inputFor="PWD"
+          handler={() => setPwdMatch(true)}
+          placeholder='비밀번호 (8~16자 이내, 영문 대소문자/숫자/기호(!,@,#,$,%,^,&,*)를 모두 포함해야 합니다.)'
+        />
+        <InputTemplate
+          inputType="password"
+          labelText="비밀번호 확인: "
+          inputFor="PWD_check"
+          handler={() => setPwdMatch(true)}
+          placeholder='비밀번호를 한 번 더 입력해주세요.'
+        />
         <p
           style={{
             'color': 'red',
@@ -113,9 +139,13 @@ const Register = () => {
             'opacity': pwdMatch ? '0' : '100%'
           }}
         >※ 비밀번호가 일치하지 않습니다.</p>
-        {/* <label htmlFor="nickname">별명: </label>
-        <input type="text" name="nickname" onChange={() => setNickState('')}/> */}
-        <InputTemplate inputType="text" labelText="별명: " inputFor="nickname" handler={() => setNickState('')} />
+        <InputTemplate
+          inputType="text"
+          labelText="별명: "
+          inputFor="nickname"
+          handler={() => setNickState('')}
+          placeholder='별명 (2~10자 이내, 한글/영문 대소문자/숫자 사용 가능)'
+        />
         <p
           style={{
             'color': 'red',

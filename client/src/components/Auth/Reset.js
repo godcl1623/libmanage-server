@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
-import ChangePwd from './module/ChangePwd';
+import ChangePwd from './module/components/ChangePwd';
 import { tokenStateCreator as setTokenState } from '../../actions';
 import { encryptor } from '../../custom_modules/aeser';
 import { tracer } from '../../custom_modules/security/fes';

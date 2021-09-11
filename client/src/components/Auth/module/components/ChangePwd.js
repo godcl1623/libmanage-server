@@ -4,10 +4,10 @@ import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import InputTemplate from './InputTemplate';
 import FormSubmit from './FormSubmit';
-import { tokenStateCreator } from '../../../actions';
-import { encryptor } from '../../../custom_modules/aeser';
-import { tracer } from '../../../custom_modules/security/fes';
-import { hasher } from '../../../custom_modules/hasher';
+import { tokenStateCreator } from '../../../../actions';
+import { encryptor } from '../../../../custom_modules/aeser';
+import { tracer } from '../../../../custom_modules/security/fes';
+import { hasher } from '../../../../custom_modules/hasher';
 
 const ChangePwd = ({ token, reqTime }) => {
   const [pwdMatch, setPwdMatch] = React.useState(true);

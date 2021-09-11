@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import FormSubmit from './module/FormSubmit';
-import FindRequested from './module/FindRequested';
+import FormSubmit from './module/components/FormSubmit';
+import FindRequested from './module/components/FindRequested';
 import { encryptor } from '../../custom_modules/aeser';
 import { tracer } from '../../custom_modules/security/fes';
 

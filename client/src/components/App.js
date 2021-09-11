@@ -5,7 +5,7 @@ import Login from './Auth/Login';
 import Register from './Auth/Register';
 import Find from './Auth/Find';
 import Reset from './Auth/Reset';
-import FindRequested from './Auth/module/FindRequested';
+import FindRequested from './Auth/module/components/FindRequested';
 import AddStore from './Options/AddStore';
 import AddLib from './Options/AddLib';
 import MetaMod from './Options/MetaMod';
