@@ -252,17 +252,18 @@ app.post('/member/find/pwd', (req, res) => {
 });
 
 app.post('/member/reset', (req, res) => {
-  if (req.body.tokenTail && req.body.requestedTime) {
+  const { tokenTail, requestedTime} = decryptor(req.body.postData, tracer);
+  if (tokenTail && requestedTime) {
     db.query(
       'select * from user_token where token_body like ?',
-      [`%${req.body.tokenTail}%`],
+      [`%${tokenTail}%`],
       (err, result) => {
         if (result[0] !== undefined) {
           const requestedToken = JSON.parse(result[0].token_body);
           requestedToken.tokenId = result[0].req_id;
           const createdTime = result[0].created;
           requestedToken.originTime = createdTime;
-          const reqTimeVal = new Date(req.body.requestedTime);
+          const reqTimeVal = new Date(requestedTime);
           const createdTimeVal = new Date(createdTime);
           const timeDiff = (reqTimeVal - createdTimeVal) / 1000;
           if (timeDiff <= requestedToken.ttl) {

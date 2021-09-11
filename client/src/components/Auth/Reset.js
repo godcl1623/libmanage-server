@@ -4,6 +4,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import ChangePwd from './module/ChangePwd';
 import { tokenStateCreator as setTokenState } from '../../actions';
+import { encryptor } from '../../custom_modules/aeser';
+import { tracer } from '../../custom_modules/security/fes';
 
 const now = () => {
   const date = new Date();
@@ -20,7 +22,6 @@ const now = () => {
 };
 
 const Reset = () => {
-  // const [tokenState, setTokenState] = useState('');
   const [requestedToken, setRequestToken] = useState({});
   const tokenState = useSelector(state => state.tokenState);
   const dispatch = useDispatch();
@@ -29,7 +30,11 @@ const Reset = () => {
   const requestedTime = now();
 
   useEffect(() => {
-    axios.post('http://localhost:3002/member/reset', { tokenTail, requestedTime }, { withCredentials: true })
+    const postData = {
+      tokenTail,
+      requestedTime
+    }
+    axios.post('http://localhost:3002/member/reset', { postData: encryptor(postData, tracer) }, { withCredentials: true })
       .then(res => {
         dispatch(setTokenState(res.data.tokenState));
         setRequestToken(res.data.token);
