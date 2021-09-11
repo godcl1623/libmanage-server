@@ -16,27 +16,18 @@ import '../styles/temp.css';
 const App = () => (
   <Router>
     <Switch>
-      <Route path="/" exact>
-        <Login />
-      </Route>
-      <Route path="/main" exact>
-        <Main />
-      </Route>
-      <Route path="/member/register" exact>
-        <Register />
-      </Route>
-      <Route path="/member/find" exact>
-        <Redirect to="/member/find/id" />
-      </Route>
-      <Route path="/member/find/id" exact>
-        <Find mode='id' />
-      </Route>
-      <Route path="/member/find/pwd" exact>
-        <Find mode='pwd' />
-      </Route>
-      <Route path="/member/reset/:token" exact>
-        <Reset />
-      </Route>
+      <Route path="/" exact component={ Login } />
+      <Route path="/main" exact component={ Main } />
+      <Route path="/member/register" exact component={ Register } />
+      <Route
+        path="/member/find"
+        exact
+        component={ () => <Redirect to="/member/find/id" /> }
+      />
+      <Route path="/member/find/id" exact component={ () => <Find mode='id' /> } />
+      <Route path="/member/find/pwd" exact component={ () => <Find mode='pwd' /> } />
+      <Route path="/member/reset/:token" exact component={Reset} />
+      <Route component={() => <Redirect to="/" />} />
     </Switch>
   </Router>
 );
