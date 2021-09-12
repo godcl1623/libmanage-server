@@ -82,29 +82,31 @@ const Register = () => {
           }
           const sofo = {}
           const checkInputVal = (id, pwd, nick, email) => {
+            let isValid = true;
             if (verifyId(id) && verifyPwd(pwd) && verifyNick(nick) && verifyEmail(email)) {
               setIdState('');
               setPwdState('');
               setNickState('');
               setEmailAuth('');
-              return true;
+              isValid=true;
             }
             if (!verifyId(id)) {
               setIdState('wrong');
-              return false;
+              isValid=false;
             }
             if (!verifyPwd(pwd)) {
               setPwdState('wrong');
-              return false;
+              isValid=false;
             }
             if (!verifyNick(nick)) {
               setNickState('wrong');
-              return false;
+              isValid=false;
             }
             if (!verifyEmail(email)) {
-              setEmailState('wrong');
-              return false;
+              setEmailAuth('wrong');
+              isValid=false;
             }
+            return isValid;
           };
           const existCheck = async sofo => {
             await axios.post(
