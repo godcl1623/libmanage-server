@@ -1,11 +1,11 @@
 export const verifyId = string => {
-  // const form = /[a-z]|[0-9]/gi;
-  const form = /^[A-Za-z0-9_-]{6,12}$/;
+  const form = /^[A-Za-z0-9]{6,12}$/;
   return form.test(string);
 };
 
 export const verifyPwd = string => {
-  const form = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^*]).{8,16}$/;
+  // const form = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^*]).{8,16}$/;
+  const form = /^[A-Za-z0-9!@#$%^&*]{8,16}$/;
   return form.test(string);
 };
 

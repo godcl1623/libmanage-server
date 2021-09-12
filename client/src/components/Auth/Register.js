@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useHistory } from 'react-router-dom';
 import { encryptor, decryptor } from '../../custom_modules/aeser';
 import { hasher } from '../../custom_modules/hasher';
 import { tracer } from '../../custom_modules/security/fes';
@@ -14,7 +15,7 @@ const Register = () => {
   const [pwdState, setPwdState] = useState('');
   const [nickState, setNickState] = useState('');
   const [emailAuth, setEmailAuth] = useState('');
-
+  const history = useHistory();
   const customOption = (state, func) => {
     if (state === 'others') {
       return <input type="text" name="email_provider" onChange={() => setEmailAuth('')}/>
@@ -33,7 +34,7 @@ const Register = () => {
   const verifyTest = (verifyValue, verifyState) => {
     if (verifyValue !== '비밀번호') {
       if (verifyState === 1) {
-        return `※ 이미 사용중인 ${verifyValue}입니다.`;
+        return `※ 이미 사용 중인 ${verifyValue}입니다.`;
       }
       if (verifyState === 'wrong') {
         return `※ ${verifyValue} 형식과 맞지 않습니다.`;
@@ -114,10 +115,15 @@ const Register = () => {
               {foo: encryptor(sofo, tracer)},
               { withCredentials: true })
             .then(res => {
-              const tempObj = decryptor(res.data, tracer);
-              setIdState(tempObj.id);
-              setNickState(tempObj.nick);
-              setEmailAuth(tempObj.email);
+              if (res.data === 'success') {
+                alert('회원가입이 완료되었습니다.\n로그인해 주세요.');
+                history.push('/');
+              } else {
+                const tempObj = decryptor(res.data, tracer);
+                setIdState(tempObj.id);
+                setNickState(tempObj.nick);
+                setEmailAuth(tempObj.email);
+              }
             })
             .catch(err => alert(err));
           }
@@ -128,8 +134,7 @@ const Register = () => {
                 sofo.pwd = hasher(formData.pwd);
                 sofo.nick = formData.nick;
                 sofo.email = formData.email;
-                // existCheck(sofo);
-                console.log(sofo);
+                existCheck(sofo);
               }
             } else {
               alert('정보를 전부 입력해주세요');
@@ -140,8 +145,7 @@ const Register = () => {
               sofo.pwd = hasher(formData.pwd);
               sofo.nick = formData.nick;
               sofo.email = formData.email;
-              // existCheck(sofo);
-              console.log(sofo);
+              existCheck(sofo);
             }
           } else {
             alert('정보를 전부 입력해주세요');
@@ -153,7 +157,7 @@ const Register = () => {
           labelText="아이디: "
           inputFor="ID"
           handler={() => setIdState('')}
-          placeholder='아이디 (6~12자 이내, 영문, 숫자 사용 가능)'
+          placeholder='아이디 (6~12자 이내, 영문, 숫자 사용)'
         />
         <p
           style={{
@@ -170,7 +174,7 @@ const Register = () => {
             setPwdMatch(true);
             setPwdState('');
           }}
-          placeholder='비밀번호 (8~16자 이내, 영문 대소문자/숫자/기호(!,@,#,$,%,^,&,*)를 모두 포함해야 합니다.)'
+          placeholder='비밀번호 (8~16자 이내, 영문, 숫자, 기호(!,@,#,$,%,^,&,*) 사용)'
         />
         <p
           style={{
@@ -198,7 +202,7 @@ const Register = () => {
           labelText="별명: "
           inputFor="nickname"
           handler={() => setNickState('')}
-          placeholder='별명 (2~10자 이내, 한글/영문 대소문자/숫자 사용 가능)'
+          placeholder='별명 (2~10자 이내, 한글,영문, 숫자 사용)'
         />
         <p
           style={{

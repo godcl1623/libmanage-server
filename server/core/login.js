@@ -126,7 +126,7 @@ app.post('/check_login', (req, res) => {
   if (req.session.loginInfo) {
     res.send(req.session.loginInfo);
   } else {
-    res.send('로그인 정보가 만료됐습니다. 다시 로그인 해주세요.');
+    res.send('로그인 정보가 만료됐습니다. 다시 로그인해 주세요.');
   }
 });
 
@@ -154,6 +154,7 @@ app.post('/member/register', (req, res) => {
       db.query(queryString, values, (err, result) => {
         if (err) throw err;
         console.log(result);
+        res.send('success');
       });
     } else {
       [temp.id, temp.nick, temp.email] = checkResult;
@@ -180,7 +181,7 @@ app.post('/member/find/id', (req, res) => {
             <p>비밀번호를 찾으시려면 아래 링크를 클릭해주세요.</p>
             <p><a href="http://localhost:3000/member/find/pwd">링크</a></p>
           `;
-          const successMsg = '메일이 발송되었습니다.\n메세지함을 확인해주세요.'
+          const successMsg = '메일이 발송되었습니다.\n메세지 함을 확인해주세요.'
           const emailOptions = genEmailOptions(`관리자 <${swallow.user}>`, queryEmail, subject, html);
           transporter.sendMail(emailOptions, (err, info) => {
             if (err) {
@@ -239,7 +240,7 @@ app.post('/member/find/pwd', (req, res) => {
               res.send('오류가 발생했습니다');
             }
             console.log(info);
-            res.send('메일이 발송되었습니다.\n메세지함을 확인해주세요.');
+            res.send('메일이 발송되었습니다.\n메세지 함을 확인해주세요.');
           });
         } else {
           res.send('가입된 정보와 일치하지 않습니다.');
