@@ -1,4 +1,5 @@
-import React from 'react';
+/* eslint-disable no-alert */
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import FormSubmit from './module/components/FormSubmit';
@@ -7,11 +8,11 @@ import { encryptor } from '../../custom_modules/aeser';
 import { tracer } from '../../custom_modules/security/fes';
 
 const Find = ({ mode }) => {
-  const [tabState, setTabState] = React.useState(mode);
+  const [tabState, setTabState] = useState(mode);
 
   const tabHandler = str => setTabState(str);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const inputs = document.querySelectorAll('input');
     inputs.forEach(input => {input.value = ''});
   }, [tabState]);

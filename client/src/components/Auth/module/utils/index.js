@@ -15,6 +15,6 @@ export const verifyNick = string => {
 };
 
 export const verifyEmail = string => {
-  const form = /^[A-Za-z0-9_\.\-]+@[A-Za-z0-9\-]+\.[A-Za-z0-9\-]+/;
+  const form = /^[A-Za-z0-9_.-]+@[A-Za-z0-9-]+\.[A-Za-z0-9-]+/;
   return form.test(string);
 }

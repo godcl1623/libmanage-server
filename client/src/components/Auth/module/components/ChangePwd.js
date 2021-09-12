@@ -1,4 +1,5 @@
-import React from 'react';
+/* eslint-disable no-alert */
+import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
@@ -8,12 +9,35 @@ import { tokenStateCreator } from '../../../../actions';
 import { encryptor } from '../../../../custom_modules/aeser';
 import { tracer } from '../../../../custom_modules/security/fes';
 import { hasher } from '../../../../custom_modules/hasher';
+import { verifyPwd } from '../utils';
 
 const ChangePwd = ({ token, reqTime }) => {
-  const [pwdMatch, setPwdMatch] = React.useState(true);
+  const [pwdMatch, setPwdMatch] = useState(true);
+  const [isValid, setIsValid] = useState(true);
   const dispatch = useDispatch();
   const history = useHistory();
   const { userId, ttl, tokenId, originTime } = token;
+  const checkValidation = (pwd, pwdCheck, verifyFunc) => {
+    let isReadyToSubmit;
+    if (!verifyFunc(pwd) && pwd !== pwdCheck) {
+      setIsValid(false);
+      setPwdMatch(false);
+      isReadyToSubmit = false;
+    } else if (verifyFunc(pwd) && pwd !== pwdCheck) {
+      setIsValid(true);
+      setPwdMatch(false);
+      isReadyToSubmit = false;
+    } else if (!verifyFunc(pwd) && pwd === pwdCheck) {
+      setIsValid(false);
+      setPwdMatch(true);
+      isReadyToSubmit = false;
+    } else {
+      setIsValid(true);
+      setPwdMatch(true);
+      isReadyToSubmit = true;
+    }
+    return isReadyToSubmit;
+  };
   return (
     <form
       onSubmit={e => {
@@ -25,9 +49,7 @@ const ChangePwd = ({ token, reqTime }) => {
         const formData = {};
         if (isEmpty[0] !== undefined) {
           alert('정보를 전부 입력해주세요');
-        } else if (pwd !== pwdCheck) {
-          setPwdMatch(false);
-        } else {
+        } else if (checkValidation(pwd, pwdCheck, verifyPwd)) {
           formData.id = userId;
           formData.pwd = hasher(pwd);
           formData.tokenId = tokenId;
@@ -49,7 +71,29 @@ const ChangePwd = ({ token, reqTime }) => {
         }
       }}
     >
-      <InputTemplate inputType="password" labelText="변경할 비밀번호: " inputFor="PWD" handler={() => setPwdMatch(true)}/>
+      <InputTemplate
+        inputType="password"
+        labelText="비밀번호: "
+        inputFor="PWD"
+        handler={() => {
+          setIsValid(true);
+        }}
+        placeholder='비밀번호 (8~16자 이내, 영문, 숫자, 기호(!,@,#,$,%,^,&,*) 사용)'
+      />
+      <p
+        style={{
+          'color': 'red',
+          'fontWeight': 'bold',
+          'opacity': isValid ? '0' : '100%'
+        }}
+      >※ 비밀번호 형식과 맞지 않습니다.</p>
+      <InputTemplate
+        inputType="password"
+        labelText="비밀번호 확인: "
+        inputFor="PWD_check"
+        handler={() => setPwdMatch(true)}
+        placeholder='비밀번호를 한 번 더 입력해주세요.'
+      />
       <p
         style={{
           'color': 'red',
@@ -57,7 +101,6 @@ const ChangePwd = ({ token, reqTime }) => {
           'opacity': pwdMatch ? '0' : '100%'
         }}
       >※ 비밀번호가 일치하지 않습니다.</p>
-      <InputTemplate inputType="password" labelText="비밀번호 확인: " inputFor="PWD_check" handler={() => setPwdMatch(true)}/>
       <FormSubmit />
     </form>
   );
