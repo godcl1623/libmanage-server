@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { encryptor, decryptor } from '../../custom_modules/aeser';
 import { hasher } from '../../custom_modules/hasher';
@@ -8,11 +8,12 @@ import InputTemplate from './module/components/InputTemplate';
 import { verifyId, verifyPwd, verifyNick, verifyEmail } from './module/utils';
 
 const Register = () => {
-  const [pwdMatch, setPwdMatch] = React.useState(true);
-  const [emailState, setEmailState] = React.useState('');
-  const [idState, setIdState] = React.useState('');
-  const [nickState, setNickState] = React.useState('');
-  const [emailAuth, setEmailAuth] = React.useState('');
+  const [pwdMatch, setPwdMatch] = useState(true);
+  const [emailState, setEmailState] = useState('');
+  const [idState, setIdState] = useState('');
+  const [pwdState, setPwdState] = useState('');
+  const [nickState, setNickState] = useState('');
+  const [emailAuth, setEmailAuth] = useState('');
 
   const customOption = (state, func) => {
     if (state === 'others') {
@@ -29,14 +30,18 @@ const Register = () => {
     );
   };
 
-  const verifyTest = () => {
-    if (idState === 1) {
-      return '※ 이미 사용중인 ID입니다.';
+  const verifyTest = (verifyValue, verifyState) => {
+    if (verifyValue !== '비밀번호') {
+      if (verifyState === 1) {
+        return `※ 이미 사용중인 ${verifyValue}입니다.`;
+      }
+      if (verifyState === 'wrong') {
+        return `※ ${verifyValue} 형식과 맞지 않습니다.`;
+      }
+    } else if (verifyState === 'wrong') {
+      return `※ ${verifyValue} 형식과 맞지 않습니다.`;
     }
-    if (idState === 'wrong') {
-      return 'verifyTest';
-    }
-    return '';
+    return '　';
   }
 
   return (
@@ -71,14 +76,40 @@ const Register = () => {
           const select = document.querySelector('select');
           const formData = {
             id: e.target.ID.value,
-            pwd: hasher(e.target.PWD.value),
+            pwd: e.target.PWD.value,
             nick: e.target.nickname.value,
             email: `${e.target.email_id.value}@${e.target.email_provider.value}`
           }
-          const existCheck = async () => {
+          const sofo = {}
+          const checkInputVal = (id, pwd, nick, email) => {
+            if (verifyId(id) && verifyPwd(pwd) && verifyNick(nick) && verifyEmail(email)) {
+              setIdState('');
+              setPwdState('');
+              setNickState('');
+              setEmailAuth('');
+              return true;
+            }
+            if (!verifyId(id)) {
+              setIdState('wrong');
+              return false;
+            }
+            if (!verifyPwd(pwd)) {
+              setPwdState('wrong');
+              return false;
+            }
+            if (!verifyNick(nick)) {
+              setNickState('wrong');
+              return false;
+            }
+            if (!verifyEmail(email)) {
+              setEmailState('wrong');
+              return false;
+            }
+          };
+          const existCheck = async sofo => {
             await axios.post(
               'http://localhost:3002/member/register',
-              {foo: encryptor(formData, tracer)},
+              {foo: encryptor(sofo, tracer)},
               { withCredentials: true })
             .then(res => {
               const tempObj = decryptor(res.data, tracer);
@@ -90,15 +121,26 @@ const Register = () => {
           }
           if (select) {
             if (isEmpty[0] === undefined && select.value !== '') {
-              // existCheck();
-              if (verifyId(formData.id) === false) {
-                setIdState('wrong');
+              if (checkInputVal(formData.id, formData.pwd, formData.nick, formData.email)) {
+                sofo.id = formData.id;
+                sofo.pwd = hasher(formData.pwd);
+                sofo.nick = formData.nick;
+                sofo.email = formData.email;
+                // existCheck(sofo);
+                console.log(sofo);
               }
             } else {
               alert('정보를 전부 입력해주세요');
             }
           } else if (isEmpty[0] === undefined) {
-              // existCheck();
+            if (checkInputVal(formData.id, formData.pwd, formData.nick, formData.email)) {
+              sofo.id = formData.id;
+              sofo.pwd = hasher(formData.pwd);
+              sofo.nick = formData.nick;
+              sofo.email = formData.email;
+              // existCheck(sofo);
+              console.log(sofo);
+            }
           } else {
             alert('정보를 전부 입력해주세요');
           }
@@ -117,14 +159,24 @@ const Register = () => {
             'fontWeight': 'bold',
             'opacity': (idState !== 1 && idState !== 'wrong') ? '0' : '100%'
           }}
-        >{verifyTest()}</p>
+        >{verifyTest('ID', idState)}</p>
         <InputTemplate
           inputType="password"
           labelText="비밀번호: "
           inputFor="PWD"
-          handler={() => setPwdMatch(true)}
+          handler={() => {
+            setPwdMatch(true);
+            setPwdState('');
+          }}
           placeholder='비밀번호 (8~16자 이내, 영문 대소문자/숫자/기호(!,@,#,$,%,^,&,*)를 모두 포함해야 합니다.)'
         />
+        <p
+          style={{
+            'color': 'red',
+            'fontWeight': 'bold',
+            'opacity': pwdState !== 'wrong' ? '0' : '100%'
+          }}
+        >{verifyTest('비밀번호', pwdState)}</p>
         <InputTemplate
           inputType="password"
           labelText="비밀번호 확인: "
@@ -150,9 +202,9 @@ const Register = () => {
           style={{
             'color': 'red',
             'fontWeight': 'bold',
-            'opacity': nickState !== 1 ? '0' : '100%'
+            'opacity': (nickState !== 1 && nickState !== 'wrong') ? '0' : '100%'
           }}
-        >※ 이미 사용중인 별명입니다.</p>
+        >{ verifyTest('별명', nickState) }</p>
         {/* <label htmlFor="email_id">이메일: </label>
         <input type="text" name="email_id" onChange={() => setEmailAuth('')} /> */}
         <InputTemplate inputType="text" labelText="이메일: " inputFor="email_id" handler={() => setEmailAuth('')} />
@@ -162,9 +214,9 @@ const Register = () => {
           style={{
             'color': 'red',
             'fontWeight': 'bold',
-            'opacity': emailAuth !== 1 ? '0' : '100%'
+            'opacity': (emailAuth !== 1 && emailAuth !== 'wrong') ? '0' : '100%'
           }}
-        >※ 이미 사용중인 이메일 주소입니다.</p>
+        >{ verifyTest('이메일 주소', emailAuth) }</p>
         <FormSubmit />
       </form>
     </article>
