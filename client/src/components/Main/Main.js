@@ -20,6 +20,9 @@ const Main = () => {
       .then(res => {
         if (res.data.isLoginSuccessful) {
           dispatch(loginStatusCreator(res.data.isLoginSuccessful));
+        } else if (res.data.isGuest) {
+          // 임시로 작성
+          dispatch(loginStatusCreator(true));
         } else {
           alert('로그인이 필요합니다');
           history.push('/');

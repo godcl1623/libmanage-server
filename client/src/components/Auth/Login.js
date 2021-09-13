@@ -8,6 +8,19 @@ import { hasher, salter } from '../../custom_modules/hasher';
 import { encryptor } from '../../custom_modules/aeser';
 import { tracer } from '../../custom_modules/security/fes';
 
+const loginException = (dispatch, history) => {
+  const formData = {
+    mode: 'guest',
+  }
+  axios.post('http://localhost:3002/login_process', { sofo: encryptor(formData, tracer) }, { withCredentials: true })
+    .then(res => {
+      // 임시로 작성
+      dispatch(loginStatusCreator(true));
+      history.push('/main');
+    })
+    .catch(err => alert(err));
+}
+
 const Login = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const dispatch = useDispatch();
@@ -18,6 +31,10 @@ const Login = () => {
     .then(res => {
       if (res.data.isLoginSuccessful) {
         dispatch(loginStatusCreator(res.data.isLoginSuccessful));
+        history.push('/main');
+      } else if (res.data.isGuest) {
+        // 임시로 작성
+        dispatch(loginStatusCreator(true));
         history.push('/main');
       } else {
         // alert(res.data);
@@ -82,6 +99,7 @@ const Login = () => {
         <Link to="/member/register">회원가입</Link>
         <Link to="/member/find">ID/PW 찾기</Link>
       </div>
+      <button onClick={() => loginException(dispatch, history)}>게스트 로그인</button>
       <button>오프라인으로 접속</button>
     </article>
     );

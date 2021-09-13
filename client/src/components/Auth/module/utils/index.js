@@ -17,4 +17,6 @@ export const verifyNick = string => {
 export const verifyEmail = string => {
   const form = /^[A-Za-z0-9_.-]+@[A-Za-z0-9-]+\.[A-Za-z0-9-]+/;
   return form.test(string);
-}
+};
+
+export const getRandom = () => String(Math.random()).split('.')[1].slice(0, 6);

@@ -13,6 +13,7 @@ const db = require('../custom_modules/db');
 const { encryptor, decryptor } = require('../custom_modules/aeser');
 const { tracer } = require('../custom_modules/security/fes');
 const swallow = require('../custom_modules/security/swallow');
+const { getRandom } = require('../custom_modules/utils');
 
 let loginInfo = {};
 let dbInfo = {};
@@ -36,7 +37,7 @@ app.use(helmet(), compression());
 app.use(session({
   secret: 'piano',
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
   cookie: {
     samesite: 'none',
     // secure: true,
@@ -86,8 +87,8 @@ app.post('/test_get', (req, res) => {
 
 app.post('/login_process', (req, res) => {
   loginInfo = decryptor(req.body.sofo, tracer);
-  loginInfo.salt = bcrypt.getSalt(loginInfo.PWD);
-  if (loginInfo.ID !== '' && loginInfo.PWD !== '') {
+  if (loginInfo.ID !== undefined && loginInfo.PWD !== undefined) {
+    loginInfo.salt = bcrypt.getSalt(loginInfo.PWD);
     db.query('select * from user_info where user_id=?', [loginInfo.ID], (error, result) => {
       if (error) throw error;
       if (result[0] === undefined) {
@@ -106,6 +107,14 @@ app.post('/login_process', (req, res) => {
         }
       }
     });
+  } else if (loginInfo.mode === 'guest') {
+    const newGuest = `guest#${getRandom()}`;
+    req.session.loginInfo = {
+      isLoginSuccessful: false,
+      nickname: newGuest,
+      isGuest: true
+    }
+    req.session.save(() => res.send(req.session.loginInfo));
   } else {
     res.send('ID와 비밀번호를 입력해주세요.');
   }
