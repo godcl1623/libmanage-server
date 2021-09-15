@@ -7,6 +7,7 @@ import Header from './Header';
 import Library from './Library';
 import Meta from './Meta';
 import Navigation from './Navigation';
+import Modal from '../Modal/Modal';
 import { loginStatusCreator, userStateCreator } from '../../actions';
 
 const Main = () => {
@@ -43,33 +44,36 @@ const Main = () => {
   } 
 
   return (
-    <main
-      id="main"
-      style={{
-        'width': '100%',
-        'height': '100vh',
-        'display': 'flex',
-        'flex-direction': 'column',
-        'justify-content': 'center',
-        'align-content': 'center'
-      }}
-    >
-      <Header />
-      <div
-        id="main-contents"
+    <>
+      <main
+        id="main"
         style={{
           'width': '100%',
-          'height': '100%',
+          'height': '100vh',
           'display': 'flex',
-          'justify-content': 'center',
-          'align-content': 'center'
+          'flexDirection': 'column',
+          'justifyContent': 'center',
+          'alignContent': 'center'
         }}
       >
-        <Navigation />
-        <Library />
-        <Meta />
-      </div>
-    </main>
+        <Header />
+        <div
+          id="main-contents"
+          style={{
+            'width': '100%',
+            'height': '100%',
+            'display': 'flex',
+            'justifyContent': 'center',
+            'alignContent': 'center'
+          }}
+        >
+          <Navigation />
+          <Library />
+          <Meta />
+        </div>
+      </main>
+      <Modal />
+    </>
   );
 };
 

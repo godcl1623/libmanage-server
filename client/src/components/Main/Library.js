@@ -23,8 +23,8 @@ const Library = () => {
   const style = {
     'padding': '20px',
     'display': balloonState,
-    'justify-content': 'center',
-    'align-items': 'center',
+    'justifyContent': 'center',
+    'alignItems': 'center',
     'width': '300px',
     'height': '100px',
     'position': 'absolute',

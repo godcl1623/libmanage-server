@@ -3,32 +3,48 @@ import { useHistory } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import Balloon from '../Modal/Balloon';
-import { loginStatusCreator, logoutClickedCreator } from '../../actions';
+import { loginStatusCreator, logoutClickedCreator, modalStateCreator } from '../../actions';
 
-const Options = () => (
-  <>
-    <button
-      style={{
-        'width': '80%',
-        'height': '50%'
-      }}
-    >스토어 추가</button>
-    <button
-      style={{
-        'width': '80%',
-        'height': '50%'
-      }}
-    >라이브러리 추가</button>
-  </>
-);
 
 
 const Header = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const userState = useSelector(state => state.userState);
+  const modalState = useSelector(state => state.modalState);
   const [balloonState, setBalloonState] = useState('none');
   const history = useHistory();
   const dispatch = useDispatch();
+
+  const Options = () => (
+    <>
+      <button
+        style={{
+          'width': '80%',
+          'height': '50%'
+        }}
+        onClick={() => {
+          if (!modalState) {
+            dispatch(modalStateCreator(true))
+          } else {
+            dispatch(modalStateCreator(false))
+          }
+        }}
+      >스토어 추가</button>
+      <button
+        style={{
+          'width': '80%',
+          'height': '50%'
+        }}
+        onClick={() => {
+          if (!modalState) {
+            dispatch(modalStateCreator(true))
+          } else {
+            dispatch(modalStateCreator(false))
+          }
+        }}
+      >라이브러리 추가</button>
+    </>
+  );
 
   const memberStatus = (
     loginStatus === true
@@ -69,15 +85,16 @@ const Header = () => {
   const style = {
     'padding': '20px',
     'display': balloonState,
-    'flex-direction': 'column',
-    'justify-content': 'center',
-    'align-items': 'center',
+    'flexDirection': 'column',
+    'justifyContent': 'center',
+    'alignItems': 'center',
     'width': '300px',
     'height': '100px',
     'position': 'absolute',
     'top': '0',
     'left': '100px',
-    'background': 'white'
+    'background': 'white',
+    'zIndex': 1
   };
 
   const hand = {
@@ -96,8 +113,8 @@ const Header = () => {
       id="header"
       style={{
         'display': 'flex',
-        'justify-content': 'space-between',
-        'align-content': 'center'
+        'justifyContent': 'space-between',
+        'alignContent': 'center'
       }}
     >
       <button

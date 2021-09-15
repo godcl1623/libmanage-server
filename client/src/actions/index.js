@@ -17,3 +17,8 @@ export const userStateCreator = obj => ({
   type: 'USER_STATE',
   payload: obj
 });
+
+export const modalStateCreator = boolean => ({
+  type: 'MODAL_STATE',
+  payload: boolean
+});
