@@ -7,11 +7,13 @@ import Header from './Header';
 import Library from './Library';
 import Meta from './Meta';
 import Navigation from './Navigation';
-import { loginStatusCreator } from '../../actions';
+import Modal from '../Modal/Modal';
+import { loginStatusCreator, userStateCreator } from '../../actions';
 
 const Main = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const logoutClicked = useSelector(state => state.logoutClicked);
+  const userState = useSelector(state => state.userState);
   const dispatch = useDispatch();
   const history = useHistory();
 
@@ -20,6 +22,15 @@ const Main = () => {
       .then(res => {
         if (res.data.isLoginSuccessful) {
           dispatch(loginStatusCreator(res.data.isLoginSuccessful));
+          if (userState.nickname === undefined) {
+            dispatch(userStateCreator(res.data));
+          }
+        } else if (res.data.isGuest) {
+          // 임시로 작성
+          dispatch(loginStatusCreator(true));
+          if (userState.nickname === undefined) {
+            dispatch(userStateCreator(res.data));
+          }
         } else {
           alert('로그인이 필요합니다');
           history.push('/');
@@ -33,33 +44,36 @@ const Main = () => {
   } 
 
   return (
-    <main
-      id="main"
-      style={{
-        'width': '100%',
-        'height': '100vh',
-        'display': 'flex',
-        'flex-direction': 'column',
-        'justify-content': 'center',
-        'align-content': 'center'
-      }}
-    >
-      <Header />
-      <div
-        id="main-contents"
+    <>
+      <main
+        id="main"
         style={{
           'width': '100%',
-          'height': '100%',
+          'height': '100vh',
           'display': 'flex',
-          'justify-content': 'center',
-          'align-content': 'center'
+          'flexDirection': 'column',
+          'justifyContent': 'center',
+          'alignContent': 'center'
         }}
       >
-        <Navigation />
-        <Library />
-        <Meta />
-      </div>
-    </main>
+        <Header />
+        <div
+          id="main-contents"
+          style={{
+            'width': '100%',
+            'height': '100%',
+            'display': 'flex',
+            'justifyContent': 'center',
+            'alignContent': 'center'
+          }}
+        >
+          <Navigation />
+          <Library />
+          <Meta />
+        </div>
+      </main>
+      <Modal />
+    </>
   );
 };
 

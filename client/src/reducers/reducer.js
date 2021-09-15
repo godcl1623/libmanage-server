@@ -12,8 +12,32 @@ const logoutClickedReducer = (status = false, action) => {
   return status;
 }
 
+const tokenStateReducer = (status = '', action) => {
+  if (action.type === 'TOKEN_STATE') {
+    return action.payload;
+  }
+  return status;
+}
+
+const userStateReducer = (status = {}, action) => {
+  if (action.type === 'USER_STATE') {
+    return {
+      ...status,
+      ...action.payload
+    }
+  }
+  return status;
+};
+
+const modalStateReducer = (status = false, action) => {
+  if (action.type === 'MODAL_STATE') {
+    return action.payload;
+  }
+  return status;
+}
+
 const tempStore = {
-  loginStatusReducer, logoutClickedReducer
+  loginStatusReducer, logoutClickedReducer, tokenStateReducer, userStateReducer, modalStateReducer
 }
 
 export default tempStore;
