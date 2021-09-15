@@ -6,10 +6,11 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const FileStore = require('session-file-store')(session);
+const MySQLStore = require('express-mysql-session')(session);
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-const db = require('../custom_modules/db');
+const { db, dbOptions } = require('../custom_modules/db');
 const { encryptor, decryptor } = require('../custom_modules/aeser');
 const { tracer } = require('../custom_modules/security/fes');
 const swallow = require('../custom_modules/security/swallow');
@@ -43,8 +44,10 @@ app.use(session({
     // secure: true,
     maxAge: 60 * 60 * 60 * 1000
   },
-  store: new FileStore()
+  // store: new FileStore()
+  store: new MySQLStore(dbOptions, db)
 }));
+db.connect();
 
 app.get('/', (req, res) => {
   res.send('login server');
