@@ -19,8 +19,18 @@ const tokenStateReducer = (status = '', action) => {
   return status;
 }
 
+const userStateReducer = (status = {}, action) => {
+  if (action.type === 'USER_STATE') {
+    return {
+      ...status,
+      ...action.payload
+    }
+  }
+  return status;
+};
+
 const tempStore = {
-  loginStatusReducer, logoutClickedReducer, tokenStateReducer
+  loginStatusReducer, logoutClickedReducer, tokenStateReducer, userStateReducer
 }
 
 export default tempStore;

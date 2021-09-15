@@ -99,7 +99,8 @@ app.post('/login_process', (req, res) => {
         if (loginInfo.ID === dbInfo.user_id && loginInfo.PWD === comparison) {
           req.session.loginInfo = {
             isLoginSuccessful: true,
-            nickname: dbInfo.user_nick
+            nickname: dbInfo.user_nick,
+            isGuest: false
           }
           req.session.save(() => res.send(req.session.loginInfo));
         } else {

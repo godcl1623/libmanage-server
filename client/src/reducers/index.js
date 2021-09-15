@@ -4,5 +4,6 @@ import tempStore from './reducer';
 export default combineReducers({
   loginStatus:tempStore.loginStatusReducer,
   logoutClicked: tempStore.logoutClickedReducer,
-  tokenState: tempStore.tokenStateReducer
+  tokenState: tempStore.tokenStateReducer,
+  userState: tempStore.userStateReducer
 });

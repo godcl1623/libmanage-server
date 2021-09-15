@@ -7,11 +7,12 @@ import Header from './Header';
 import Library from './Library';
 import Meta from './Meta';
 import Navigation from './Navigation';
-import { loginStatusCreator } from '../../actions';
+import { loginStatusCreator, userStateCreator } from '../../actions';
 
 const Main = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const logoutClicked = useSelector(state => state.logoutClicked);
+  const userState = useSelector(state => state.userState);
   const dispatch = useDispatch();
   const history = useHistory();
 
@@ -20,9 +21,15 @@ const Main = () => {
       .then(res => {
         if (res.data.isLoginSuccessful) {
           dispatch(loginStatusCreator(res.data.isLoginSuccessful));
+          if (userState.nickname === undefined) {
+            dispatch(userStateCreator(res.data));
+          }
         } else if (res.data.isGuest) {
           // 임시로 작성
           dispatch(loginStatusCreator(true));
+          if (userState.nickname === undefined) {
+            dispatch(userStateCreator(res.data));
+          }
         } else {
           alert('로그인이 필요합니다');
           history.push('/');

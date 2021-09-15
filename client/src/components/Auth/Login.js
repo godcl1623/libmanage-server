@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
-import { loginStatusCreator } from '../../actions';
+import { loginStatusCreator, userStateCreator } from '../../actions';
 import { hasher, salter } from '../../custom_modules/hasher';
 import { encryptor } from '../../custom_modules/aeser';
 import { tracer } from '../../custom_modules/security/fes';
@@ -16,6 +16,8 @@ const loginException = (dispatch, history) => {
     .then(res => {
       // 임시로 작성
       dispatch(loginStatusCreator(true));
+      dispatch(userStateCreator(res.data));
+      alert('현재 게스트로 로그인했습니다.\n데이터 보존을 위해 회원으로 로그인해 주세요.');
       history.push('/main');
     })
     .catch(err => alert(err));
@@ -23,6 +25,7 @@ const loginException = (dispatch, history) => {
 
 const Login = () => {
   const loginStatus = useSelector(state => state.loginStatus);
+  const userState = useSelector(state => state.userState);
   const dispatch = useDispatch();
   const history = useHistory();
 
@@ -32,10 +35,16 @@ const Login = () => {
       if (res.data.isLoginSuccessful) {
         dispatch(loginStatusCreator(res.data.isLoginSuccessful));
         history.push('/main');
+        if (userState.nickname === undefined) {
+          dispatch(userStateCreator(res.data));
+        }
       } else if (res.data.isGuest) {
         // 임시로 작성
         dispatch(loginStatusCreator(true));
         history.push('/main');
+        if (userState.nickname === undefined) {
+          dispatch(userStateCreator(res.data));
+        }
       } else {
         // alert(res.data);
       }
@@ -78,8 +87,9 @@ const Login = () => {
           }
           axios.post('http://localhost:3002/login_process', {sofo: encryptor(formData, tracer)}, { withCredentials: true })
           .then(res => {
-            if (res.data.isLoginSuccessful) {
+            if (res.data.isLoginSuccessful && !res.data.isGuest) {
               dispatch(loginStatusCreator(res.data.isLoginSuccessful));
+              dispatch(userStateCreator(res.data));
               alert(`${res.data.nickname}님, 로그인에 성공했습니다.`);
               history.push('/main');
             } else {

@@ -12,3 +12,8 @@ export const tokenStateCreator = string => ({
   type: 'TOKEN_STATE',
   payload: string
 });
+
+export const userStateCreator = obj => ({
+  type: 'USER_STATE',
+  payload: obj
+});

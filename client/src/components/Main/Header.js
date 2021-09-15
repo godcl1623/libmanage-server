@@ -25,6 +25,7 @@ const Options = () => (
 
 const Header = () => {
   const loginStatus = useSelector(state => state.loginStatus);
+  const userState = useSelector(state => state.userState);
   const [balloonState, setBalloonState] = useState('none');
   const history = useHistory();
   const dispatch = useDispatch();
@@ -115,6 +116,7 @@ const Header = () => {
         <button>검색옵션</button>
       </form>
       {/* <button>로그인</button> */}
+      { userState.nickname }
       { memberStatus }
     </header>
   );
