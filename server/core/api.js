@@ -3,10 +3,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-const passport = require('passport');
-const util = require('util');
-const session = require('express-session');
 const { db, dbOptions } = require('../custom_modules/db');
+const { cyber, blade } = require('../custom_modules/security/fes');
 
 const app = express();
 const port = 3003;

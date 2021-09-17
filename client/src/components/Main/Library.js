@@ -1,4 +1,5 @@
 import React from 'react';
+import axios from 'axios';
 import Balloon from '../Modal/Balloon';
 
 const Options = () => (
@@ -69,6 +70,13 @@ const Library = () => {
         <li>라이브러리 4</li>
         <li>라이브러리 5</li>
       </ul>
+      <button
+        onClick={e => {
+          e.preventDefault();
+          axios.get('http://localhost:3010/test')
+            .then(res => alert(res.data));
+        }}
+      >스팀으로 로그인</button>
     </article>
   );
 };
