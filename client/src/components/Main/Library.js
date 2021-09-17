@@ -70,13 +70,18 @@ const Library = () => {
         <li>라이브러리 4</li>
         <li>라이브러리 5</li>
       </ul>
-      <button
+      {/* <button
         onClick={e => {
           e.preventDefault();
-          axios.get('http://localhost:3010/test')
-            .then(res => alert(res.data));
+          axios.get('http://localhost:3010/auth/steam', { withCredentials: true })
+            .then(res => console.log(res.data));
         }}
-      >스팀으로 로그인</button>
+      >스팀으로 로그인</button> */}
+      <a
+        href="http://localhost:3010/auth/steam"
+        target="_blank"
+        rel="noreferrer"
+      >스팀으로 로그인</a>
     </article>
   );
 };

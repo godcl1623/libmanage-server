@@ -42,19 +42,16 @@ passport.use(new SteamStrategy({
   (identifier, profile, done) => {
     process.nextTick(() => {
       profile.identifier = identifier;
-      console.log(identifier, profile, done(null, profile));
       return done(null, profile);
     });
   }
 ));
 
 passport.serializeUser((user, done) => {
-  console.log(done(null, user));
   done(null, user);
 });
 
 passport.deserializeUser((user, done) => {
-  console.log(done(null, user));
   done(null, user);
 });
 
@@ -68,16 +65,19 @@ app.use(passport.session());
 
 app.get('/auth/steam',
   passport.authenticate('steam', {
-    failureRedirect: '/login'
+    failureRedirect: '/login',
+    session: false
   }),
   (req, res) => {
 });
 
 app.get('/auth/steam/return',
   passport.authenticate('steam', {
-    failureRedirect: '/login'
+    failureRedirect: '/login',
+    session: false
   }),
   (req, res) => {
+    console.log(req.user)
     res.redirect('/');
   }
 )
@@ -103,7 +103,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/test', (req, res) => {
-  res.send(test)
+  res.redirect('http://localhost:3000/');
 });
 
 
