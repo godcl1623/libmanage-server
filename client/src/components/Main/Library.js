@@ -13,6 +13,16 @@ const Options = () => (
 
 const Library = () => {
   const [balloonState, setBalloonState] = React.useState('none');
+  const [apiData, setApiData] = React.useState('');
+
+  const handler = (name, value) => {
+    setApiData(prevState => ({
+      ...prevState,
+      [name]: value
+    }))
+  }
+
+  React.useEffect(() => {console.log(apiData)}, [apiData])
 
   const wrapper = {
     'display': balloonState,
@@ -78,10 +88,32 @@ const Library = () => {
         }}
       >스팀으로 로그인</button> */}
       <a
+        // href="http://localhost:3010/auth/steam"
         href="http://localhost:3010/auth/steam"
         target="_blank"
         rel="noreferrer"
       >스팀으로 로그인</a>
+      <button
+        onClick={e => {
+          e.preventDefault();
+          axios.post('http://localhost:3010/api_test', { execute: 'order66' }, { withCredentials: true})
+            .then(res => {
+              // console.log(res.data)
+              handler('token', res.data.access_token);
+              handler('cid', res.data.cid);
+            });
+        }}
+      >api test</button>
+      <button
+        onClick={e => {
+          e.preventDefault();
+          axios.post('http://localhost:3010/db_test', {
+            cid: apiData.cid,
+            token: apiData.token
+          }, { withCredentials: true })
+            .then(res => console.log(res))
+        }}
+      >db test</button>
     </article>
   );
 };

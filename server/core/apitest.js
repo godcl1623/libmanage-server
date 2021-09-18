@@ -18,8 +18,9 @@ const compression = require('compression');
 const session = require('express-session');
 const passport = require('passport');
 const SteamStrategy = require('passport-steam').Strategy;
+const axios = require('axios');
 const { db, dbOptions } = require('../custom_modules/db');
-const { cyber, blade } = require('../custom_modules/security/fes');
+const { cyber, blade, owl } = require('../custom_modules/security/fes');
 
 const app = express();
 const port = 3010;
@@ -69,6 +70,7 @@ app.get('/auth/steam',
     session: false
   }),
   (req, res) => {
+    res.send('test')
 });
 
 app.get('/auth/steam/return',
@@ -78,7 +80,9 @@ app.get('/auth/steam/return',
   }),
   (req, res) => {
     console.log(req.user)
-    res.redirect('/');
+    // res.redirect('/');
+    // res.redirect('/close');
+    res.redirect('/test')
   }
 )
 
@@ -86,25 +90,54 @@ app.get('/login', (req, res) => {
   res.send('failed');
 })
 
-app.get('/logout', (req, res) => {
-  req.logout();
-  res.redirect('/');
+app.get('/close', (req, res) => {
+  res.send('<script>window.close();</script>');
 })
 
-app.get('/', (req, res) => {
-  // res.send('api server');
-  if (req.user) {
-    res.send('Stored in session when logged : <br><br> ' + 
-    JSON.stringify(req.user) + '<br><br>' +
-    '<a href="/logout">Logout</a>');
-  } else {
-    res.send('Not connected : <a href="/auth/steam"><img src="https://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_small.png"></a>');
+// app.get('/logout', (req, res) => {
+//   req.logout();
+//   res.redirect('/');
+// })
+
+// app.get('/', (req, res) => {
+//   // res.send('api server');
+//   if (req.user) {
+//     res.send('Stored in session when logged : <br><br> ' + 
+//     JSON.stringify(req.user) + '<br><br>' +
+//     '<a href="/logout">Logout</a>');
+//   } else {
+//     res.send('Not connected : <a href="/auth/steam"><img src="https://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_small.png"></a>');
+//   }
+// });
+
+app.get('/test', (req, res) => {
+  // res.redirect('/close');
+  res.send('test')
+});
+
+app.post('/api_test', (req, res) => {
+  if (req.body.execute === 'order66') {
+    const cid = `client_id=${owl.me}`;
+    const secret = `client_secret=${owl.spell}`;
+    const cred = 'grant_type=client_credentials';
+    const address = `https://id.twitch.tv/oauth2/token?${cid}&${secret}&${cred}`;
+    axios.post(address)
+      .then(response => {
+        response.data.cid = owl.me;
+        res.json(response.data)
+      });
   }
 });
 
-app.get('/test', (req, res) => {
-  res.redirect('http://localhost:3000/');
+app.post('/db_test', (req, res) => {
+  const { cid, token } = req.body;
+  const address = `https://api.igdb.com/v4/games?limit=5&search=assassin's_creed&fields=id,name`;
+  axios.post(address, {}, {
+    headers: {
+      'Client-ID': cid,
+      Authorization: `Bearer ${token}`
+    }
+  }).then(result => console.log(result.data))
 });
-
 
 app.listen(port, () => console.log(`server is running at port${port}`));
