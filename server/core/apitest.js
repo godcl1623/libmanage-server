@@ -33,6 +33,15 @@ app.use(cors({
 app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded());
 app.use(helmet(), compression());
+app.use(
+  csp({
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"]
+    }
+  })
+);
 db.connect();
 
 passport.use(new SteamStrategy({
@@ -112,7 +121,7 @@ app.get('/close', (req, res) => {
 
 app.get('/test', (req, res) => {
   // res.redirect('/close');
-  res.send('test')
+  res.redirect('http://localhost:3000/main');
 });
 
 app.post('/api_test', (req, res) => {

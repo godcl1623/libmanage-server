@@ -90,8 +90,6 @@ const Library = () => {
       <a
         // href="http://localhost:3010/auth/steam"
         href="http://localhost:3010/auth/steam"
-        target="_blank"
-        rel="noreferrer"
       >스팀으로 로그인</a>
       <button
         onClick={e => {
