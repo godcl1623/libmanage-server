@@ -13,7 +13,7 @@ const { cyber, blade, owl } = require('../custom_modules/security/fes');
 const app = express();
 const port = 3003;
 let uid = '';
-let test = '';
+let gameList = '';
 
 app.use(cors({
   origin: true,
@@ -68,10 +68,31 @@ app.get('/auth/steam/return',
     session: false
   }),
   (req, res) => {
+    // 1. 스팀 로그인 성공 후 사용자 아이디를 반환
     uid = req.user.id;
+    // 2. 반환받은 사용자 아이디로 게임 목록 호출, 제목만 추출한 후 알파벳 순 정렬
     const getOwnedGames = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?include_appinfo=1&include_played_free_games=1&key=${cyber}&steamid=${uid}&format=json`;
-    axios.get(getOwnedGames).then(result => console.log(result.data.response.games));
-    res.redirect('http://localhost:3000/main')
+    axios.get(getOwnedGames)
+      .then(result => {
+        const rawGamesData = result.data.response.games;
+        const tempArr = [];
+        rawGamesData.forEach(gameDataObj => {
+          tempArr.push(gameDataObj.name)
+        });
+        const sortedTempArr = tempArr.sort((prev, next) => prev < next ? -1 : 1);
+        // 정렬된 게임 목록을 변수 gameList로 업데이트
+        gameList = sortedTempArr
+      })
+      .then(() => {
+        axios.post(`http://localhost:${port}/api_test`, { execute: 'order66' })
+          .then(result => {
+            axios.post(`http://localhost:${port}/db_test`, { test: result.data })
+            .then(
+              // result => console.log(result)
+            );
+          })
+      })
+      // .then(() => res.redirect('http://localhost:3000/main'));
   }
 )
 
@@ -93,6 +114,7 @@ app.get('/test', (req, res) => {
   res.send(uid);
 });
 
+// 프론트에서 처리하도록 수정
 app.post('/api_test', (req, res) => {
   if (req.body.execute === 'order66') {
     const cid = `client_id=${owl.me}`;
@@ -108,14 +130,43 @@ app.post('/api_test', (req, res) => {
 });
 
 app.post('/db_test', (req, res) => {
-  const { cid, token } = req.body;
-  const address = `https://api.igdb.com/v4/games?limit=5&search=assassin's_creed&fields=id,name`;
-  axios.post(address, {}, {
-    headers: {
-      'Client-ID': cid,
-      Authorization: `Bearer ${token}`
-    }
-  }).then(result => console.log(result.data))
+  // console.log(req.body.gameList);
+  const { cid, access_token: token } = req.body.test;
+  const tempArr = [];
+  // gameList.forEach((game, index) => {
+  //   setTimeout(() => {
+  //     // tempArr.push(game);
+  //     // if (tempArr.length === gameList.length) {
+  //     //   console.log(tempArr);
+  //     // }
+  //     console.log(game)
+  //   }, index * 10);
+  // })
+  const tempList = ["Assassin's Creed"]
+  // gameList.forEach((game, index) => {
+  tempList.forEach((game, index) => {
+    setTimeout(() => {
+      const address = `https://api.igdb.com/v4/games?limit=99&search=${game}&fields=id,name`;
+      axios.post(address, {}, {
+        headers: {
+          'Client-ID': cid,
+          Authorization: `Bearer ${token}`
+        }
+      })
+        .then(result => {
+          const rawData = result.data;
+          // const test = rawData.find(obj => obj.name === game);
+          // console.log(test)
+          console.log(rawData);
+          // tempArr.push(test);
+          // console.lo(result.data)
+          // res.send(result.ata);
+        })
+        if (tempArr.length === gameList.length) {
+          console.log(tempArr)
+        }
+    }, index * 600);
+  });
 });
 
 app.listen(port, () => console.log(`server is running at port${port}`));
