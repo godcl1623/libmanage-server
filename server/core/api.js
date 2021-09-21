@@ -12,7 +12,8 @@ const { cyber, blade, owl } = require('../custom_modules/security/fes');
 
 const app = express();
 const port = 3003;
-const test = 'message sent from api server';
+let uid = '';
+let test = '';
 
 app.use(cors({
   origin: true,
@@ -24,8 +25,8 @@ app.use(helmet(), compression());
 db.connect();
 
 passport.use(new SteamStrategy({
-    returnURL: 'http://localhost:3010/auth/steam/return',
-    realm: 'http://localhost:3010/',
+    returnURL: `http://localhost:${port}/auth/steam/return`,
+    realm: `http://localhost:${port}/`,
     apiKey: cyber
   },
   (identifier, profile, done) => {
@@ -67,10 +68,10 @@ app.get('/auth/steam/return',
     session: false
   }),
   (req, res) => {
-    console.log(req.user)
-    // res.redirect('/');
-    // res.redirect('/close');
-    res.redirect('/test')
+    uid = req.user.id;
+    const getOwnedGames = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?include_appinfo=1&include_played_free_games=1&key=${cyber}&steamid=${uid}&format=json`;
+    axios.get(getOwnedGames).then(result => console.log(result.data.response.games));
+    res.redirect('http://localhost:3000/main')
   }
 )
 
@@ -89,7 +90,7 @@ app.get('/', (req, res) => {
 
 app.get('/test', (req, res) => {
   // res.send(test)
-  res.redirect('http://localhost:3000/main');
+  res.send(uid);
 });
 
 app.post('/api_test', (req, res) => {

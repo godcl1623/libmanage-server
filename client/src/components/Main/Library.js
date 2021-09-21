@@ -24,6 +24,11 @@ const Library = () => {
 
   React.useEffect(() => {console.log(apiData)}, [apiData])
 
+  React.useEffect(() => {
+    axios.get('http://localhost:3003/test', { withCredentials: true })
+      .then(res => console.log(res));
+  }, []);
+
   const wrapper = {
     'display': balloonState,
     'position': 'absolute',
@@ -83,18 +88,17 @@ const Library = () => {
       {/* <button
         onClick={e => {
           e.preventDefault();
-          axios.get('http://localhost:3010/auth/steam', { withCredentials: true })
+          axios.get('http://localhost:3003/auth/steam/return', { withCredentials: true })
             .then(res => console.log(res.data));
         }}
       >스팀으로 로그인</button> */}
       <a
-        // href="http://localhost:3010/auth/steam"
-        href="http://localhost:3010/auth/steam"
+        href="http://localhost:3003/auth/steam"
       >스팀으로 로그인</a>
       <button
         onClick={e => {
           e.preventDefault();
-          axios.post('http://localhost:3010/api_test', { execute: 'order66' }, { withCredentials: true})
+          axios.post('http://localhost:3003/api_test', { execute: 'order66' }, { withCredentials: true})
             .then(res => {
               // console.log(res.data)
               handler('token', res.data.access_token);
