@@ -142,11 +142,12 @@ app.post('/db_test', (req, res) => {
   //     console.log(game)
   //   }, index * 10);
   // })
-  const tempList = ["Assassin's Creed"]
+  const tempList = ["Assassin's Creed III"]
   // gameList.forEach((game, index) => {
   tempList.forEach((game, index) => {
     setTimeout(() => {
-      const address = `https://api.igdb.com/v4/games?limit=99&search=${game}&fields=id,name`;
+      // const address = `https://api.igdb.com/v4/games?limit=99&search=${game}&fields=name,websites`;
+      const address = `https://api.igdb.com/v4/websites?url=208480`;
       axios.post(address, {}, {
         headers: {
           'Client-ID': cid,
@@ -155,7 +156,7 @@ app.post('/db_test', (req, res) => {
       })
         .then(result => {
           const rawData = result.data;
-          // const test = rawData.find(obj => obj.name === game);
+          const test = rawData.find(obj => obj.name === game);
           // console.log(test)
           console.log(rawData);
           // tempArr.push(test);
