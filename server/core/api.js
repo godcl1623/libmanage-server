@@ -72,17 +72,19 @@ app.get('/auth/steam/return',
     // 1. 스팀 로그인 성공 후 사용자 아이디를 반환
     uid = req.user.id;
     // 2. 반환받은 사용자 아이디로 게임 목록 호출, 제목만 추출한 후 알파벳 순 정렬
+    // 제목에서 appid로 변경 - url 대조를 위해
     const getOwnedGames = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?include_appinfo=1&include_played_free_games=1&key=${cyber}&steamid=${uid}&format=json`;
     axios.get(getOwnedGames)
       .then(result => {
         const rawGamesData = result.data.response.games;
         const tempArr = [];
         rawGamesData.forEach(gameDataObj => {
-          tempArr.push(gameDataObj.name)
+          tempArr.push(gameDataObj.appid)
         });
         const sortedTempArr = tempArr.sort((prev, next) => prev < next ? -1 : 1);
         // 정렬된 게임 목록을 변수 gameList로 업데이트
         gameList = sortedTempArr
+        // console.log(gameList);
       })
       .then(() => {
         axios.post(`http://localhost:${port}/api_test`, { execute: 'order66' })
@@ -138,24 +140,45 @@ app.post('/db_test', (req, res) => {
     (async function() {
       const response = await client
         .fields(['*'])
-        // .search(game)
-        // .where('url~*208480')
-        // .where('id=game')
-        .where(`category = 13 & url ~ *"0"`)
+        .where(`url = *"/${game}"*`)
         .request('/websites');
-        console.log(response.data)
+        if (response.data[0] === undefined) {
+          console.log(game)
+        } else {
+          console.log(game, response.data[0].game)
+        }
     })();
   }
-  test('13780');
-  const tempArr = [];
+  // appid로 검색이 되지 않는 경우 = igdb에 스팀 url이 등록되지 않음 혹은 진짜 없거나
+  // 메인 게임이 아님
+  const test2 = game => {
+    (async function() {
+      const response = await client
+        .fields(['*'])
+        // .search('cyberpunk 2077')
+        .where('name ~ "GOD EATER RESURRECTION"')
+        .request('/games');
+      console.log(response.data)
+    })();
+  }
+  const test3 = game => {
+    (async function() {
+      const response = await client
+        .fields(['*'])
+        .where(`id = ${game}`)
+        .request('/websites');
+        console.log(response.data);
+    })();
+  }
+  // const tempArr = [];
   // gameList.forEach((game, index) => {
   //   setTimeout(() => {
   //     // tempArr.push(game);
   //     // if (tempArr.length === gameList.length) {
   //     //   console.log(tempArr);
   //     // }
-  //     console.log(game)
-  //   }, index * 10);
+  //     test(game)
+  //   }, index * 400);
   // })
   // const tempList = ["Assassin's Creed III"]
   // gameList.forEach((game, index) => {
