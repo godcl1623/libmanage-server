@@ -7,6 +7,7 @@ const session = require('express-session');
 const passport = require('passport');
 const SteamStrategy = require('passport-steam').Strategy;
 const axios = require('axios');
+const igdb = require('igdb-api-node').default;
 const { db, dbOptions } = require('../custom_modules/db');
 const { cyber, blade, owl } = require('../custom_modules/security/fes');
 
@@ -132,6 +133,20 @@ app.post('/api_test', (req, res) => {
 app.post('/db_test', (req, res) => {
   // console.log(req.body.gameList);
   const { cid, access_token: token } = req.body.test;
+  const client = igdb(cid, token);
+  const test = game => {
+    (async function() {
+      const response = await client
+        .fields(['*'])
+        // .search(game)
+        // .where('url~*208480')
+        // .where('id=game')
+        .where(`category = 13 & url ~ *"0"`)
+        .request('/websites');
+        console.log(response.data)
+    })();
+  }
+  test('13780');
   const tempArr = [];
   // gameList.forEach((game, index) => {
   //   setTimeout(() => {
@@ -142,32 +157,33 @@ app.post('/db_test', (req, res) => {
   //     console.log(game)
   //   }, index * 10);
   // })
-  const tempList = ["Assassin's Creed III"]
+  // const tempList = ["Assassin's Creed III"]
   // gameList.forEach((game, index) => {
-  tempList.forEach((game, index) => {
-    setTimeout(() => {
-      // const address = `https://api.igdb.com/v4/games?limit=99&search=${game}&fields=name,websites`;
-      const address = `https://api.igdb.com/v4/websites?url=208480`;
-      axios.post(address, {}, {
-        headers: {
-          'Client-ID': cid,
-          Authorization: `Bearer ${token}`
-        }
-      })
-        .then(result => {
-          const rawData = result.data;
-          const test = rawData.find(obj => obj.name === game);
-          // console.log(test)
-          console.log(rawData);
-          // tempArr.push(test);
-          // console.lo(result.data)
-          // res.send(result.ata);
-        })
-        if (tempArr.length === gameList.length) {
-          console.log(tempArr)
-        }
-    }, index * 600);
-  });
+  // // tempList.forEach((game, index) => {
+  //   setTimeout(() => {
+  //     // const address = `https://api.igdb.com/v4/games?limit=99&search=${game}&fields=name,websites`;
+  //     // const address = `https://api.igdb.com/v4/websites?url=208480`;
+  //     // axios.post(address, {}, {
+  //     //   headers: {
+  //     //     'Client-ID': cid,
+  //     //     Authorization: `Bearer ${token}`
+  //     //   }
+  //     // })
+  //     //   .then(result => {
+  //     //     const rawData = result.data;
+  //     //     const test = rawData.find(obj => obj.name === game);
+  //     //     // console.log(test)
+  //     //     console.log(rawData);
+  //     //     // tempArr.push(test);
+  //     //     // console.lo(result.data)
+  //     //     // res.send(result.ata);
+  //     //   })
+  //     //   if (tempArr.length === gameList.length) {
+  //     //     console.log(tempArr)
+  //     //   }
+  //     test(game)
+  //   }, index * 600);
+  // });
 });
 
 app.listen(port, () => console.log(`server is running at port${port}`));
