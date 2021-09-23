@@ -90,9 +90,13 @@ app.get('/auth/steam/return',
         axios.post(`http://localhost:${port}/api_test`, { execute: 'order66' })
           .then(result => {
             axios.post(`http://localhost:${port}/db_test`, { test: result.data })
-            .then(
-              // result => console.log(result)
-            );
+              .then(result => {
+                axios.post(`http://localhost:${port}/db_test2`, { test: result.data })
+                  .then(result => {
+                    axios.post(`http://localhost:${port}/db_test3`, { test: result.data })
+                      .then(result => console.log(result));
+                  })
+              })
           })
       })
       // .then(() => res.redirect('http://localhost:3000/main'));
@@ -136,41 +140,57 @@ app.post('/db_test', (req, res) => {
   // console.log(req.body.gameList);
   const { cid, access_token: token } = req.body.test;
   const client = igdb(cid, token);
-  const test = game => {
-    (async function() {
-      const response = await client
-        .fields(['*'])
-        .where(`url = *"/${game}"*`)
-        .request('/websites');
-        if (response.data[0] === undefined) {
-          console.log(game)
-        } else {
-          console.log(game, response.data[0].game)
-        }
-    })();
-  }
-  // appid로 검색이 되지 않는 경우 = igdb에 스팀 url이 등록되지 않음 혹은 진짜 없거나
-  // 메인 게임이 아님
-  const test2 = game => {
-    (async function() {
-      const response = await client
-        .fields(['*'])
-        // .search('cyberpunk 2077')
-        .where('name ~ "GOD EATER RESURRECTION"')
-        .request('/games');
-      console.log(response.data)
-    })();
+  const test = async (game, arr, fail, total) => {
+    const response = await client
+      .fields(['*'])
+      .where(`category = 13 & url = *"/${game}"`)
+      .request('/websites');
+    if (response.data[0] === undefined) {
+      fail.push(game);
+      // console.log(fail)
+      // console.log(game);
+    } else {
+      arr.push(response.data[0].game);
+      // console.log(response.data[0].url, game);
+      console.log(arr.length + fail.length);
+    }
+    if (arr.length + fail.length === total) {
+      // const result = [ ...arr ];
+      return true;
+    }
   }
   const test3 = game => {
     (async function() {
       const response = await client
         .fields(['*'])
+        .search(game)
+        // .where(`id = ${game}`)
+        .request('/games');
+        console.log(response.data);
+    })();
+  }
+  const test4 = game => {
+    (async function() {
+      const response = await client
+        .fields(['*'])
+        // .search(game)
         .where(`id = ${game}`)
         .request('/websites');
         console.log(response.data);
     })();
   }
-  // const tempArr = [];
+  const test5 = game => {
+    (async function() {
+      const response = await client
+        .fields(['*'])
+        // .search(game)
+        .where(`url = *"/${game}/"*`)
+        .request('/websites');
+        console.log(response.data);
+    })();
+  }
+  const tempArr = [];
+  const arrFail = [];
   // gameList.forEach((game, index) => {
   //   setTimeout(() => {
   //     // tempArr.push(game);
@@ -181,32 +201,124 @@ app.post('/db_test', (req, res) => {
   //   }, index * 400);
   // })
   // const tempList = ["Assassin's Creed III"]
-  // gameList.forEach((game, index) => {
-  // // tempList.forEach((game, index) => {
-  //   setTimeout(() => {
-  //     // const address = `https://api.igdb.com/v4/games?limit=99&search=${game}&fields=name,websites`;
-  //     // const address = `https://api.igdb.com/v4/websites?url=208480`;
-  //     // axios.post(address, {}, {
-  //     //   headers: {
-  //     //     'Client-ID': cid,
-  //     //     Authorization: `Bearer ${token}`
-  //     //   }
-  //     // })
-  //     //   .then(result => {
-  //     //     const rawData = result.data;
-  //     //     const test = rawData.find(obj => obj.name === game);
-  //     //     // console.log(test)
-  //     //     console.log(rawData);
-  //     //     // tempArr.push(test);
-  //     //     // console.lo(result.data)
-  //     //     // res.send(result.ata);
-  //     //   })
-  //     //   if (tempArr.length === gameList.length) {
-  //     //     console.log(tempArr)
-  //     //   }
-  //     test(game)
-  //   }, index * 600);
-  // });
+  // test3('the flame in the flood')
+  const websites = [
+    318600,
+    582010,
+    601150,
+    743890,
+    743900,
+    812140,
+    860950,
+    927250,
+    960170,
+    976730,
+    999020,
+    1091500,
+    1113000,
+    1172380,
+    1190460,
+    1289310
+  ];
+  // websites.forEach((site, index) => {
+  //   setTimeout(() => test5(site), index * 300);
+  // })
+  gameList.forEach((game, index) => {
+  // tempList.forEach((game, index) => {
+    setTimeout(() => {
+      // const address = `https://api.igdb.com/v4/games?limit=99&search=${game}&fields=name,websites`;
+      // const address = `https://api.igdb.com/v4/websites?url=208480`;
+      // axios.post(address, {}, {
+      //   headers: {
+      //     'Client-ID': cid,
+      //     Authorization: `Bearer ${token}`
+      //   }
+      // })
+      //   .then(result => {
+      //     const rawData = result.data;
+      //     const test = rawData.find(obj => obj.name === game);
+      //     // console.log(test)
+      //     console.log(rawData);
+      //     // tempArr.push(test);
+      //     // console.lo(result.data)
+      //     // res.send(result.ata);
+      //   })
+      //   if (tempArr.length === gameList.length) {
+      //     console.log(tempArr)
+      //   }
+      test(game, tempArr, arrFail, gameList.length)
+        .then(result => {
+          if (result) {
+            const resData = {
+              cid,
+              token,
+              tempArr,
+              arrFail
+            }
+            res.send(resData);
+          }
+        });
+    }, index * 300);
+  });
+});
+
+app.post('/db_test2', (req, res) => {
+  const { cid, token, tempArr, arrFail } = req.body.test;
+  const client = igdb(cid, token);
+  const secArr = [];
+  const secFail = [];
+  const test2 = async (game, arr, fail) => {
+    const response = await client
+      .fields(['*'])
+      .where(`category = 13 & url = *"/${game}/"*`)
+      .request('/websites');
+    if (response.data[0] === undefined && arrFail.includes(game)) {
+      // return false;
+      fail.push(game);
+    // eslint-disable-next-line no-else-return
+    } else {
+      arr.push(response.data[0].game);
+      console.log(secArr.length + secFail.length);
+    }
+    if (secArr.length + secFail.length === arrFail.length) {
+      return true;
+    }
+  }
+  arrFail.forEach((steamAppId, index) => {
+    setTimeout(() => {
+      test2(steamAppId, secArr, secFail)
+        .then(result => {
+          if (result) {
+            const resData = {
+              cid,
+              token,
+              resArr: tempArr.concat(secArr).sort((prev, next) => prev < next ? -1 : 1)
+            }
+            res.send(resData);
+          }
+        });
+    }, index * 300);
+  });
+});
+
+app.post('/db_test3', (req, res) => {
+  const { cid, token, resArr } = req.body.test;
+  const client = igdb(cid, token);
+  // appid로 검색이 되지 않는 경우 = igdb에 스팀 url이 등록되지 않음 혹은 진짜 없거나
+  // 메인 게임이 아님
+  const test2 = async game => {
+    const response = await client
+      .fields(['name'])
+      // .search('cyberpunk 2077')
+      .where(`id = ${game}`)
+      .request('/games');
+    console.log(response.data);
+  }
+  resArr.forEach((igdbId, index) => {
+    setTimeout(() => {
+      test2(igdbId);
+    }, index * 300);
+  });
 });
 
 app.listen(port, () => console.log(`server is running at port${port}`));
