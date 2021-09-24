@@ -8,7 +8,7 @@ const passport = require('passport');
 const SteamStrategy = require('passport-steam').Strategy;
 const axios = require('axios');
 const igdb = require('igdb-api-node').default;
-const { db, dbOptions } = require('../custom_modules/db');
+const { libDB } = require('../custom_modules/db');
 const { cyber, blade, owl } = require('../custom_modules/security/fes');
 
 const app = express();
@@ -23,7 +23,7 @@ app.use(cors({
 app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded());
 app.use(helmet(), compression());
-db.connect();
+libDB.connect();
 
 passport.use(new SteamStrategy({
     returnURL: `http://localhost:${port}/auth/steam/return`,
@@ -155,10 +155,19 @@ app.post('/meta_search', (req, res) => {
       .request('/games');
     return response;
   };
-  // 4. IGDB상 저장된 스팀 게임의 url을 기반으로 IGDB 고유 게임 아이디 반환
+  // 4. 게임 표지 검색 함수
+  const coverSearch = async igdbCoverID => {
+    const response = await client
+      .fields(['*'])
+      .where(`id = ${igdbCoverID}`)
+      .request('/covers');
+    return response;
+  };
+  // 5. IGDB상 저장된 스팀 게임의 url을 기반으로 IGDB 고유 게임 아이디 반환
   const firstFilter = (rawData, filterFunc) => new Promise((resolve, reject) => {
     const temp = [];
     const fail = [];
+    // rawData.slice(0,5).forEach((steamAppId, index) => {
     rawData.forEach((steamAppId, index) => {
       setTimeout(() => {
         filterFunc(steamAppId)
@@ -170,6 +179,7 @@ app.post('/meta_search', (req, res) => {
               // 기능 완성 이후 삭제할 것
               console.log(temp.length + fail.length);
             }
+            // if (temp.length + fail.length === 5) {
             if (temp.length + fail.length === rawData.length) {
               resolve({ temp, fail });
             }
@@ -177,7 +187,7 @@ app.post('/meta_search', (req, res) => {
       }, index * 300);
     });
   });
-  // 5. 4에서 검색에 실패한 게임들 대상 IGDB 고유 게임 아이디 검색 함수
+  // 6. 5에서 검색에 실패한 게임들 대상 IGDB 고유 게임 아이디 검색 함수
   const secondFilter = (rawData, filterFunc) => new Promise((resolve, reject) => {
     const { temp, fail } = rawData;
     const secTemp = [];
@@ -205,7 +215,7 @@ app.post('/meta_search', (req, res) => {
       resolve(temp);
     }
   });
-  // 6. 4, 5에서 검색된 IGDB 고유 아이디를 통한 게임 메타데이터 검색 함수
+  // 7. 5, 6에서 검색된 IGDB 고유 아이디를 통한 게임 메타데이터 검색 함수
   const returnMeta = (rawData, filterFunc) => new Promise((resolve, reject) => {
     const temp = [];
     rawData.forEach((igdbID, index) => {
@@ -214,7 +224,25 @@ app.post('/meta_search', (req, res) => {
           .then(result => {
             temp.push(result.data[0]);
             console.log(temp.length);
-            if (temp.length === rawData.length) resolve(temp);
+            if (temp.length === rawData.length) {
+              resolve(temp.sort((prev, next) => prev.name < next.name ? -1 : 1));
+            }
+          });
+      }, index * 300);
+    });
+  });
+  // 8. 메타 데이터 가공 함수 - 제목, 표지, url 추출
+  const processMeta = (rawData, filterFunc) => new Promise((resolve, reject) => {
+    const titles = rawData.map(gameMeta => gameMeta.name);
+    const urls = rawData.map(gameMeta => gameMeta.url);
+    const coversTemp = rawData.map(gameMeta => gameMeta.cover);
+    const covers = [];
+    coversTemp.forEach((coverId, index) => {
+      setTimeout(() => {
+        filterFunc(coverId)
+          .then(result => {
+            covers.push(result.data[0].image_id);
+            if (covers.length === coversTemp.length) resolve({ titles, urls, covers, rawData });
           });
       }, index * 300);
     });
@@ -223,9 +251,22 @@ app.post('/meta_search', (req, res) => {
   firstFilter(gameList, steamURLSearchQuery)
     .then(rawURLSearchResult => secondFilter(rawURLSearchResult, steamURLException))
     .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
-    // 최종 메타데이터 목록
-    .then(igdbResult => console.log(igdbResult))
+    .then(igdbResult => processMeta(igdbResult, coverSearch))
+    // 최종 메타데이터 목록 - igdbResult는 배열, 이 중 name, cover 정보 필요. name은 추출하기만 하면 되는데, cover는 image_id를 별도로 검색해서 받아와야 함
+    .then(resultObj => {
+      const { titles, urls, covers, rawData } = resultObj;
+      const columns = 'title, cover, igdb_url, meta';
+      const queryString = `insert into DB_SAVE_TEST (${columns}) values(?, ?, ?, ?)`;
+      rawData.forEach((data, index) => {
+        const values = [titles[index], covers[index], urls[index], JSON.stringify(data)];
+        libDB.query(queryString, values, (err, result) => {
+          if (err) throw err;
+          console.log(result);
+        });
+      });
+    })
     .catch(err => console.log(err));
+  
 });
 
 app.listen(port, () => console.log(`server is running at port${port}`));
