@@ -140,113 +140,27 @@ app.post('/db_test', (req, res) => {
   // console.log(req.body.gameList);
   const { cid, access_token: token } = req.body.test;
   const client = igdb(cid, token);
-  const test = async (game, arr, fail, total) => {
+  const tempArr = [];
+  const arrFail = [];
+  const steamURLSearchQuery = async (steamAppId, arr, fail, total) => {
     const response = await client
       .fields(['*'])
-      .where(`category = 13 & url = *"/${game}"`)
+      .where(`category = 13 & url = *"/${steamAppId}"`)
       .request('/websites');
     if (response.data[0] === undefined) {
-      fail.push(game);
-      // console.log(fail)
-      // console.log(game);
+      fail.push(steamAppId);
     } else {
       arr.push(response.data[0].game);
-      // console.log(response.data[0].url, game);
+      // 기능 완성 이후 삭제할 것
       console.log(arr.length + fail.length);
     }
     if (arr.length + fail.length === total) {
-      // const result = [ ...arr ];
       return true;
     }
   }
-  const test3 = game => {
-    (async function() {
-      const response = await client
-        .fields(['*'])
-        .search(game)
-        // .where(`id = ${game}`)
-        .request('/games');
-        console.log(response.data);
-    })();
-  }
-  const test4 = game => {
-    (async function() {
-      const response = await client
-        .fields(['*'])
-        // .search(game)
-        .where(`id = ${game}`)
-        .request('/websites');
-        console.log(response.data);
-    })();
-  }
-  const test5 = game => {
-    (async function() {
-      const response = await client
-        .fields(['*'])
-        // .search(game)
-        .where(`url = *"/${game}/"*`)
-        .request('/websites');
-        console.log(response.data);
-    })();
-  }
-  const tempArr = [];
-  const arrFail = [];
-  // gameList.forEach((game, index) => {
-  //   setTimeout(() => {
-  //     // tempArr.push(game);
-  //     // if (tempArr.length === gameList.length) {
-  //     //   console.log(tempArr);
-  //     // }
-  //     test(game)
-  //   }, index * 400);
-  // })
-  // const tempList = ["Assassin's Creed III"]
-  // test3('the flame in the flood')
-  const websites = [
-    318600,
-    582010,
-    601150,
-    743890,
-    743900,
-    812140,
-    860950,
-    927250,
-    960170,
-    976730,
-    999020,
-    1091500,
-    1113000,
-    1172380,
-    1190460,
-    1289310
-  ];
-  // websites.forEach((site, index) => {
-  //   setTimeout(() => test5(site), index * 300);
-  // })
-  gameList.forEach((game, index) => {
-  // tempList.forEach((game, index) => {
+  gameList.forEach((steamAppId, index) => {
     setTimeout(() => {
-      // const address = `https://api.igdb.com/v4/games?limit=99&search=${game}&fields=name,websites`;
-      // const address = `https://api.igdb.com/v4/websites?url=208480`;
-      // axios.post(address, {}, {
-      //   headers: {
-      //     'Client-ID': cid,
-      //     Authorization: `Bearer ${token}`
-      //   }
-      // })
-      //   .then(result => {
-      //     const rawData = result.data;
-      //     const test = rawData.find(obj => obj.name === game);
-      //     // console.log(test)
-      //     console.log(rawData);
-      //     // tempArr.push(test);
-      //     // console.lo(result.data)
-      //     // res.send(result.ata);
-      //   })
-      //   if (tempArr.length === gameList.length) {
-      //     console.log(tempArr)
-      //   }
-      test(game, tempArr, arrFail, gameList.length)
+      steamURLSearchQuery(steamAppId, tempArr, arrFail, gameList.length)
         .then(result => {
           if (result) {
             const resData = {
@@ -267,17 +181,17 @@ app.post('/db_test2', (req, res) => {
   const client = igdb(cid, token);
   const secArr = [];
   const secFail = [];
-  const test2 = async (game, arr, fail) => {
+  const steamURLException = async (steamAppId, arr, fail) => {
     const response = await client
       .fields(['*'])
-      .where(`category = 13 & url = *"/${game}/"*`)
+      .where(`category = 13 & url = *"/${steamAppId}/"*`)
       .request('/websites');
-    if (response.data[0] === undefined && arrFail.includes(game)) {
-      // return false;
-      fail.push(game);
+    if (response.data[0] === undefined && arrFail.includes(steamAppId)) {
+      fail.push(steamAppId);
     // eslint-disable-next-line no-else-return
     } else {
       arr.push(response.data[0].game);
+      // 기능 구현 이후에 삭제할 것
       console.log(secArr.length + secFail.length);
     }
     if (secArr.length + secFail.length === arrFail.length) {
@@ -286,7 +200,7 @@ app.post('/db_test2', (req, res) => {
   }
   arrFail.forEach((steamAppId, index) => {
     setTimeout(() => {
-      test2(steamAppId, secArr, secFail)
+      steamURLException(steamAppId, secArr, secFail)
         .then(result => {
           if (result) {
             const resData = {
@@ -306,17 +220,17 @@ app.post('/db_test3', (req, res) => {
   const client = igdb(cid, token);
   // appid로 검색이 되지 않는 경우 = igdb에 스팀 url이 등록되지 않음 혹은 진짜 없거나
   // 메인 게임이 아님
-  const test2 = async game => {
+  const igdbIDSearch = async igdbID => {
     const response = await client
       .fields(['name'])
       // .search('cyberpunk 2077')
-      .where(`id = ${game}`)
+      .where(`id = ${igdbID}`)
       .request('/games');
     console.log(response.data);
   }
-  resArr.forEach((igdbId, index) => {
+  resArr.forEach((igdbID, index) => {
     setTimeout(() => {
-      test2(igdbId);
+      igdbIDSearch(igdbID);
     }, index * 300);
   });
 });
