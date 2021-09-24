@@ -84,17 +84,10 @@ app.get('/auth/steam/return',
         // console.log(gameList);
       })
       .then(() => {
-        axios.post(`http://localhost:${port}/api_test`, { execute: 'order66' })
+        axios.post(`http://localhost:${port}/api_connect`, { execute: 'order66' })
           .then(result => {
-            // axios.post(`http://localhost:${port}/db_test`, { test: result.data })
-            //   .then(result => {
-            //     axios.post(`http://localhost:${port}/db_test2`, { test: result.data })
-            //       .then(result => {
-            //         axios.post(`http://localhost:${port}/db_test3`, { test: result.data })
-            //           .then(result => console.log(result));
-            //       })
-            //   })
-            axios.post(`http://localhost:${port}/promise_test`, { test: result.data }).then(res => console.log(res))
+            axios.post(`http://localhost:${port}/meta_search`, { test: result.data })
+              .then(res => console.log(res))
           })
       })
       // .then(() => res.redirect('http://localhost:3000/main'));
@@ -120,7 +113,7 @@ app.get('/test', (req, res) => {
 });
 
 // 프론트에서 처리하도록 수정
-app.post('/api_test', (req, res) => {
+app.post('/api_connect', (req, res) => {
   if (req.body.execute === 'order66') {
     const cid = `client_id=${owl.me}`;
     const secret = `client_secret=${owl.spell}`;
@@ -134,106 +127,7 @@ app.post('/api_test', (req, res) => {
   }
 });
 
-app.post('/db_test', (req, res) => {
-  // console.log(req.body.gameList);
-  const { cid, access_token: token } = req.body.test;
-  const client = igdb(cid, token);
-  const tempArr = [];
-  const arrFail = [];
-  const steamURLSearchQuery = async (steamAppId, arr, fail, total) => {
-    const response = await client
-      .fields(['*'])
-      .where(`category = 13 & url = *"/${steamAppId}"`)
-      .request('/websites');
-    if (response.data[0] === undefined) {
-      fail.push(steamAppId);
-    } else {
-      arr.push(response.data[0].game);
-      // 기능 완성 이후 삭제할 것
-      console.log(arr.length + fail.length);
-    }
-    if (arr.length + fail.length === total) {
-      return true;
-    }
-  }
-  gameList.forEach((steamAppId, index) => {
-    setTimeout(() => {
-      steamURLSearchQuery(steamAppId, tempArr, arrFail, gameList.length)
-        .then(result => {
-          if (result) {
-            const resData = {
-              cid,
-              token,
-              tempArr,
-              arrFail
-            }
-            res.send(resData);
-          }
-        });
-    }, index * 300);
-  });
-});
-
-app.post('/db_test2', (req, res) => {
-  const { cid, token, tempArr, arrFail } = req.body.test;
-  const client = igdb(cid, token);
-  const secArr = [];
-  const secFail = [];
-  const steamURLException = async (steamAppId, arr, fail) => {
-    const response = await client
-      .fields(['*'])
-      .where(`category = 13 & url = *"/${steamAppId}/"*`)
-      .request('/websites');
-    if (response.data[0] === undefined && arrFail.includes(steamAppId)) {
-      fail.push(steamAppId);
-    // eslint-disable-next-line no-else-return
-    } else {
-      arr.push(response.data[0].game);
-      // 기능 구현 이후에 삭제할 것
-      console.log(secArr.length + secFail.length);
-    }
-    if (secArr.length + secFail.length === arrFail.length) {
-      return true;
-    }
-  }
-  arrFail.forEach((steamAppId, index) => {
-    setTimeout(() => {
-      steamURLException(steamAppId, secArr, secFail)
-        .then(result => {
-          if (result) {
-            const resData = {
-              cid,
-              token,
-              resArr: tempArr.concat(secArr).sort((prev, next) => prev < next ? -1 : 1)
-            }
-            res.send(resData);
-          }
-        });
-    }, index * 300);
-  });
-});
-
-app.post('/db_test3', (req, res) => {
-  const { cid, token, resArr } = req.body.test;
-  const client = igdb(cid, token);
-  // appid로 검색이 되지 않는 경우 = igdb에 스팀 url이 등록되지 않음 혹은 진짜 없거나
-  // 메인 게임이 아님
-  const igdbIDSearch = async igdbID => {
-    const response = await client
-      .fields(['name'])
-      // .search('cyberpunk 2077')
-      .where(`id = ${igdbID}`)
-      .request('/games');
-    console.log(response.data);
-  }
-  resArr.forEach((igdbID, index) => {
-    setTimeout(() => {
-      igdbIDSearch(igdbID);
-    }, index * 300);
-  });
-});
-
-app.post('/promise_test', (req, res) => {
+app.post('/meta_search', (req, res) => {
   const { cid, access_token: token } = req.body.test;
   const client = igdb(cid, token);
   // 1. 스팀 게임별 고유 id와 IGDB 사이트에 등록된 스팀 url 대조 함수 - IGDB 고유 게임 아이디 이용 예정
@@ -325,6 +219,7 @@ app.post('/promise_test', (req, res) => {
       }, index * 300);
     });
   });
+  // 실제 검색 실행 코드
   firstFilter(gameList, steamURLSearchQuery)
     .then(rawURLSearchResult => secondFilter(rawURLSearchResult, steamURLException))
     .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
