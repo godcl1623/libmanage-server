@@ -87,7 +87,14 @@ app.get('/auth/steam/return',
         axios.post(`http://localhost:${port}/api_connect`, { execute: 'order66' })
           .then(result => {
             axios.post(`http://localhost:${port}/meta_search`, { test: result.data })
-              .then(res => console.log(res))
+              .then(searchResult => {
+                if (searchResult.data === true) {
+                  console.log('DB write completed. Return to app service.')
+                  res.redirect('http://localhost:3000/main');
+                } else {
+                  res.redirect('/error/search');
+                }
+              })
           })
       })
       // .then(() => res.redirect('http://localhost:3000/main'));
@@ -110,6 +117,10 @@ app.get('/', (req, res) => {
 app.get('/test', (req, res) => {
   // res.send(test)
   res.send(uid);
+});
+
+app.get('/error/search', (req, res) => {
+  res.send('<h1>Error has occured. Please try again later.</h1>')
 });
 
 // 프론트에서 처리하도록 수정
@@ -177,10 +188,11 @@ app.post('/meta_search', (req, res) => {
             } else {
               temp.push(result.data[0].game);
               // 기능 완성 이후 삭제할 것
-              console.log(temp.length + fail.length);
             }
+            console.log(`Searching for steam URL based on steam app id: ${temp.length + fail.length}/${rawData.length}`);
             // if (temp.length + fail.length === 5) {
             if (temp.length + fail.length === rawData.length) {
+              console.log(`First attempt: Succeed(${temp.length}), Fail(${fail.length})`)
               resolve({ temp, fail });
             }
           });
@@ -203,15 +215,17 @@ app.post('/meta_search', (req, res) => {
               } else {
                 secTemp.push(result.data[0].game);
                 // 기능 구현 이후에 삭제할 것
-                console.log(secTemp.length + secFail.length);
               }
+              console.log(`Searching for steam URL from steam app id failed on first attempt: ${secTemp.length + secFail.length}/${fail.length}`);
               if (secTemp.length + secFail.length === thisArr.length) {
+                console.log(`Second attempt: Succeed(${secTemp.length}), Fail(${secFail.length})`)
                 resolve(temp.concat(secTemp).sort((prev, next) => prev < next ? -1 : 1));
               }
             });
         }, index * 300);
       });
     } else {
+      console.log(`Second attempt: No fails detected. Proceed to next step.`)
       resolve(temp);
     }
   });
@@ -223,8 +237,9 @@ app.post('/meta_search', (req, res) => {
         filterFunc(igdbID)
           .then(result => {
             temp.push(result.data[0]);
-            console.log(temp.length);
+            console.log(`Searching meta: ${temp.length}/${rawData.length}`);
             if (temp.length === rawData.length) {
+              console.log(`Searching meta: Search complete. Proceed to next step.`)
               resolve(temp.sort((prev, next) => prev.name < next.name ? -1 : 1));
             }
           });
@@ -242,31 +257,40 @@ app.post('/meta_search', (req, res) => {
         filterFunc(coverId)
           .then(result => {
             covers.push(result.data[0].image_id);
-            if (covers.length === coversTemp.length) resolve({ titles, urls, covers, rawData });
+            console.log(`Processing meta: Searching covers: ${covers.length}/${coversTemp.length}`)
+            if (covers.length === coversTemp.length) {
+              console.log(`Processing meta: Processing complete. Proceed to next step.`);
+              resolve({ titles, urls, covers, rawData });
+            };
           });
       }, index * 300);
     });
   });
+  // 9. DB 기록 함수
+  const writeToDB = resultObj => new Promise((resolve, reject) => {
+    const { titles, urls, covers, rawData } = resultObj;
+    const columns = 'title, cover, igdb_url, meta';
+    const queryString = `insert into DB_SAVE_TEST (${columns}) values(?, ?, ?, ?)`;
+    rawData.forEach((data, index) => {
+      const values = [titles[index], covers[index], urls[index], JSON.stringify(data)];
+      libDB.query(queryString, values, (err, result) => {
+        if (err) {
+          throw err;
+        } else {
+          resolve(true);
+        }
+      });
+    });
+  });
   // 실제 검색 실행 코드
   firstFilter(gameList, steamURLSearchQuery)
-    .then(rawURLSearchResult => secondFilter(rawURLSearchResult, steamURLException))
-    .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
-    .then(igdbResult => processMeta(igdbResult, coverSearch))
-    // 최종 메타데이터 목록 - igdbResult는 배열, 이 중 name, cover 정보 필요. name은 추출하기만 하면 되는데, cover는 image_id를 별도로 검색해서 받아와야 함
-    .then(resultObj => {
-      const { titles, urls, covers, rawData } = resultObj;
-      const columns = 'title, cover, igdb_url, meta';
-      const queryString = `insert into DB_SAVE_TEST (${columns}) values(?, ?, ?, ?)`;
-      rawData.forEach((data, index) => {
-        const values = [titles[index], covers[index], urls[index], JSON.stringify(data)];
-        libDB.query(queryString, values, (err, result) => {
-          if (err) throw err;
-          console.log(result);
-        });
-      });
-    })
-    .catch(err => console.log(err));
-  
+  .then(rawURLSearchResult => secondFilter(rawURLSearchResult, steamURLException))
+  .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
+  .then(igdbResult => processMeta(igdbResult, coverSearch))
+  // 최종 메타데이터 목록 - igdbResult는 배열, 이 중 name, cover 정보 필요. name은 추출하기만 하면 되는데, cover는 image_id를 별도로 검색해서 받아와야 함
+  .then(resultObj => writeToDB(resultObj))
+  .then(writeResult => res.send(writeResult))
+  .catch(err => console.log(err));
 });
 
 app.listen(port, () => console.log(`server is running at port${port}`));
