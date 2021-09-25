@@ -15,6 +15,9 @@ const app = express();
 const port = 3003;
 let uid = '';
 let gameList = '';
+let testObj = '';
+let count = 0;
+let total = 0;
 
 app.use(cors({
   origin: true,
@@ -80,21 +83,24 @@ app.get('/auth/steam/return',
         const steamResult = rawGamesData.map(gameDataObj => gameDataObj.appid);
         const sortedTempArr = steamResult.sort((prev, next) => prev < next ? -1 : 1);
         // 정렬된 게임 목록을 변수 gameList로 업데이트
-        gameList = sortedTempArr
+        gameList = sortedTempArr;
+        total = gameList.length;
         // console.log(gameList);
       })
       .then(() => {
         axios.post(`http://localhost:${port}/api_connect`, { execute: 'order66' })
           .then(result => {
-            axios.post(`http://localhost:${port}/meta_search`, { test: result.data })
-              .then(searchResult => {
-                if (searchResult.data === true) {
-                  console.log('DB write completed. Return to app service.')
-                  res.redirect('http://localhost:3000/main');
-                } else {
-                  res.redirect('/error/search');
-                }
-              })
+            // axios.post(`http://localhost:${port}/meta_search`, { test: result.data })
+            //   .then(searchResult => {
+            //     if (searchResult.data === true) {
+            //       console.log('DB write completed. Return to app service.')
+            //       res.redirect('http://localhost:3000/main');
+            //     } else {
+            //       res.redirect('/error/search');
+            //     }
+            //   })
+            testObj = result.data;
+            res.redirect('http://localhost:3000/test/test4')
           })
       })
       // .then(() => res.redirect('http://localhost:3000/main'));
@@ -118,6 +124,27 @@ app.get('/test', (req, res) => {
   // res.send(test)
   res.send(uid);
 });
+
+app.post('/test', (req, res) => {
+  // res.send('foo');
+  axios.post(`http://localhost:${port}/meta_search`, { test: testObj })
+  .then(searchResult => {
+    if (searchResult.data === true) {
+      console.log('DB write completed. Return to app service.')
+      // res.redirect('http://localhost:3000/main');
+      res.send(true)
+    } else {
+      res.redirect('/error/search');
+    }
+  })
+})
+
+app.post('/test2', (req, res) => {
+  res.send({
+    count: String(count),
+    total: String(total)
+  });
+})
 
 app.get('/error/search', (req, res) => {
   res.send('<h1>Error has occured. Please try again later.</h1>')
@@ -178,6 +205,7 @@ app.post('/meta_search', (req, res) => {
   const firstFilter = (rawData, filterFunc) => new Promise((resolve, reject) => {
     const temp = [];
     const fail = [];
+    total = rawData.length;
     // rawData.slice(0,5).forEach((steamAppId, index) => {
     rawData.forEach((steamAppId, index) => {
       setTimeout(() => {
@@ -189,6 +217,7 @@ app.post('/meta_search', (req, res) => {
               temp.push(result.data[0].game);
               // 기능 완성 이후 삭제할 것
             }
+            count++;
             console.log(`Searching for steam URL based on steam app id: ${temp.length + fail.length}/${rawData.length}`);
             // if (temp.length + fail.length === 5) {
             if (temp.length + fail.length === rawData.length) {
