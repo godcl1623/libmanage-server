@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useHistory } from 'react-router-dom';
 
-const Test = () => {
+const Progress = () => {
   const [ count, setCount ] = useState('');
   const [ total, setTotal ] = useState('');
   const [ status, setStatus ] = useState('1');
@@ -35,7 +35,6 @@ const Test = () => {
     const requestStatus = setInterval(() => {
       axios.post('http://localhost:3003/stat/track', {}, {withCredentials: true})
         .then(res => {
-          console.log(res.data);
           if (res.data.status === status) {
             setCount(res.data.count);
             setTotal(res.data.total);
@@ -50,10 +49,10 @@ const Test = () => {
   }, [total]);
   return (
     <>
-      <h1>Test</h1>
+      <h1>Progress</h1>
       <p>{`${statusText(status)} (${count}/${total})`}</p>
     </>
   );
 }
 
-export default Test;
+export default Progress;

@@ -93,7 +93,7 @@ app.get('/auth/steam/return',
         axios.post(`http://localhost:${port}/api/connect`, { execute: 'order66' })
           .then(result => {
             apiCredential = result.data;
-            res.redirect('http://localhost:3000/test/test4');
+            res.redirect('http://localhost:3000/api/progress');
           })
       })
   }
@@ -125,7 +125,6 @@ app.post('/api/search', (req, res) => {
 })
 
 app.post('/stat/track', (req, res) => {
-  console.log(req)
   res.send({
     count: String(statObj.count),
     total: String(statObj.total),
