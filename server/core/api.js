@@ -9,15 +9,18 @@ const SteamStrategy = require('passport-steam').Strategy;
 const axios = require('axios');
 const igdb = require('igdb-api-node').default;
 const { libDB } = require('../custom_modules/db');
-const { cyber, blade, owl } = require('../custom_modules/security/fes');
+const { cyber, owl } = require('../custom_modules/security/fes');
 
 const app = express();
 const port = 3003;
 let uid = '';
 let gameList = '';
-let testObj = '';
-let count = 0;
-let total = 0;
+let apiCredential = '';
+const statObj = {
+  count: 0,
+  total: 0,
+  status: 1
+};
 
 app.use(cors({
   origin: true,
@@ -84,26 +87,15 @@ app.get('/auth/steam/return',
         const sortedTempArr = steamResult.sort((prev, next) => prev < next ? -1 : 1);
         // 정렬된 게임 목록을 변수 gameList로 업데이트
         gameList = sortedTempArr;
-        total = gameList.length;
-        // console.log(gameList);
+        statObj.total = gameList.length;
       })
       .then(() => {
-        axios.post(`http://localhost:${port}/api_connect`, { execute: 'order66' })
+        axios.post(`http://localhost:${port}/api/connect`, { execute: 'order66' })
           .then(result => {
-            // axios.post(`http://localhost:${port}/meta_search`, { test: result.data })
-            //   .then(searchResult => {
-            //     if (searchResult.data === true) {
-            //       console.log('DB write completed. Return to app service.')
-            //       res.redirect('http://localhost:3000/main');
-            //     } else {
-            //       res.redirect('/error/search');
-            //     }
-            //   })
-            testObj = result.data;
-            res.redirect('http://localhost:3000/test/test4')
+            apiCredential = result.data;
+            res.redirect('http://localhost:3000/test/test4');
           })
       })
-      // .then(() => res.redirect('http://localhost:3000/main'));
   }
 )
 
@@ -111,27 +103,20 @@ app.get('/login', (req, res) => {
   res.send('failed');
 })
 
-// app.get('/logout', (req, res) => {
-//   req.logout();
-//   res.redirect('/');
-// })
-
 app.get('/', (req, res) => {
   res.send('api server');
 });
 
 app.get('/test', (req, res) => {
   // res.send(test)
-  res.send(uid);
+  // res.send(uid);
 });
 
-app.post('/test', (req, res) => {
-  // res.send('foo');
-  axios.post(`http://localhost:${port}/meta_search`, { test: testObj })
+app.post('/api/search', (req, res) => {
+  axios.post(`http://localhost:${port}/meta_search`, { apiCred: apiCredential })
   .then(searchResult => {
     if (searchResult.data === true) {
       console.log('DB write completed. Return to app service.')
-      // res.redirect('http://localhost:3000/main');
       res.send(true)
     } else {
       res.redirect('/error/search');
@@ -139,10 +124,12 @@ app.post('/test', (req, res) => {
   })
 })
 
-app.post('/test2', (req, res) => {
+app.post('/stat/track', (req, res) => {
+  console.log(req)
   res.send({
-    count: String(count),
-    total: String(total)
+    count: String(statObj.count),
+    total: String(statObj.total),
+    status: String(statObj.status)
   });
 })
 
@@ -151,7 +138,7 @@ app.get('/error/search', (req, res) => {
 });
 
 // 프론트에서 처리하도록 수정
-app.post('/api_connect', (req, res) => {
+app.post('/api/connect', (req, res) => {
   if (req.body.execute === 'order66') {
     const cid = `client_id=${owl.me}`;
     const secret = `client_secret=${owl.spell}`;
@@ -166,7 +153,7 @@ app.post('/api_connect', (req, res) => {
 });
 
 app.post('/meta_search', (req, res) => {
-  const { cid, access_token: token } = req.body.test;
+  const { cid, access_token: token } = req.body.apiCred;
   const client = igdb(cid, token);
   // 1. 스팀 게임별 고유 id와 IGDB 사이트에 등록된 스팀 url 대조 함수 - IGDB 고유 게임 아이디 이용 예정
   const steamURLSearchQuery = async steamAppId => {
@@ -205,8 +192,8 @@ app.post('/meta_search', (req, res) => {
   const firstFilter = (rawData, filterFunc) => new Promise((resolve, reject) => {
     const temp = [];
     const fail = [];
-    total = rawData.length;
-    // rawData.slice(0,5).forEach((steamAppId, index) => {
+    statObj.total = rawData.length;
+    // rawData.slice(rawData.length - 30,rawData.length).forEach((steamAppId, index) => {
     rawData.forEach((steamAppId, index) => {
       setTimeout(() => {
         filterFunc(steamAppId)
@@ -217,10 +204,13 @@ app.post('/meta_search', (req, res) => {
               temp.push(result.data[0].game);
               // 기능 완성 이후 삭제할 것
             }
-            count++;
+            statObj.count++;
             console.log(`Searching for steam URL based on steam app id: ${temp.length + fail.length}/${rawData.length}`);
-            // if (temp.length + fail.length === 5) {
+            // if (temp.length + fail.length === 30) {
             if (temp.length + fail.length === rawData.length) {
+              statObj.total = fail.length;
+              statObj.count = 0;
+              statObj.status = '2';
               console.log(`First attempt: Succeed(${temp.length}), Fail(${fail.length})`)
               resolve({ temp, fail });
             }
@@ -245,10 +235,15 @@ app.post('/meta_search', (req, res) => {
                 secTemp.push(result.data[0].game);
                 // 기능 구현 이후에 삭제할 것
               }
+              statObj.count++;
               console.log(`Searching for steam URL from steam app id failed on first attempt: ${secTemp.length + secFail.length}/${fail.length}`);
               if (secTemp.length + secFail.length === thisArr.length) {
                 console.log(`Second attempt: Succeed(${secTemp.length}), Fail(${secFail.length})`)
-                resolve(temp.concat(secTemp).sort((prev, next) => prev < next ? -1 : 1));
+                const totalSuccess = temp.concat(secTemp).sort((prev, next) => prev < next ? -1 : 1);
+                statObj.total = totalSuccess.length;
+                statObj.count = 0;
+                statObj.status = '3';
+                resolve(totalSuccess);
               }
             });
         }, index * 300);
@@ -266,10 +261,15 @@ app.post('/meta_search', (req, res) => {
         filterFunc(igdbID)
           .then(result => {
             temp.push(result.data[0]);
+            statObj.count++;
             console.log(`Searching meta: ${temp.length}/${rawData.length}`);
             if (temp.length === rawData.length) {
               console.log(`Searching meta: Search complete. Proceed to next step.`)
-              resolve(temp.sort((prev, next) => prev.name < next.name ? -1 : 1));
+              const rawMeta = temp.sort((prev, next) => prev.name < next.name ? -1 : 1)
+              statObj.total = rawMeta.length;
+              statObj.count = 0;
+              statObj.status = '4';
+              resolve(rawMeta);
             }
           });
       }, index * 300);
@@ -286,8 +286,10 @@ app.post('/meta_search', (req, res) => {
         filterFunc(coverId)
           .then(result => {
             covers.push(result.data[0].image_id);
+            statObj.count++;
             console.log(`Processing meta: Searching covers: ${covers.length}/${coversTemp.length}`)
             if (covers.length === coversTemp.length) {
+              statObj.status = '5';
               console.log(`Processing meta: Processing complete. Proceed to next step.`);
               resolve({ titles, urls, covers, rawData });
             };

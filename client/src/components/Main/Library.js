@@ -22,13 +22,6 @@ const Library = () => {
     }))
   }
 
-  React.useEffect(() => {console.log(apiData)}, [apiData])
-
-  React.useEffect(() => {
-    axios.get('http://localhost:3003/test', { withCredentials: true })
-      .then(res => console.log(res));
-  }, []);
-
   const wrapper = {
     'display': balloonState,
     'position': 'absolute',

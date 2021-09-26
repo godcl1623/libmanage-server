@@ -1,58 +1,57 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useHistory } from 'react-router-dom';
 
 const Test = () => {
-  const [ count, setCount ] = React.useState('');
-  const [ total, setTotal ] = React.useState('');
+  const [ count, setCount ] = useState('');
+  const [ total, setTotal ] = useState('');
+  const [ status, setStatus ] = useState('1');
   const history = useHistory();
-  React.useEffect(() => {
-    // const foo = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-    // let count = 0;
-    // foo.forEach((ele, index) => {
-    //   setTimeout(() => {
-    //     axios.post('http://localhost:3003/test', {}, {withCredentials: true})
-    //       .then(res => {
-    //         console.log(res)
-    //         count++;
-    //         console.log(count)
-    //         if (count === 10) console.log('bar');
-    //       });
-    //   }, index * 1000);
-    // });
-    axios.post('http://localhost:3003/test', {}, {withCredentials: true})
+  const statusText = status => {
+    switch (status) {
+      case ('1'):
+        return '보유 중인 라이브러리를 IGDB 서비스에 검색 중입니다'
+      case ('2'):
+        return '누락된 항목을 IGDB 서비스에 재검색 중입니다'
+      case ('3'):
+        return 'IGDB 서비스로부터 메타데이터를 수신하는 중입니다'
+      case ('4'):
+        return '수신한 메타데이터를 가공하는 중입니다'
+      case ('5'):
+        return '메타데이터의 저장이 완료됐습니다'
+      default:
+        return '오류가 발생했습니다'
+    }
+  }
+  useEffect(() => {
+    axios.post('http://localhost:3003/api/search', {}, {withCredentials: true})
       .then(res => {
-        console.log(res.data)
         if (res.data) {
-          history.push('/main');
+          setTimeout(() => history.push('/main'), 3000);
         }
       })
     }, []);
-    React.useEffect(() => {
-      axios.post('http://localhost:3003/test2', {}, {withCredentials: true})
-          .then(res => {
-            console.log(res.data)
-            setTotal(Number(res.data.total))
-          })
-    }, []);
-    React.useEffect(() => {
-      if (total !== '' || total !== 0) {
-        const foo = [...Array(total).keys()];
-        foo.forEach((ele, index) => {
-          setTimeout(() => {
-            axios.post('http://localhost:3003/test2', {}, {withCredentials: true})
-            .then(res => {
-              console.log(res.data)
-              setCount(res.data.count)
-            })
-          }, index * 1000);
+  useEffect(() => {
+    const requestStatus = setInterval(() => {
+      axios.post('http://localhost:3003/stat/track', {}, {withCredentials: true})
+        .then(res => {
+          console.log(res.data);
+          if (res.data.status === status) {
+            setCount(res.data.count);
+            setTotal(res.data.total);
+          } else {
+            setCount(res.data.count);
+            setTotal(res.data.total);
+            setStatus(res.data.status);
+          }
         })
-      }
-    }, [total]);
+    }, 100);
+    return () => clearInterval(requestStatus);
+  }, [total]);
   return (
     <>
       <h1>Test</h1>
-      <p>{`${count}/${total}`}</p>
+      <p>{`${statusText(status)} (${count}/${total})`}</p>
     </>
   );
 }
