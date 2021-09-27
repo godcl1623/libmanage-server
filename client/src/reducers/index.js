@@ -6,5 +6,6 @@ export default combineReducers({
   logoutClicked: tempStore.logoutClickedReducer,
   tokenState: tempStore.tokenStateReducer,
   userState: tempStore.userStateReducer,
-  modalState: tempStore.modalStateReducer
+  modalState: tempStore.modalStateReducer,
+  balloonState: tempStore.balloonStateReducer
 });

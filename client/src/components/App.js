@@ -5,6 +5,7 @@ import Login from './Auth/Login';
 import Register from './Auth/Register';
 import Find from './Auth/Find';
 import Reset from './Auth/Reset';
+import Progress from './Progress';
 import FindRequested from './Auth/module/components/FindRequested';
 import AddStore from './Options/AddStore';
 import AddLib from './Options/AddLib';
@@ -27,6 +28,7 @@ const App = () => (
       <Route path="/member/find/id" exact component={ () => <Find mode='id' /> } />
       <Route path="/member/find/pwd" exact component={ () => <Find mode='pwd' /> } />
       <Route path="/member/reset/:token" exact component={Reset} />
+      <Route path="/api/progress" exact component={ Progress } />
       <Route component={() => <Redirect to="/" />} />
     </Switch>
   </Router>

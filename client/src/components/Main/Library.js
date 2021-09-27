@@ -17,7 +17,11 @@ const Library = () => {
     'display': balloonState,
     'position': 'absolute',
     'top': '50px',
-    'right': '0'
+    'right': '0',
+    'background': 'rgba(0, 0, 0, 0.3)',
+    'width': '100%',
+    'height': '100%',
+    'zIndex': '1'
   }
 
   const style = {
@@ -69,6 +73,9 @@ const Library = () => {
         <li>라이브러리 4</li>
         <li>라이브러리 5</li>
       </ul>
+      <a
+        href="http://localhost:3003/auth/steam"
+      >스팀으로 로그인</a>
     </article>
   );
 };

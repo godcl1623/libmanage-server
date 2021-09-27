@@ -5,7 +5,6 @@ const session = require('express-session');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-const FileStore = require('session-file-store')(session);
 const MySQLStore = require('express-mysql-session')(session);
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');

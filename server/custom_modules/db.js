@@ -10,7 +10,17 @@ const dbOptions = {
   dateStrings: true
 }
 
+const libDBOptions = {
+  host: 'localhost',
+  user: 'root',
+  password: pwd,
+  database: 'libmanage_user_library',
+  multipleStatements: true,
+  dateStrings: true
+}
+
 const db = mysql.createConnection(dbOptions);
+const libDB = mysql.createConnection(libDBOptions);
 // db.connect();
 
-module.exports = { db, dbOptions };
+module.exports = { db, dbOptions, libDB };
