@@ -1,5 +1,4 @@
 import React from 'react';
-import axios from 'axios';
 import Balloon from '../Modal/Balloon';
 
 const Options = () => (
@@ -13,20 +12,16 @@ const Options = () => (
 
 const Library = () => {
   const [balloonState, setBalloonState] = React.useState('none');
-  const [apiData, setApiData] = React.useState('');
-
-  const handler = (name, value) => {
-    setApiData(prevState => ({
-      ...prevState,
-      [name]: value
-    }))
-  }
 
   const wrapper = {
     'display': balloonState,
     'position': 'absolute',
     'top': '50px',
-    'right': '0'
+    'right': '0',
+    'background': 'rgba(0, 0, 0, 0.3)',
+    'width': '100%',
+    'height': '100%',
+    'zIndex': '1'
   }
 
   const style = {
@@ -78,37 +73,9 @@ const Library = () => {
         <li>라이브러리 4</li>
         <li>라이브러리 5</li>
       </ul>
-      {/* <button
-        onClick={e => {
-          e.preventDefault();
-          axios.get('http://localhost:3003/auth/steam/return', { withCredentials: true })
-            .then(res => console.log(res.data));
-        }}
-      >스팀으로 로그인</button> */}
       <a
         href="http://localhost:3003/auth/steam"
       >스팀으로 로그인</a>
-      <button
-        onClick={e => {
-          e.preventDefault();
-          axios.post('http://localhost:3003/api_test', { execute: 'order66' }, { withCredentials: true})
-            .then(res => {
-              // console.log(res.data)
-              handler('token', res.data.access_token);
-              handler('cid', res.data.cid);
-            });
-        }}
-      >api test</button>
-      <button
-        onClick={e => {
-          e.preventDefault();
-          axios.post('http://localhost:3003/db_test', {
-            cid: apiData.cid,
-            token: apiData.token
-          }, { withCredentials: true })
-            .then(res => console.log(res))
-        }}
-      >db test</button>
     </article>
   );
 };

@@ -8,11 +8,12 @@ import Library from './Library';
 import Meta from './Meta';
 import Navigation from './Navigation';
 import Modal from '../Modal/Modal';
-import { loginStatusCreator, userStateCreator } from '../../actions';
+import { loginStatusCreator, userStateCreator, balloonStatecreator } from '../../actions';
 
 const Main = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const logoutClicked = useSelector(state => state.logoutClicked);
+  const balloonState = useSelector(state => state.balloonState);
   const userState = useSelector(state => state.userState);
   const dispatch = useDispatch();
   const history = useHistory();
@@ -54,6 +55,13 @@ const Main = () => {
           'flexDirection': 'column',
           'justifyContent': 'center',
           'alignContent': 'center'
+        }}
+        onClick={e => {
+          e.preventDefault();
+          console.log(e.target)
+          if (balloonState !== 'none' && e.target.id === 'balloon') {
+            dispatch(balloonStatecreator('none'));
+          }
         }}
       >
         <Header />

@@ -3,21 +3,20 @@ import { useHistory } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import Balloon from '../Modal/Balloon';
-import { loginStatusCreator, logoutClickedCreator, modalStateCreator } from '../../actions';
-
-
+import { loginStatusCreator, logoutClickedCreator, modalStateCreator, balloonStatecreator } from '../../actions';
 
 const Header = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const userState = useSelector(state => state.userState);
   const modalState = useSelector(state => state.modalState);
-  const [balloonState, setBalloonState] = useState('none');
+  const balloonState = useSelector(state => state.balloonState);
+  // const [balloonState, setBalloonState] = useState('none');
   const history = useHistory();
   const dispatch = useDispatch();
 
   const Options = () => (
     <>
-      <button
+      {/* <button
         style={{
           'width': '80%',
           'height': '50%'
@@ -29,7 +28,7 @@ const Header = () => {
             dispatch(modalStateCreator(false))
           }
         }}
-      >스토어 추가</button>
+      >스토어 추가</button> */}
       <button
         style={{
           'width': '80%',
@@ -79,7 +78,11 @@ const Header = () => {
     'display': balloonState,
     'position': 'absolute',
     'top': '0',
-    'left': '100px'
+    'left': '0',
+    // 'background': 'rgba(0, 0, 0, 0.3)',
+    'width': '100%',
+    'height': '100%',
+    'zIndex': '1'
   }
 
   const style = {
@@ -92,7 +95,7 @@ const Header = () => {
     'height': '100px',
     'position': 'absolute',
     'top': '0',
-    'left': '100px',
+    'left': '200px',
     'background': 'white',
     'zIndex': 1
   };
@@ -102,7 +105,7 @@ const Header = () => {
     'height': '50px',
     'position': 'absolute',
     'top': '0',
-    'left': '100px',
+    'left': '176px',
     'transform': 'translate(-50%)',
     'background': 'white',
     'display': balloonState
@@ -120,9 +123,9 @@ const Header = () => {
       <button
         onClick={() => {
           if (balloonState === 'none') {
-            setBalloonState('flex');
+            dispatch(balloonStatecreator('flex'));
           } else {
-            setBalloonState('none');
+            dispatch(balloonStatecreator('none'));
           }
         }}
       >옵션</button>
