@@ -8,7 +8,7 @@ import Library from './Library';
 import Meta from './Meta';
 import Navigation from './Navigation';
 import Modal from '../Modal/Modal';
-import { loginStatusCreator, userStateCreator, balloonStatecreator } from '../../actions';
+import { loginStatusCreator, userStateCreator, balloonStateCreator } from '../../actions';
 
 const Main = () => {
   const loginStatus = useSelector(state => state.loginStatus);
@@ -58,9 +58,9 @@ const Main = () => {
         }}
         onClick={e => {
           e.preventDefault();
-          console.log(e.target)
+          console.log(e)
           if (balloonState !== 'none' && e.target.id === 'balloon') {
-            dispatch(balloonStatecreator('none'));
+            dispatch(balloonStateCreator('none'));
           }
         }}
       >

@@ -3,13 +3,20 @@ import { useHistory } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import Balloon from '../Modal/Balloon';
-import { loginStatusCreator, logoutClickedCreator, modalStateCreator, balloonStatecreator } from '../../actions';
+import {
+  loginStatusCreator,
+  logoutClickedCreator,
+  modalStateCreator,
+  balloonStateCreator,
+  balloonOriginCreator
+} from '../../actions';
 
 const Header = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const userState = useSelector(state => state.userState);
   const modalState = useSelector(state => state.modalState);
   const balloonState = useSelector(state => state.balloonState);
+  const balloonOrigin = useSelector(state => state.balloonOrigin);
   // const [balloonState, setBalloonState] = useState('none');
   const history = useHistory();
   const dispatch = useDispatch();
@@ -75,7 +82,7 @@ const Header = () => {
   );
   
   const wrapper = {
-    'display': balloonState,
+    'display': balloonOrigin === 'Header' ? balloonState : 'none',
     'position': 'absolute',
     'top': '0',
     'left': '0',
@@ -87,7 +94,7 @@ const Header = () => {
 
   const style = {
     'padding': '20px',
-    'display': balloonState,
+    'display': balloonOrigin === 'Header' ? balloonState : 'none',
     'flexDirection': 'column',
     'justifyContent': 'center',
     'alignItems': 'center',
@@ -108,7 +115,7 @@ const Header = () => {
     'left': '176px',
     'transform': 'translate(-50%)',
     'background': 'white',
-    'display': balloonState
+    'display': balloonOrigin === 'Header' ? balloonState : 'none'
   }
 
   return (
@@ -122,10 +129,11 @@ const Header = () => {
     >
       <button
         onClick={() => {
+          dispatch(balloonOriginCreator('Header'));
           if (balloonState === 'none') {
-            dispatch(balloonStatecreator('flex'));
-          } else {
-            dispatch(balloonStatecreator('none'));
+            dispatch(balloonStateCreator('flex'));
+          } else if (balloonOrigin === 'Header') {
+            dispatch(balloonStateCreator('none'));
           }
         }}
       >옵션</button>

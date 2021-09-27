@@ -1,5 +1,7 @@
 import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import Balloon from '../Modal/Balloon';
+import { balloonStateCreator, balloonOriginCreator } from '../../actions';
 
 const Options = () => (
   <>
@@ -11,12 +13,15 @@ const Options = () => (
 );
 
 const Library = () => {
-  const [balloonState, setBalloonState] = React.useState('none');
+  // const [balloonState, setBalloonState] = React.useState('none');
+  const balloonState = useSelector(state => state.balloonState);
+  const balloonOrigin = useSelector(state => state.balloonOrigin);
+  const dispatch = useDispatch();
 
   const wrapper = {
-    'display': balloonState,
+    'display': balloonOrigin === 'Library' ? balloonState : 'none',
     'position': 'absolute',
-    'top': '50px',
+    'top': '0',
     'right': '0',
     'background': 'rgba(0, 0, 0, 0.3)',
     'width': '100%',
@@ -26,14 +31,16 @@ const Library = () => {
 
   const style = {
     'padding': '20px',
-    'display': balloonState,
+    'display': balloonOrigin === 'Library' ? balloonState : 'none',
     'justifyContent': 'center',
     'alignItems': 'center',
     'width': '300px',
     'height': '100px',
     'position': 'absolute',
-    'top': '0',
-    'right': '0',
+    'top': '50px',
+    // 'right': '0',
+    // 버튼 좌표 따서 말풍선 좌표로 설정
+    'left': '402px',
     'background': 'white'
   };
 
@@ -45,7 +52,7 @@ const Library = () => {
     'left': '0',
     'transform': 'translate(-100%, -50%)',
     'background': 'white',
-    'display': balloonState
+    'display': balloonOrigin === 'Library' ? balloonState : 'none'
   }
 
   return (
@@ -53,15 +60,16 @@ const Library = () => {
       id="library"
       style={{
         'flex': '2',
-        'position': 'relative'
+        // 'position': 'relative'
       }}
     >
       <button
         onClick={() => {
+          dispatch(balloonOriginCreator('Library'));
           if (balloonState === 'none') {
-            setBalloonState('flex');
-          } else {
-            setBalloonState('none');
+            dispatch(balloonStateCreator('flex'));
+          } else if (balloonOrigin === 'Library') {
+            dispatch(balloonStateCreator('none'));
           }
         }}
       >옵션</button>

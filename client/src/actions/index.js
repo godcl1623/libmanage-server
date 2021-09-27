@@ -23,7 +23,12 @@ export const modalStateCreator = boolean => ({
   payload: boolean
 });
 
-export const balloonStatecreator = string => ({
+export const balloonStateCreator = string => ({
   type: 'BALLOON_STATE',
+  payload: string
+})
+
+export const balloonOriginCreator = string => ({
+  type: 'BALLOON_ORIGIN',
   payload: string
 })
