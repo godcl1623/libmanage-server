@@ -10,6 +10,17 @@ import Navigation from './Navigation';
 import Modal from '../Modal/Modal';
 import { loginStatusCreator, userStateCreator, balloonStateCreator } from '../../actions';
 
+const modalOption = {
+  'position': 'absolute',
+  'width': '50%',
+  'height': '50%',
+  'background': 'white',
+  'top': '50%',
+  'left': '50%',
+  'transform': 'translate(-50%, -50%)',
+  'zIndex': '2'
+}
+
 const Main = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const logoutClicked = useSelector(state => state.logoutClicked);
@@ -80,7 +91,7 @@ const Main = () => {
           <Meta />
         </div>
       </main>
-      <Modal />
+      <Modal style={modalOption} />
     </>
   );
 };

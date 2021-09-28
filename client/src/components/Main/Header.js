@@ -43,9 +43,10 @@ const Header = () => {
         }}
         onClick={() => {
           if (!modalState) {
-            dispatch(modalStateCreator(true))
+            dispatch(modalStateCreator(true));
+            dispatch(balloonStateCreator('none'));
           } else {
-            dispatch(modalStateCreator(false))
+            dispatch(modalStateCreator(false));
           }
         }}
       >라이브러리 추가</button>
