@@ -96,9 +96,6 @@ const Library = () => {
         <li>라이브러리 4</li>
         <li>라이브러리 5</li>
       </ul>
-      <a
-        href="http://localhost:3003/auth/steam"
-      >스팀으로 로그인</a>
     </article>
   );
 };

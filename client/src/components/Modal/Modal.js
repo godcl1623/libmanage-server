@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { modalStateCreator } from '../../actions';
 
-const Modal = ({style}) => {
+const Modal = ({ style, contents }) => {
   const modalState = useSelector(state => state.modalState);
   const dispatch = useDispatch();
   const display = !modalState ? 'none' : 'block';
@@ -21,7 +21,7 @@ const Modal = ({style}) => {
         'zIndex': '2'
       }}
       onClick={e => {
-        e.preventDefault();
+        // e.preventDefault();
         if (e.target.className === 'modal-bg') {
           dispatch(modalStateCreator(false));
         }
@@ -33,7 +33,7 @@ const Modal = ({style}) => {
           ...style
         }}
       >
-        <h1>modal</h1>
+        { contents() }
       </div>
     </div>,
     document.querySelector('#modal')

@@ -21,6 +21,21 @@ const modalOption = {
   'zIndex': '2'
 }
 
+const modalContents = () => (
+  <article>
+    <h2>스토어 목록</h2>
+    <hr />
+    <section className="store_container">
+      <h3>스팀</h3>
+      <a
+        href="http://localhost:3003/auth/steam"
+        // target="_blank"
+        // rel="noreferrer"
+      >스팀으로 로그인</a>
+    </section>
+  </article>
+);
+
 const Main = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const logoutClicked = useSelector(state => state.logoutClicked);
@@ -68,8 +83,8 @@ const Main = () => {
           'alignContent': 'center'
         }}
         onClick={e => {
-          e.preventDefault();
-          console.log(e)
+          // e.preventDefault();
+          // console.log(e)
           if (balloonState !== 'none' && e.target.id === 'balloon') {
             dispatch(balloonStateCreator('none'));
           }
@@ -91,7 +106,7 @@ const Main = () => {
           <Meta />
         </div>
       </main>
-      <Modal style={modalOption} />
+      <Modal style={modalOption} contents={modalContents} />
     </>
   );
 };
