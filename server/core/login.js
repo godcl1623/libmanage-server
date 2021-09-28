@@ -136,6 +136,7 @@ app.post('/logout_process', (req, res) => {
 });
 
 app.post('/check_login', (req, res) => {
+  console.log(req.session)
   if (req.session.loginInfo) {
     res.send(req.session.loginInfo);
   } else {

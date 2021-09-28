@@ -47,6 +47,7 @@ const Main = () => {
   React.useEffect(() => {
     axios.post('http://localhost:3002/check_login', { message: 'isLoginSuccessful' }, { withCredentials: true })
       .then(res => {
+        console.log(res.data)
         if (res.data.isLoginSuccessful) {
           dispatch(loginStatusCreator(res.data.isLoginSuccessful));
           if (userState.nickname === undefined) {

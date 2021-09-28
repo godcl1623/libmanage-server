@@ -152,6 +152,7 @@ app.post('/api/connect', (req, res) => {
 });
 
 app.post('/meta_search', (req, res) => {
+  console.log(req.session)
   const { cid, access_token: token } = req.body.apiCred;
   const client = igdb(cid, token);
   // 1. 스팀 게임별 고유 id와 IGDB 사이트에 등록된 스팀 url 대조 함수 - IGDB 고유 게임 아이디 이용 예정
@@ -193,7 +194,8 @@ app.post('/meta_search', (req, res) => {
     const fail = [];
     statObj.total = rawData.length;
     // rawData.slice(rawData.length - 30,rawData.length).forEach((steamAppId, index) => {
-    rawData.forEach((steamAppId, index) => {
+    rawData.slice(0 - 5).forEach((steamAppId, index) => {
+    // rawData.forEach((steamAppId, index) => {
       setTimeout(() => {
         filterFunc(steamAppId)
           .then(result => {
@@ -206,7 +208,8 @@ app.post('/meta_search', (req, res) => {
             statObj.count++;
             console.log(`Searching for steam URL based on steam app id: ${temp.length + fail.length}/${rawData.length}`);
             // if (temp.length + fail.length === 30) {
-            if (temp.length + fail.length === rawData.length) {
+            if (temp.length + fail.length === 5) {
+            // if (temp.length + fail.length === rawData.length) {
               statObj.total = fail.length;
               statObj.count = 0;
               statObj.status = '2';
@@ -300,7 +303,8 @@ app.post('/meta_search', (req, res) => {
   const writeToDB = resultObj => new Promise((resolve, reject) => {
     const { titles, urls, covers, rawData } = resultObj;
     const columns = 'title, cover, igdb_url, meta';
-    const queryString = `insert into DB_SAVE_TEST (${columns}) values(?, ?, ?, ?)`;
+    // const queryString = `insert into DB_SAVE_TEST (${columns}) values(?, ?, ?, ?)`;
+    const queryString = `insert into SES_WRITE_TEST (${columns}) values(?, ?, ?, ?)`;
     rawData.forEach((data, index) => {
       const values = [titles[index], covers[index], urls[index], JSON.stringify(data)];
       libDB.query(queryString, values, (err, result) => {
