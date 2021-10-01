@@ -32,3 +32,8 @@ export const balloonOriginCreator = string => ({
   type: 'BALLOON_ORIGIN',
   payload: string
 })
+
+export const LOGINSTATETESTER = obj => ({
+  type: 'LOGINSTATETEST',
+  payload: obj
+})

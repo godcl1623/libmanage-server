@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
-import { loginStatusCreator, userStateCreator } from '../../actions';
+import { loginStatusCreator, userStateCreator, LOGINSTATETESTER } from '../../actions';
 import { hasher, salter } from '../../custom_modules/hasher';
 import { encryptor } from '../../custom_modules/aeser';
 import { tracer } from '../../custom_modules/security/fes';
@@ -26,6 +26,7 @@ const loginException = (dispatch, history) => {
 const Login = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const userState = useSelector(state => state.userState);
+  const _LOGINSTATE = useSelector(state => state.LOGINSTATETEST);
   const dispatch = useDispatch();
   const history = useHistory();
 
@@ -33,6 +34,7 @@ const Login = () => {
     axios.post('http://localhost:3002/check_login', {}, { withCredentials: true })
     .then(res => {
       if (res.data.isLoginSuccessful) {
+        dispatch(LOGINSTATETESTER(res.data));
         dispatch(loginStatusCreator(res.data.isLoginSuccessful));
         history.push('/main');
         if (userState.nickname === undefined) {
@@ -51,7 +53,7 @@ const Login = () => {
     })
     .catch(err => alert(err));
   }, []);
-
+  console.log(_LOGINSTATE)
   if (loginStatus) {
     return <></>;
   }
