@@ -8,6 +8,5 @@ export default combineReducers({
   userState: tempStore.userStateReducer,
   modalState: tempStore.modalStateReducer,
   balloonState: tempStore.balloonStateReducer,
-  balloonOrigin: tempStore.balloonOriginReducer,
-  LOGINSTATETEST: tempStore.LOGINSTATETESTREDUCER
+  balloonOrigin: tempStore.balloonOriginReducer
 });

@@ -8,7 +8,7 @@ const passport = require('passport');
 const SteamStrategy = require('passport-steam').Strategy;
 const axios = require('axios');
 const igdb = require('igdb-api-node').default;
-const { libDB } = require('../custom_modules/db');
+const { libDB, db } = require('../custom_modules/db');
 const { cyber, owl } = require('../custom_modules/security/fes');
 
 const app = express();

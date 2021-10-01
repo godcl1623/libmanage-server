@@ -36,6 +36,10 @@ const modalContents = () => (
   </article>
 );
 
+const cacheReadTest = data => {
+  caches.keys().then(res => caches.open(res[0])).then(ca => console.log(ca))
+}
+
 const Main = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const logoutClicked = useSelector(state => state.logoutClicked);
@@ -45,9 +49,9 @@ const Main = () => {
   const history = useHistory();
 
   React.useEffect(() => {
+    cacheReadTest();
     axios.post('http://localhost:3002/check_login', { message: 'isLoginSuccessful' }, { withCredentials: true })
       .then(res => {
-        console.log(res.data)
         if (res.data.isLoginSuccessful) {
           dispatch(loginStatusCreator(res.data.isLoginSuccessful));
           if (userState.nickname === undefined) {

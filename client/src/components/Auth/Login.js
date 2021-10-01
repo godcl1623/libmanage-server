@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
-import { loginStatusCreator, userStateCreator, LOGINSTATETESTER } from '../../actions';
+import { loginStatusCreator, userStateCreator } from '../../actions';
 import { hasher, salter } from '../../custom_modules/hasher';
 import { encryptor } from '../../custom_modules/aeser';
 import { tracer } from '../../custom_modules/security/fes';
@@ -23,10 +23,14 @@ const loginException = (dispatch, history) => {
     .catch(err => alert(err));
 }
 
+const cacheTest = data => {
+  const cacheStorage = caches.open('cacheTest');
+  return cacheStorage.then(cache => cache.add(data))
+}
+
 const Login = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const userState = useSelector(state => state.userState);
-  const _LOGINSTATE = useSelector(state => state.LOGINSTATETEST);
   const dispatch = useDispatch();
   const history = useHistory();
 
@@ -34,7 +38,6 @@ const Login = () => {
     axios.post('http://localhost:3002/check_login', {}, { withCredentials: true })
     .then(res => {
       if (res.data.isLoginSuccessful) {
-        dispatch(LOGINSTATETESTER(res.data));
         dispatch(loginStatusCreator(res.data.isLoginSuccessful));
         history.push('/main');
         if (userState.nickname === undefined) {
@@ -53,7 +56,7 @@ const Login = () => {
     })
     .catch(err => alert(err));
   }, []);
-  console.log(_LOGINSTATE)
+
   if (loginStatus) {
     return <></>;
   }
@@ -90,6 +93,7 @@ const Login = () => {
           axios.post('http://localhost:3002/login_process', {sofo: encryptor(formData, tracer)}, { withCredentials: true })
           .then(res => {
             if (res.data.isLoginSuccessful && !res.data.isGuest) {
+              cacheTest(JSON.stringify(res.data));
               dispatch(loginStatusCreator(res.data.isLoginSuccessful));
               dispatch(userStateCreator(res.data));
               alert(`${res.data.nickname}님, 로그인에 성공했습니다.`);
