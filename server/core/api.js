@@ -107,9 +107,13 @@ app.get('/', (req, res) => {
   res.send('api server');
 });
 
-app.get('/test', (req, res) => {
-  // res.send(test)
-  // res.send(uid);
+app.post('/test', (req, res) => {
+  let foo = '';
+  axios.post('http://localhost:3002/check_login', { from: 'server'})
+    .then(resu => {
+      foo = resu.data;
+      console.log(foo.nickname)
+    })
 });
 
 app.post('/api/search', (req, res) => {

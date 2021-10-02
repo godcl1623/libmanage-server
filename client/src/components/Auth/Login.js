@@ -23,11 +23,6 @@ const loginException = (dispatch, history) => {
     .catch(err => alert(err));
 }
 
-const cacheTest = data => {
-  const cacheStorage = caches.open('cacheTest');
-  return cacheStorage.then(cache => cache.add(data))
-}
-
 const Login = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const userState = useSelector(state => state.userState);
@@ -93,7 +88,6 @@ const Login = () => {
           axios.post('http://localhost:3002/login_process', {sofo: encryptor(formData, tracer)}, { withCredentials: true })
           .then(res => {
             if (res.data.isLoginSuccessful && !res.data.isGuest) {
-              cacheTest(JSON.stringify(res.data));
               dispatch(loginStatusCreator(res.data.isLoginSuccessful));
               dispatch(userStateCreator(res.data));
               alert(`${res.data.nickname}님, 로그인에 성공했습니다.`);

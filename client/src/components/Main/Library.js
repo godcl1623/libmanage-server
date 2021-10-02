@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import axios from 'axios';
 import Balloon from '../Modal/Balloon';
 import { balloonStateCreator, balloonOriginCreator } from '../../actions';
 
@@ -96,6 +97,14 @@ const Library = () => {
         <li>라이브러리 4</li>
         <li>라이브러리 5</li>
       </ul>
+      <button
+        onClick={e => {
+          axios.post('http://localhost:3003/test', {}, {withCredentials: true})
+            .then(res => console.log(res))
+        }}
+      >
+        세션 테스트
+      </button>
     </article>
   );
 };

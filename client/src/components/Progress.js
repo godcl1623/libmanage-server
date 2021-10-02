@@ -24,6 +24,10 @@ const Progress = () => {
     }
   }
   useEffect(() => {
+    axios.post('http://localhost:3002/check_login', {}, {withCredentials: true})
+      .then(res => console.log(res))
+  }, [])
+  useEffect(() => {
     axios.post('http://localhost:3003/api/search', {}, {withCredentials: true})
       .then(res => {
         if (res.data) {
