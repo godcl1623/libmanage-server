@@ -132,16 +132,24 @@ app.post('/logout_process', (req, res) => {
 });
 
 app.post('/check_login', (req, res) => {
-  if (req.body.from === 'server') {
-    db.query("select data from sessions where data like ?", ['%tester%'], (err, result) => {
-      res.send(JSON.stringify(JSON.parse(result[0].data).loginInfo))
-    })
-  } else if (req.body.message === 'isLoginSuccessful') {
-    if (req.session.loginInfo) {
+  // 빌드 전에 삭제
+  console.log(req.body.message)
+  console.log(req.session.loginInfo)
+  if (req.body.message !== '') {
+    const origin = JSON.stringify(req.session.loginInfo);
+    const compare = JSON.stringify(req.body.message);
+    if (origin !== compare) {
+      req.session.loginInfo = req.body.message;
+      if (req.session.loginInfo) {
         res.send(req.session.loginInfo);
       } else {
         res.send('로그인 정보가 만료됐습니다. 다시 로그인해 주세요.');
       }
+    }
+  } else if (req.session.loginInfo) {
+    res.send(req.session.loginInfo);
+  } else {
+    res.send('로그인 정보가 만료됐습니다. 다시 로그인해 주세요.');
   }
 });
 

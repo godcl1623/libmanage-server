@@ -44,9 +44,15 @@ const Main = () => {
   const testState = useSelector(state => state._TEST);
   const dispatch = useDispatch();
   const history = useHistory();
-  console.log(testState);
+
   React.useEffect(() => {
-    axios.post('http://localhost:3002/check_login', { message: 'isLoginSuccessful' }, { withCredentials: true })
+    if (testState.stores !== undefined && userState.stores === undefined) {
+      dispatch(userStateCreator(testState));
+    }
+  }, [])
+
+  React.useEffect(() => {
+    axios.post('http://localhost:3002/check_login', { message: testState }, { withCredentials: true })
       .then(res => {
         if (res.data.isLoginSuccessful) {
           dispatch(loginStatusCreator(res.data.isLoginSuccessful));
@@ -65,7 +71,7 @@ const Main = () => {
         }
       })
       .catch(err => console.log(err));
-  }, []);
+    }, []);
 
   if (loginStatus === false && logoutClicked === false) {
     return(<></>);

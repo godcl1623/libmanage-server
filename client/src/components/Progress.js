@@ -28,7 +28,7 @@ const Progress = () => {
     }
   }
   useEffect(() => {
-    axios.post('http://localhost:3002/check_login', { message: 'isLoginSuccessful' }, {withCredentials: true})
+    axios.post('http://localhost:3002/check_login', { message: ''}, {withCredentials: true})
       .then(res => {
         const reqUserInfo = res.data;
         return (new Promise((resolve, reject) => resolve(reqUserInfo)));
