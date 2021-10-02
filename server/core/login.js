@@ -132,7 +132,6 @@ app.post('/logout_process', (req, res) => {
 });
 
 app.post('/check_login', (req, res) => {
-  // console.log(req.session)
   if (req.body.from === 'server') {
     db.query("select data from sessions where data like ?", ['%tester%'], (err, result) => {
       res.send(JSON.stringify(JSON.parse(result[0].data).loginInfo))

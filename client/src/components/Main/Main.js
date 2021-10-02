@@ -41,9 +41,10 @@ const Main = () => {
   const logoutClicked = useSelector(state => state.logoutClicked);
   const balloonState = useSelector(state => state.balloonState);
   const userState = useSelector(state => state.userState);
+  const testState = useSelector(state => state._TEST);
   const dispatch = useDispatch();
   const history = useHistory();
-
+  console.log(testState);
   React.useEffect(() => {
     axios.post('http://localhost:3002/check_login', { message: 'isLoginSuccessful' }, { withCredentials: true })
       .then(res => {

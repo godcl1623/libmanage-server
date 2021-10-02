@@ -117,11 +117,22 @@ app.post('/test', (req, res) => {
 });
 
 app.post('/api/search', (req, res) => {
+  const { reqUserInfo } = req.body;
   axios.post(`http://localhost:${port}/meta_search`, { apiCred: apiCredential })
   .then(searchResult => {
     if (searchResult.data === true) {
       console.log('DB write completed. Return to app service.')
-      res.send(true)
+      res.send({
+        result: true,
+        newInfo: {
+          ...reqUserInfo,
+          stores: {
+            game: {
+              steam: true
+            }
+          }
+        }
+      })
     } else {
       res.redirect('/error/search');
     }

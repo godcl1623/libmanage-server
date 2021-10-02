@@ -32,3 +32,8 @@ export const balloonOriginCreator = string => ({
   type: 'BALLOON_ORIGIN',
   payload: string
 })
+
+export const _TESTCREATOR = anything => ({
+  type: '__TEST__',
+  payload: anything
+})

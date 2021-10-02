@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useSelector, useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
+import { _TESTCREATOR as testUp } from '../actions';
 
 const Progress = () => {
+  const testState = useSelector(state => state._TEST);
   const [ count, setCount ] = useState('');
   const [ total, setTotal ] = useState('');
   const [ status, setStatus ] = useState('1');
   const history = useHistory();
+  const dispatch = useDispatch();
   const statusText = status => {
     switch (status) {
       case ('1'):
@@ -24,17 +28,29 @@ const Progress = () => {
     }
   }
   useEffect(() => {
-    axios.post('http://localhost:3002/check_login', {}, {withCredentials: true})
-      .then(res => console.log(res))
-  }, [])
-  useEffect(() => {
-    axios.post('http://localhost:3003/api/search', {}, {withCredentials: true})
+    axios.post('http://localhost:3002/check_login', { message: 'isLoginSuccessful' }, {withCredentials: true})
       .then(res => {
-        if (res.data) {
-          setTimeout(() => history.push('/main'), 3000);
-        }
+        const reqUserInfo = res.data;
+        return (new Promise((resolve, reject) => resolve(reqUserInfo)));
       })
-    }, []);
+      .then(res => {
+        axios.post('http://localhost:3003/api/search', { reqUserInfo: res }, {withCredentials: true})
+          .then(res => {
+            if (res.data.result) {
+              dispatch(testUp(res.data.newInfo));
+              setTimeout(() => history.push('/main'), 3000);
+            }
+          })
+      })
+  }, [])
+  // useEffect(() => {
+  //   axios.post('http://localhost:3003/api/search', {}, {withCredentials: true})
+  //     .then(res => {
+  //       if (res.data) {
+  //         setTimeout(() => history.push('/main'), 3000);
+  //       }
+  //     })
+  //   }, []);
   useEffect(() => {
     const requestStatus = setInterval(() => {
       axios.post('http://localhost:3003/stat/track', {}, {withCredentials: true})

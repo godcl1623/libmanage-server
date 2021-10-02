@@ -50,6 +50,13 @@ const balloonOriginReducer = (state = '', action) => {
   return state;
 }
 
+const _TESTREDUCER = (state = '', action) => {
+  if (action.type === '__TEST__') {
+    return action.payload;
+  }
+  return state;
+}
+
 const tempStore = {
   loginStatusReducer,
   logoutClickedReducer,
@@ -57,7 +64,8 @@ const tempStore = {
   userStateReducer,
   modalStateReducer,
   balloonStateReducer,
-  balloonOriginReducer
+  balloonOriginReducer,
+  _TESTREDUCER
 }
 
 export default tempStore;
