@@ -9,7 +9,7 @@ const MySQLStore = require('express-mysql-session')(session);
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-const { db, dbOptions } = require('../custom_modules/db');
+const { db, dbOptions, libDB } = require('../custom_modules/db');
 const { encryptor, decryptor } = require('../custom_modules/aeser');
 const { tracer } = require('../custom_modules/security/fes');
 const swallow = require('../custom_modules/security/swallow');
@@ -93,14 +93,25 @@ app.post('/login_process', (req, res) => {
         res.send('등록되지 않은 ID입니다.');
       } else {
         [dbInfo] = result;
+        console.log('stores', dbInfo.stores === '')
         const comparison = bcrypt.hashSync(dbInfo.user_pwd, loginInfo.salt);
         if (loginInfo.ID === dbInfo.user_id && loginInfo.PWD === comparison) {
-          req.session.loginInfo = {
-            isLoginSuccessful: true,
-            nickname: dbInfo.user_nick,
-            isGuest: false
+          if (dbInfo.stores === '') {
+            req.session.loginInfo = {
+              isLoginSuccessful: true,
+              nickname: dbInfo.user_nick,
+              isGuest: false
+            }
+            req.session.save(() => res.send(req.session.loginInfo));
+          } else {
+            req.session.loginInfo = {
+              isLoginSuccessful: true,
+              nickname: dbInfo.user_nick,
+              isGuest: false,
+              stores: { ...dbInfo.stores }
+            }
+            req.session.save(() => res.send(req.session.loginInfo));
           }
-          req.session.save(() => res.send(req.session.loginInfo));
         } else {
           res.send('ID 혹은 비밀번호가 잘못됐습니다.');
         }
