@@ -145,6 +145,8 @@ app.post('/check_login', (req, res) => {
       } else {
         res.send('로그인 정보가 만료됐습니다. 다시 로그인해 주세요.');
       }
+    } else {
+      res.send(req.session.loginInfo);  
     }
   } else if (req.session.loginInfo) {
     res.send(req.session.loginInfo);
