@@ -14,7 +14,7 @@ const libDBOptions = {
   host: 'localhost',
   user: 'root',
   password: pwd,
-  database: 'libmanage_user_library',
+  database: 'libmanage_user_steam',
   multipleStatements: true,
   dateStrings: true
 }

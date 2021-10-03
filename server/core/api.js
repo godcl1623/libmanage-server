@@ -16,6 +16,7 @@ const port = 3003;
 let uid = '';
 let gameList = '';
 let apiCredential = '';
+let requestedUser = '';
 const statObj = {
   count: 0,
   total: 0,
@@ -108,30 +109,65 @@ app.get('/', (req, res) => {
 });
 
 app.post('/test', (req, res) => {
-  let foo = '';
-  axios.post('http://localhost:3002/check_login', { from: 'server'})
-    .then(resu => {
-      foo = resu.data;
-      console.log(foo.nickname)
-    })
+  libDB.query(`select * from dee`, (err, result) => {
+    if (err) {
+      const columns = {
+        first: 'libid int not null auto_increment',
+        second: 'title text not null',
+        third: 'cover text null',
+        fourth: 'igdb_url text not null',
+        fifth: 'meta text not null',
+        sixth: 'primary key (libid)'
+      }
+      const queryString = `
+        create table dee (
+          ${columns.first},
+          ${columns.second},
+          ${columns.third},
+          ${columns.fourth},
+          ${columns.fifth},
+          ${columns.sixth}
+        );
+      `;
+      libDB.query(queryString, (err, result) => {
+        if (err) {
+          throw err;
+        } else {
+          console.log(result);
+        }
+      })
+    } else {
+      console.log('result is', result)
+    }
+  })
 });
 
 app.post('/api/search', (req, res) => {
   const { reqUserInfo } = req.body;
+  requestedUser = reqUserInfo.nickname;
   axios.post(`http://localhost:${port}/meta_search`, { apiCred: apiCredential })
   .then(searchResult => {
     if (searchResult.data === true) {
       console.log('DB write completed. Return to app service.')
-      res.send({
-        result: true,
-        newInfo: {
-          ...reqUserInfo,
-          stores: {
-            game: {
-              steam: true
+      const stores = {
+        game: {
+          steam: true
+        }
+      }
+      db.query(`update user_info set stores=? where user_nick=?`,
+      [JSON.stringify(stores), requestedUser],
+      (err, result) => {
+        if (err) throw err;
+        console.log(result);
+        res.send({
+          result: true,
+          newInfo: {
+            ...reqUserInfo,
+            stores: {
+              ...stores
             }
           }
-        }
+        })
       })
     } else {
       res.redirect('/error/search');
@@ -317,18 +353,53 @@ app.post('/meta_search', (req, res) => {
   // 9. DB 기록 함수
   const writeToDB = resultObj => new Promise((resolve, reject) => {
     const { titles, urls, covers, rawData } = resultObj;
-    const columns = 'title, cover, igdb_url, meta';
-    // const queryString = `insert into DB_SAVE_TEST (${columns}) values(?, ?, ?, ?)`;
-    const queryString = `insert into SES_WRITE_TEST (${columns}) values(?, ?, ?, ?)`;
-    rawData.forEach((data, index) => {
-      const values = [titles[index], covers[index], urls[index], JSON.stringify(data)];
-      libDB.query(queryString, values, (err, result) => {
-        if (err) {
-          throw err;
-        } else {
-          resolve(true);
+    const writeDB = () => {
+      (() => {
+        const columns = 'title, cover, igdb_url, meta';
+        // const queryString = `insert into ${requestedUser} (${columns}) values(?, ?, ?, ?)`;
+        const queryString = `insert into ${requestedUser} (${columns}) values(?, ?, ?, ?)`;
+        rawData.forEach((data, index) => {
+          const values = [titles[index], covers[index], urls[index], JSON.stringify(data)];
+          libDB.query(queryString, values, (err, result) => {
+            if (err) {
+              throw err;
+            } else {
+              resolve(true);
+            }
+          });
+        });
+      })();
+    };
+    libDB.query(`select * from ${requestedUser}`, (err, result) => {
+      if (err) {
+        const columns = {
+          first: 'libid int not null auto_increment',
+          second: 'title text not null',
+          third: 'cover text null',
+          fourth: 'igdb_url text not null',
+          fifth: 'meta text not null',
+          sixth: 'primary key (libid)'
         }
-      });
+        const queryString = `
+          create table ${requestedUser} (
+            ${columns.first},
+            ${columns.second},
+            ${columns.third},
+            ${columns.fourth},
+            ${columns.fifth},
+            ${columns.sixth}
+          );
+        `;
+        libDB.query(queryString, (err, result) => {
+          if (err) {
+            throw err;
+          } else {
+            writeDB();
+          }
+        })
+      } else {
+        writeDB();
+      }
     });
   });
   // 실제 검색 실행 코드
