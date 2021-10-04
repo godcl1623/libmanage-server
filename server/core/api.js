@@ -202,7 +202,7 @@ app.post('/api/connect', (req, res) => {
 });
 
 app.post('/meta_search', (req, res) => {
-  const tempList = [1210030, 1222140, 1254120, 1286830, 1289310];
+  // const tempList = [1210030, 1222140, 1254120, 1286830, 1289310];
   const { cid, access_token: token } = req.body.apiCred;
   const client = igdb(cid, token);
   // 1. 스팀 게임별 고유 id와 IGDB 사이트에 등록된 스팀 url 대조 함수 - IGDB 고유 게임 아이디 이용 예정
@@ -355,8 +355,8 @@ app.post('/meta_search', (req, res) => {
     const writeDB = () => {
       (() => {
         const columns = 'title, cover, igdb_url, meta';
-        const queryString = `insert into foo (${columns}) values(?, ?, ?, ?)`;
-        // const queryString = `insert into ${requestedUser} (${columns}) values(?, ?, ?, ?)`;
+        // const queryString = `insert into foo (${columns}) values(?, ?, ?, ?)`;
+        const queryString = `insert into ${requestedUser} (${columns}) values(?, ?, ?, ?)`;
         rawData.forEach((data, index) => {
           const values = [titles[index], covers[index], urls[index], JSON.stringify(data)];
           libDB.query(queryString, values, (err, result) => {
@@ -369,8 +369,8 @@ app.post('/meta_search', (req, res) => {
         });
       })();
     };
-    // libDB.query(`select * from ${requestedUser}`, (err, result) => {
-    libDB.query(`select * from foo`, (err, result) => {
+    libDB.query(`select * from ${requestedUser}`, (err, result) => {
+    // libDB.query(`select * from foo`, (err, result) => {
       if (err) {
         console.log(err)
         const columns = {
@@ -404,8 +404,8 @@ app.post('/meta_search', (req, res) => {
     });
   });
   // 실제 검색 실행 코드
-  // firstFilter(gameList, steamURLSearchQuery)
-  firstFilter(tempList, steamURLSearchQuery)
+  firstFilter(gameList, steamURLSearchQuery)
+  // firstFilter(tempList, steamURLSearchQuery)
     .then(rawURLSearchResult => secondFilter(rawURLSearchResult, steamURLException))
     .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
     .then(igdbResult => processMeta(igdbResult, coverSearch))

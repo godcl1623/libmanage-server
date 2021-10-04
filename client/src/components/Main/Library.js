@@ -13,12 +13,35 @@ const Options = () => (
   </>
 );
 
+const testBtns = (state, setState) => (
+  <>
+    <button
+        onClick={e => {
+          axios.post('http://localhost:3003/api/connect', {execute: 'order66'}, {withCredentials: true})
+            .then(res => {
+              setState(res.data)
+            })
+        }}
+      >
+        api 인증
+      </button>
+      <button
+        onClick={e => {
+          axios.post('http://localhost:3003/meta_search', {apiCred: state}, {withCredentials: true})
+            .then(res => console.log(res))
+        }}
+      >
+        검색 테스트
+      </button>
+  </>
+);
+
 const Library = () => {
   // const [balloonState, setBalloonState] = React.useState('none');
-  const [ btnCoords, setBtnCoords ] = React.useState({});
-  const [apiAuth, setApiAuth] = React.useState('');
   const balloonState = useSelector(state => state.balloonState);
   const balloonOrigin = useSelector(state => state.balloonOrigin);
+  const [ btnCoords, setBtnCoords ] = React.useState({});
+  // const [apiAuth, setApiAuth] = React.useState('');
   const dispatch = useDispatch();
   const ref = React.useRef();
   const updateBtnCoords = (left, top) => {
@@ -33,10 +56,6 @@ const Library = () => {
     const { left, top } = ref.current.getBoundingClientRect();
     updateBtnCoords(left, top);
   }, []);
-
-  React.useEffect(() => {
-    console.log(apiAuth)
-  }, [apiAuth])
 
   const wrapper = {
     'display': balloonOrigin === 'Library' ? balloonState : 'none',
@@ -102,24 +121,7 @@ const Library = () => {
         <li>라이브러리 4</li>
         <li>라이브러리 5</li>
       </ul>
-      <button
-        onClick={e => {
-          axios.post('http://localhost:3003/api/connect', {execute: 'order66'}, {withCredentials: true})
-            .then(res => {
-              setApiAuth(res.data)
-            })
-        }}
-      >
-        api 인증
-      </button>
-      <button
-        onClick={e => {
-          axios.post('http://localhost:3003/meta_search', {apiCred: apiAuth}, {withCredentials: true})
-            .then(res => console.log(res))
-        }}
-      >
-        검색 테스트
-      </button>
+      {/* { testBtns(apiAuth, setApiAuth) } */}
     </article>
   );
 };

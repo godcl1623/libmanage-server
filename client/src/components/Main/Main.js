@@ -21,20 +21,23 @@ const modalOption = {
   'zIndex': '2'
 }
 
-const modalContents = () => (
-  <article>
-    <h2>스토어 목록</h2>
-    <hr />
-    <section className="store_container">
-      <h3>스팀</h3>
-      <a
-        href="http://localhost:3003/auth/steam"
-        // target="_blank"
-        // rel="noreferrer"
-      >스팀으로 로그인</a>
-    </section>
-  </article>
-);
+const modalContents = state => {
+  console.log(state.stores)
+  return (
+    <article>
+      <h2>스토어 목록</h2>
+      <hr />
+      <section className="store_container">
+        <h3>스팀</h3>
+        <a
+          href="http://localhost:3003/auth/steam"
+          // target="_blank"
+          // rel="noreferrer"
+        >스팀으로 로그인</a>
+      </section>
+    </article>
+  );
+};
 
 const Main = () => {
   const loginStatus = useSelector(state => state.loginStatus);
@@ -113,7 +116,7 @@ const Main = () => {
           <Meta />
         </div>
       </main>
-      <Modal style={modalOption} contents={modalContents} />
+      <Modal style={modalOption} contents={() => modalContents(userState)} />
     </>
   );
 };

@@ -20,11 +20,14 @@ const tokenStateReducer = (status = '', action) => {
 }
 
 const userStateReducer = (status = {}, action) => {
-  if (action.type === 'USER_STATE') {
+  if (action.type === 'USER_STATE' && action.payload !== null) {
     return {
       ...status,
       ...action.payload
     }
+  // eslint-disable-next-line no-else-return
+  } else if (action.type === 'USER_STATE' && action.payload === null) {
+    return {};
   }
   return status;
 };

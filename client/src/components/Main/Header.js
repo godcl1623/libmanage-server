@@ -8,7 +8,8 @@ import {
   logoutClickedCreator,
   modalStateCreator,
   balloonStateCreator,
-  balloonOriginCreator
+  balloonOriginCreator,
+  userStateCreator
 } from '../../actions';
 
 const Header = () => {
@@ -58,16 +59,15 @@ const Header = () => {
       ?
         <button
         onClick={() => {
-            dispatch(logoutClickedCreator(true));
-            axios.post('http://localhost:3002/logout_process', {message: 'foo'}, { withCredentials: true })
-              .then(res => {
-                dispatch(loginStatusCreator(res.data.isLoginSuccessful));
-                setTimeout(() => {
-                  alert('로그아웃 했습니다.');
-                  history.push('/');
-                }, 10);
-              })
-              .catch(err => alert(err));
+          axios.post('http://localhost:3002/logout_process', {message: 'foo'}, { withCredentials: true })
+            .then(res => {
+              dispatch(logoutClickedCreator(true));
+              dispatch(userStateCreator(null));
+              dispatch(loginStatusCreator(res.data.isLoginSuccessful));
+              alert('로그아웃 했습니다.');
+              history.push('/');
+            })
+            .catch(err => alert(err));
           }}
         >
           로그아웃
