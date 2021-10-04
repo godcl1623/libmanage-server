@@ -22,21 +22,39 @@ const modalOption = {
 }
 
 const modalContents = state => {
-  console.log(state.stores)
-  return (
-    <article>
-      <h2>스토어 목록</h2>
-      <hr />
-      <section className="store_container">
-        <h3>스팀</h3>
-        <a
-          href="http://localhost:3003/auth/steam"
-          // target="_blank"
-          // rel="noreferrer"
-        >스팀으로 로그인</a>
-      </section>
-    </article>
-  );
+  if (state.stores === undefined) {
+    return (
+      <article>
+        <h2>스토어 목록</h2>
+        <hr />
+        <section className="store_container">
+          <h3>스팀</h3>
+          <a
+            href="http://localhost:3003/auth/steam"
+            // target="_blank"
+            // rel="noreferrer"
+          >스팀으로 로그인</a>
+        </section>
+      </article>
+    );
+  // eslint-disable-next-line no-else-return
+  } else {
+    return (
+      <article>
+        <h2>스토어 목록</h2>
+        <hr />
+        <section className="store_container">
+          <h3>스팀</h3>
+          <button
+            onClick={e => {
+              axios.post('http://localhost:3003/disconnect', { reqUserInfo: state.nickname}, {withCredentials: true})
+                .then(res => console.log(res));
+            }}
+          >연동 해제</button>
+        </section>
+      </article>
+    );
+  }
 };
 
 const Main = () => {

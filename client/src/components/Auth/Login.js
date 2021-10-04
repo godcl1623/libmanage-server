@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
-import { loginStatusCreator, userStateCreator } from '../../actions';
+import { loginStatusCreator, userStateCreator, logoutClickedCreator } from '../../actions';
 import { hasher, salter } from '../../custom_modules/hasher';
 import { encryptor } from '../../custom_modules/aeser';
 import { tracer } from '../../custom_modules/security/fes';
@@ -26,6 +26,7 @@ const loginException = (dispatch, history) => {
 const Login = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const userState = useSelector(state => state.userState);
+  const logoutClicked = useSelector(state => state.logoutClicked);
   const dispatch = useDispatch();
   const history = useHistory();
 
@@ -51,6 +52,13 @@ const Login = () => {
     })
     .catch(err => alert(err));
   }, []);
+
+  useEffect(() => {
+    if (logoutClicked) {
+      dispatch(logoutClickedCreator(false));
+    }
+  }, []);
+
 
   if (loginStatus) {
     return <></>;

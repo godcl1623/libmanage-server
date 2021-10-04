@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
@@ -18,7 +18,6 @@ const Header = () => {
   const modalState = useSelector(state => state.modalState);
   const balloonState = useSelector(state => state.balloonState);
   const balloonOrigin = useSelector(state => state.balloonOrigin);
-  // const [balloonState, setBalloonState] = useState('none');
   const history = useHistory();
   const dispatch = useDispatch();
 

@@ -415,4 +415,8 @@ app.post('/meta_search', (req, res) => {
     .catch(err => console.log(err));
 });
 
+app.post('/disconnect', (req, res) => {
+  console.log(req.body);
+})
+
 app.listen(port, () => console.log(`server is running at port${port}`));
