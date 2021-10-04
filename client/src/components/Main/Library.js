@@ -16,6 +16,7 @@ const Options = () => (
 const Library = () => {
   // const [balloonState, setBalloonState] = React.useState('none');
   const [ btnCoords, setBtnCoords ] = React.useState({});
+  const [apiAuth, setApiAuth] = React.useState('');
   const balloonState = useSelector(state => state.balloonState);
   const balloonOrigin = useSelector(state => state.balloonOrigin);
   const dispatch = useDispatch();
@@ -32,6 +33,10 @@ const Library = () => {
     const { left, top } = ref.current.getBoundingClientRect();
     updateBtnCoords(left, top);
   }, []);
+
+  React.useEffect(() => {
+    console.log(apiAuth)
+  }, [apiAuth])
 
   const wrapper = {
     'display': balloonOrigin === 'Library' ? balloonState : 'none',
@@ -99,11 +104,21 @@ const Library = () => {
       </ul>
       <button
         onClick={e => {
-          axios.post('http://localhost:3003/test', {}, {withCredentials: true})
+          axios.post('http://localhost:3003/api/connect', {execute: 'order66'}, {withCredentials: true})
+            .then(res => {
+              setApiAuth(res.data)
+            })
+        }}
+      >
+        api 인증
+      </button>
+      <button
+        onClick={e => {
+          axios.post('http://localhost:3003/meta_search', {apiCred: apiAuth}, {withCredentials: true})
             .then(res => console.log(res))
         }}
       >
-        세션 테스트
+        검색 테스트
       </button>
     </article>
   );

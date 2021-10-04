@@ -202,7 +202,7 @@ app.post('/api/connect', (req, res) => {
 });
 
 app.post('/meta_search', (req, res) => {
-  console.log(req.session)
+  const tempList = [1210030, 1222140, 1254120, 1286830, 1289310];
   const { cid, access_token: token } = req.body.apiCred;
   const client = igdb(cid, token);
   // 1. 스팀 게임별 고유 id와 IGDB 사이트에 등록된 스팀 url 대조 함수 - IGDB 고유 게임 아이디 이용 예정
@@ -355,8 +355,8 @@ app.post('/meta_search', (req, res) => {
     const writeDB = () => {
       (() => {
         const columns = 'title, cover, igdb_url, meta';
+        const queryString = `insert into foo (${columns}) values(?, ?, ?, ?)`;
         // const queryString = `insert into ${requestedUser} (${columns}) values(?, ?, ?, ?)`;
-        const queryString = `insert into ${requestedUser} (${columns}) values(?, ?, ?, ?)`;
         rawData.forEach((data, index) => {
           const values = [titles[index], covers[index], urls[index], JSON.stringify(data)];
           libDB.query(queryString, values, (err, result) => {
@@ -369,8 +369,10 @@ app.post('/meta_search', (req, res) => {
         });
       })();
     };
-    libDB.query(`select * from ${requestedUser}`, (err, result) => {
+    // libDB.query(`select * from ${requestedUser}`, (err, result) => {
+    libDB.query(`select * from foo`, (err, result) => {
       if (err) {
+        console.log(err)
         const columns = {
           first: 'libid int not null auto_increment',
           second: 'title text not null',
@@ -402,14 +404,15 @@ app.post('/meta_search', (req, res) => {
     });
   });
   // 실제 검색 실행 코드
-  firstFilter(gameList, steamURLSearchQuery)
-  .then(rawURLSearchResult => secondFilter(rawURLSearchResult, steamURLException))
-  .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
-  .then(igdbResult => processMeta(igdbResult, coverSearch))
+  // firstFilter(gameList, steamURLSearchQuery)
+  firstFilter(tempList, steamURLSearchQuery)
+    .then(rawURLSearchResult => secondFilter(rawURLSearchResult, steamURLException))
+    .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
+    .then(igdbResult => processMeta(igdbResult, coverSearch))
   // 최종 메타데이터 목록 - igdbResult는 배열, 이 중 name, cover 정보 필요. name은 추출하기만 하면 되는데, cover는 image_id를 별도로 검색해서 받아와야 함
-  .then(resultObj => writeToDB(resultObj))
-  .then(writeResult => res.send(writeResult))
-  .catch(err => console.log(err));
+    .then(resultObj => writeToDB(resultObj))
+    .then(writeResult => res.send(writeResult))
+    .catch(err => console.log(err));
 });
 
 app.listen(port, () => console.log(`server is running at port${port}`));
