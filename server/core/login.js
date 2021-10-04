@@ -93,7 +93,6 @@ app.post('/login_process', (req, res) => {
         res.send('등록되지 않은 ID입니다.');
       } else {
         [dbInfo] = result;
-        console.log('stores', dbInfo.stores === '')
         const comparison = bcrypt.hashSync(dbInfo.user_pwd, loginInfo.salt);
         if (loginInfo.ID === dbInfo.user_id && loginInfo.PWD === comparison) {
           if (dbInfo.stores === '') {
@@ -108,7 +107,7 @@ app.post('/login_process', (req, res) => {
               isLoginSuccessful: true,
               nickname: dbInfo.user_nick,
               isGuest: false,
-              stores: { ...dbInfo.stores }
+              stores: { ...JSON.parse(dbInfo.stores) }
             }
             req.session.save(() => res.send(req.session.loginInfo));
           }
@@ -144,8 +143,8 @@ app.post('/logout_process', (req, res) => {
 
 app.post('/check_login', (req, res) => {
   // 빌드 전에 삭제
-  console.log(req.body.message)
-  console.log(req.session.loginInfo)
+  // console.log(req.body.message)
+  // console.log(req.session.loginInfo)
   if (req.body.message !== '') {
     const origin = JSON.stringify(req.session.loginInfo);
     const compare = JSON.stringify(req.body.message);

@@ -158,7 +158,6 @@ app.post('/api/search', (req, res) => {
       [JSON.stringify(stores), requestedUser],
       (err, result) => {
         if (err) throw err;
-        console.log(result);
         res.send({
           result: true,
           newInfo: {

@@ -87,6 +87,7 @@ const Login = () => {
           }
           axios.post('http://localhost:3002/login_process', {sofo: encryptor(formData, tracer)}, { withCredentials: true })
           .then(res => {
+            console.log(res.data)
             if (res.data.isLoginSuccessful && !res.data.isGuest) {
               dispatch(loginStatusCreator(res.data.isLoginSuccessful));
               dispatch(userStateCreator(res.data));
