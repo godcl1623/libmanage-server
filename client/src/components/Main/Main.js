@@ -8,7 +8,13 @@ import Library from './Library';
 import Meta from './Meta';
 import Navigation from './Navigation';
 import Modal from '../Modal/Modal';
-import { loginStatusCreator, userStateCreator, balloonStateCreator, _TESTCREATOR } from '../../actions';
+import {
+  loginStatusCreator,
+  userStateCreator,
+  balloonStateCreator,
+  comparisonStateCreator,
+  modalStateCreator
+} from '../../actions';
 
 const modalOption = {
   'position': 'absolute',
@@ -21,8 +27,9 @@ const modalOption = {
   'zIndex': '2'
 }
 
-const modalContents = (state, dispatch, setState) => {
-  if (state.stores === undefined) {
+const modalContents = (state, dispatch, setState1, setState2) => {
+  // 모든 스토어에 대응 가능하도록 개선 필요
+  if (state.stores === undefined || state.stores.game.steam === false) {
     return (
       <article>
         <h2>스토어 목록</h2>
@@ -49,10 +56,14 @@ const modalContents = (state, dispatch, setState) => {
             onClick={e => {
               const temp = state;
               temp.stores.game.steam = false;
-              // 반영을 위해서는 testState 변경이 필요
-              dispatch(setState(temp));
+              // 반영을 위해서는 comparisonState 변경이 필요
+              dispatch(setState1(temp));
               axios.post('http://localhost:3003/disconnect', { reqUserInfo: JSON.stringify(state) }, {withCredentials: true})
-                .then(res => console.log(res));
+                .then(res => {
+                  if (res) {
+                    dispatch(setState2(false));
+                  }
+                });
             }}
           >연동 해제</button>
         </section>
@@ -66,37 +77,41 @@ const Main = () => {
   const logoutClicked = useSelector(state => state.logoutClicked);
   const balloonState = useSelector(state => state.balloonState);
   const userState = useSelector(state => state.userState);
-  const testState = useSelector(state => state._TEST);
+  const comparisonState = useSelector(state => state.comparisonState);
   const dispatch = useDispatch();
   const history = useHistory();
 
   React.useEffect(() => {
-    if (testState.stores !== undefined && userState.stores === undefined) {
-      dispatch(userStateCreator(testState));
+    if (comparisonState.stores !== undefined && userState.stores === undefined) {
+      dispatch(userStateCreator(comparisonState));
     }
   }, [])
 
   React.useEffect(() => {
-    axios.post('http://localhost:3002/check_login', { message: testState }, { withCredentials: true })
-      .then(res => {
-        if (res.data.isLoginSuccessful) {
-          dispatch(loginStatusCreator(res.data.isLoginSuccessful));
-          if (userState.nickname === undefined) {
-            dispatch(userStateCreator(res.data));
+    if (comparisonState !== '') {
+      axios.post('http://localhost:3002/check_login', { message: comparisonState }, { withCredentials: true })
+        .then(res => {
+          if (res.data.isLoginSuccessful) {
+            dispatch(loginStatusCreator(res.data.isLoginSuccessful));
+            if (userState.nickname === undefined) {
+              dispatch(userStateCreator(res.data));
+              dispatch(comparisonStateCreator(''));
+            }
+          } else if (res.data.isGuest) {
+            // 임시로 작성
+            dispatch(loginStatusCreator(true));
+            if (userState.nickname === undefined) {
+              dispatch(userStateCreator(res.data));
+              dispatch(comparisonStateCreator(''));
+            }
+          } else {
+            alert('로그인이 필요합니다');
+            history.push('/');
           }
-        } else if (res.data.isGuest) {
-          // 임시로 작성
-          dispatch(loginStatusCreator(true));
-          if (userState.nickname === undefined) {
-            dispatch(userStateCreator(res.data));
-          }
-        } else {
-          alert('로그인이 필요합니다');
-          history.push('/');
-        }
-      })
-      .catch(err => console.log(err));
-    }, []);
+        })
+        .catch(err => console.log(err));
+    }
+    }, [comparisonState]);
 
   if (loginStatus === false && logoutClicked === false) {
     return(<></>);
@@ -138,7 +153,12 @@ const Main = () => {
           <Meta />
         </div>
       </main>
-      <Modal style={modalOption} contents={() => modalContents(userState, dispatch, _TESTCREATOR)} />
+      <Modal
+        style={modalOption}
+        contents={
+          () => modalContents(userState, dispatch, comparisonStateCreator, modalStateCreator)
+        }
+      />
     </>
   );
 };

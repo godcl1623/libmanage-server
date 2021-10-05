@@ -9,7 +9,8 @@ import {
   modalStateCreator,
   balloonStateCreator,
   balloonOriginCreator,
-  userStateCreator
+  userStateCreator,
+  comparisonStateCreator
 } from '../../actions';
 
 const Header = () => {
@@ -62,6 +63,7 @@ const Header = () => {
             .then(res => {
               dispatch(logoutClickedCreator(true));
               dispatch(userStateCreator(null));
+              dispatch(comparisonStateCreator(''));
               dispatch(loginStatusCreator(res.data.isLoginSuccessful));
               alert('로그아웃 했습니다.');
               history.push('/');

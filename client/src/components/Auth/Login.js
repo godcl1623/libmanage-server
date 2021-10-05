@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
-import { loginStatusCreator, userStateCreator, logoutClickedCreator } from '../../actions';
+import { loginStatusCreator, userStateCreator, logoutClickedCreator, comparisonStateCreator } from '../../actions';
 import { hasher, salter } from '../../custom_modules/hasher';
 import { encryptor } from '../../custom_modules/aeser';
 import { tracer } from '../../custom_modules/security/fes';
@@ -27,12 +27,12 @@ const Login = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const userState = useSelector(state => state.userState);
   const logoutClicked = useSelector(state => state.logoutClicked);
-  const testState = useSelector(state => state._TEST);
+  const comparisonState = useSelector(state => state.comparisonState);
   const dispatch = useDispatch();
   const history = useHistory();
 
   useEffect(() => {
-    axios.post('http://localhost:3002/check_login', { message: testState }, { withCredentials: true })
+    axios.post('http://localhost:3002/check_login', { message: comparisonState }, { withCredentials: true })
     .then(res => {
       if (res.data.isLoginSuccessful) {
         dispatch(loginStatusCreator(res.data.isLoginSuccessful));
@@ -57,6 +57,9 @@ const Login = () => {
   useEffect(() => {
     if (logoutClicked) {
       dispatch(logoutClickedCreator(false));
+    }
+    if (comparisonState !== '') {
+      dispatch(comparisonStateCreator(''));
     }
   }, []);
 

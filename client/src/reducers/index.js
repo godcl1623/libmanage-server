@@ -9,5 +9,6 @@ export default combineReducers({
   modalState: tempStore.modalStateReducer,
   balloonState: tempStore.balloonStateReducer,
   balloonOrigin: tempStore.balloonOriginReducer,
+  comparisonState: tempStore.comparisonStateReducer,
   _TEST: tempStore._TESTREDUCER
 });

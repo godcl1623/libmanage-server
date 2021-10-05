@@ -26,14 +26,19 @@ export const modalStateCreator = boolean => ({
 export const balloonStateCreator = string => ({
   type: 'BALLOON_STATE',
   payload: string
-})
+});
 
 export const balloonOriginCreator = string => ({
   type: 'BALLOON_ORIGIN',
   payload: string
-})
+});
+
+export const comparisonStateCreator = anything => ({
+  type: 'COMPARE_STATE',
+  payload: anything
+});
 
 export const _TESTCREATOR = anything => ({
   type: '__TEST__',
   payload: anything
-})
+});

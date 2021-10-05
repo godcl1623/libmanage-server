@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
-import { _TESTCREATOR as testUp } from '../actions';
+import { comparisonStateCreator } from '../actions';
 
 const Progress = () => {
-  const testState = useSelector(state => state._TEST);
   const [ count, setCount ] = useState('');
   const [ total, setTotal ] = useState('');
   const [ status, setStatus ] = useState('1');
@@ -37,7 +36,7 @@ const Progress = () => {
         axios.post('http://localhost:3003/api/search', { reqUserInfo: res }, {withCredentials: true})
           .then(res => {
             if (res.data.result) {
-              dispatch(testUp(res.data.newInfo));
+              dispatch(comparisonStateCreator(res.data.newInfo));
               setTimeout(() => history.push('/main'), 3000);
             }
           })

@@ -3,21 +3,21 @@ const loginStatusReducer = (status = false, action) => {
     return action.payload;
   }
   return status;
-}
+};
 
 const logoutClickedReducer = (status = false, action) => {
   if (action.type === 'LOGOUT_CLICKED') {
     return action.payload;
   }
   return status;
-}
+};
 
 const tokenStateReducer = (status = '', action) => {
   if (action.type === 'TOKEN_STATE') {
     return action.payload;
   }
   return status;
-}
+};
 
 const userStateReducer = (status = {}, action) => {
   if (action.type === 'USER_STATE' && action.payload !== null) {
@@ -37,28 +37,35 @@ const modalStateReducer = (status = false, action) => {
     return action.payload;
   }
   return status;
-}
+};
 
 const balloonStateReducer = (state = 'none', action) => {
   if (action.type === 'BALLOON_STATE') {
     return action.payload;
   }
   return state;
-}
+};
 
 const balloonOriginReducer = (state = '', action) => {
   if (action.type === 'BALLOON_ORIGIN') {
     return action.payload;
   }
   return state;
-}
+};
+
+const comparisonStateReducer = (state = '', action) => {
+  if (action.type === 'COMPARE_STATE') {
+    return action.payload;
+  }
+  return state;
+};
 
 const _TESTREDUCER = (state = '', action) => {
   if (action.type === '__TEST__') {
     return action.payload;
   }
   return state;
-}
+};
 
 const tempStore = {
   loginStatusReducer,
@@ -68,7 +75,8 @@ const tempStore = {
   modalStateReducer,
   balloonStateReducer,
   balloonOriginReducer,
+  comparisonStateReducer,
   _TESTREDUCER
-}
+};
 
 export default tempStore;

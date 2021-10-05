@@ -447,7 +447,20 @@ app.post('/disconnect', (req, res) => {
           if (err) {
             throw err;
           } else {
-            res.send(true);
+            // 추후 여러 스토어에 대응 가능하도록 수정
+            const stores = {
+              game: {
+                steam: false
+              }
+            };
+            const updateQueryStr = `update user_info set stores=? where user_nick=?`;
+            db.query(updateQueryStr, [JSON.stringify(stores), nickname], (err, result) => {
+              if (err) {
+                throw err;
+              } else {
+                res.send(true);
+              }
+            });
           }
         });
       }

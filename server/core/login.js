@@ -93,6 +93,7 @@ app.post('/login_process', (req, res) => {
         res.send('등록되지 않은 ID입니다.');
       } else {
         [dbInfo] = result;
+        console.log(dbInfo)
         const comparison = bcrypt.hashSync(dbInfo.user_pwd, loginInfo.salt);
         if (loginInfo.ID === dbInfo.user_id && loginInfo.PWD === comparison) {
           if (dbInfo.stores === '') {
