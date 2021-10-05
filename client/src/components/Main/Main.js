@@ -21,7 +21,7 @@ const modalOption = {
   'zIndex': '2'
 }
 
-const modalContents = state => {
+const modalContents = (state, dispatch, setState) => {
   if (state.stores === undefined) {
     return (
       <article>
@@ -47,7 +47,11 @@ const modalContents = state => {
           <h3>스팀</h3>
           <button
             onClick={e => {
-              axios.post('http://localhost:3003/disconnect', { reqUserInfo: state.nickname}, {withCredentials: true})
+              const temp = state;
+              temp.stores.game.steam = false;
+              // 반영을 위해서는 testState 변경이 필요
+              dispatch(setState(temp));
+              axios.post('http://localhost:3003/disconnect', { reqUserInfo: JSON.stringify(state) }, {withCredentials: true})
                 .then(res => console.log(res));
             }}
           >연동 해제</button>
@@ -134,7 +138,7 @@ const Main = () => {
           <Meta />
         </div>
       </main>
-      <Modal style={modalOption} contents={() => modalContents(userState)} />
+      <Modal style={modalOption} contents={() => modalContents(userState, dispatch, userStateCreator)} />
     </>
   );
 };

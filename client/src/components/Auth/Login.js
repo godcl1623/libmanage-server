@@ -27,11 +27,12 @@ const Login = () => {
   const loginStatus = useSelector(state => state.loginStatus);
   const userState = useSelector(state => state.userState);
   const logoutClicked = useSelector(state => state.logoutClicked);
+  const testState = useSelector(state => state._TEST);
   const dispatch = useDispatch();
   const history = useHistory();
 
   useEffect(() => {
-    axios.post('http://localhost:3002/check_login', {}, { withCredentials: true })
+    axios.post('http://localhost:3002/check_login', { message: testState }, { withCredentials: true })
     .then(res => {
       if (res.data.isLoginSuccessful) {
         dispatch(loginStatusCreator(res.data.isLoginSuccessful));

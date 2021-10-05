@@ -416,7 +416,12 @@ app.post('/meta_search', (req, res) => {
 });
 
 app.post('/disconnect', (req, res) => {
-  console.log(req.body);
+  const originalMsg = JSON.parse(req.body.reqUserInfo);
+  const { stores } = originalMsg;
+  const { game: gameStoreList } = stores;
+  const storeNames = Object.keys(gameStoreList);
+  const isStoreAdded = Object.values(gameStoreList);
+  console.log(storeNames, isStoreAdded);
 })
 
 app.listen(port, () => console.log(`server is running at port${port}`));
