@@ -8,7 +8,7 @@ import Library from './Library';
 import Meta from './Meta';
 import Navigation from './Navigation';
 import Modal from '../Modal/Modal';
-import { loginStatusCreator, userStateCreator, balloonStateCreator } from '../../actions';
+import { loginStatusCreator, userStateCreator, balloonStateCreator, _TESTCREATOR } from '../../actions';
 
 const modalOption = {
   'position': 'absolute',
@@ -138,7 +138,7 @@ const Main = () => {
           <Meta />
         </div>
       </main>
-      <Modal style={modalOption} contents={() => modalContents(userState, dispatch, userStateCreator)} />
+      <Modal style={modalOption} contents={() => modalContents(userState, dispatch, _TESTCREATOR)} />
     </>
   );
 };

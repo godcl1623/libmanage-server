@@ -143,8 +143,8 @@ app.post('/logout_process', (req, res) => {
 
 app.post('/check_login', (req, res) => {
   // 빌드 전에 삭제
-  // console.log(req.body.message)
-  // console.log(req.session.loginInfo)
+  console.log(req.body.message)
+  console.log(req.session.loginInfo)
   if (req.body.message !== '') {
     const origin = JSON.stringify(req.session.loginInfo);
     const compare = JSON.stringify(req.body.message);

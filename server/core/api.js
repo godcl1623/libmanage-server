@@ -417,11 +417,43 @@ app.post('/meta_search', (req, res) => {
 
 app.post('/disconnect', (req, res) => {
   const originalMsg = JSON.parse(req.body.reqUserInfo);
-  const { stores } = originalMsg;
+  const { nickname, stores } = originalMsg;
   const { game: gameStoreList } = stores;
   const storeNames = Object.keys(gameStoreList);
   const isStoreAdded = Object.values(gameStoreList);
-  console.log(storeNames, isStoreAdded);
+  // const storeNames = ['steam', 'epic', 'origin', 'ubisoft'];
+  // const isStoreAdded = [true, false, false, true]
+  const deletedStoresFilter = storeNames
+    .map((store, index) => {
+      let temp = '';
+      if (!isStoreAdded[index]) {
+        temp = store;
+      }
+      return temp;
+    })
+    .filter(result => result !== '');
+  deletedStoresFilter.forEach(store => {
+    const queryString = `select * from ${nickname}`;
+    libDB.query(queryString, (err, result) => {
+      console.log('search', err, result);
+      if (err) {
+        if (err.code === 'ER_NO_SUCH_TABLE') {
+          res.send('오류가 발생했습니다.');
+        }
+      } else {
+        const delQueryString = `delete from ${nickname}`;
+        libDB.query(delQueryString, (err, result) => {
+          console.log('del', err, result);
+          if (err) {
+            throw err;
+          } else {
+            res.send(true);
+          }
+        });
+      }
+    });
+  });
+  // console.log(deletedStoresFilter);
 })
 
 app.listen(port, () => console.log(`server is running at port${port}`));
