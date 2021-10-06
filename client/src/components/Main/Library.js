@@ -37,10 +37,12 @@ const testBtns = (state, setState) => (
 );
 
 const makeList = source => {
-  const result = source.map((item, index) => (
-    <li key={index}>{item.title}</li>
-  ));
-  return result;
+  if (source !== '') {
+    const result = source.map((item, index) => (
+      <li key={index}>{item.title}</li>
+    ));
+    return result;
+  }
 }
 
 const Library = ({ userLib }) => {
