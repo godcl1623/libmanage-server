@@ -88,7 +88,7 @@ const Main = () => {
   }, [])
 
   React.useEffect(() => {
-    if (comparisonState !== '') {
+    const checkLogin = () => {
       axios.post('http://localhost:3002/check_login', { message: comparisonState }, { withCredentials: true })
         .then(res => {
           if (res.data.isLoginSuccessful) {
@@ -111,6 +111,10 @@ const Main = () => {
         })
         .catch(err => console.log(err));
     }
+    if (comparisonState !== '') {
+      checkLogin();
+    }
+    checkLogin();
     }, [comparisonState]);
 
   if (loginStatus === false && logoutClicked === false) {
