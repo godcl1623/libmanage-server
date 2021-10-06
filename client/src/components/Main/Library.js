@@ -36,7 +36,14 @@ const testBtns = (state, setState) => (
   </>
 );
 
-const Library = () => {
+const makeList = source => {
+  const result = source.map((item, index) => (
+    <li key={index}>{item.title}</li>
+  ));
+  return result;
+}
+
+const Library = ({ userLib }) => {
   // const [balloonState, setBalloonState] = React.useState('none');
   const balloonState = useSelector(state => state.balloonState);
   const balloonOrigin = useSelector(state => state.balloonOrigin);
@@ -51,7 +58,7 @@ const Library = () => {
       topCoord: top
     }));
   };
-  
+  console.log(userLib)
   React.useEffect(() => {
     const { left, top } = ref.current.getBoundingClientRect();
     updateBtnCoords(left, top);
@@ -115,11 +122,7 @@ const Library = () => {
       >옵션</button>
       <Balloon contents={<Options />} display={wrapper} style={style} hand={hand} />
       <ul id="contents-lists">
-        <li>라이브러리 1</li>
-        <li>라이브러리 2</li>
-        <li>라이브러리 3</li>
-        <li>라이브러리 4</li>
-        <li>라이브러리 5</li>
+        { makeList(userLib) }
       </ul>
       {/* { testBtns(apiAuth, setApiAuth) } */}
     </article>

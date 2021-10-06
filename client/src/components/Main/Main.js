@@ -78,6 +78,8 @@ const Main = () => {
   const balloonState = useSelector(state => state.balloonState);
   const userState = useSelector(state => state.userState);
   const comparisonState = useSelector(state => state.comparisonState);
+  const [storesList, setStoresList] = React.useState('');
+  const [userLibrary, setUserLibrary] = React.useState('');
   const dispatch = useDispatch();
   const history = useHistory();
 
@@ -85,7 +87,7 @@ const Main = () => {
     if (comparisonState.stores !== undefined && userState.stores === undefined) {
       dispatch(userStateCreator(comparisonState));
     }
-  }, [])
+  }, []);
 
   React.useEffect(() => {
     const checkLogin = () => {
@@ -116,6 +118,36 @@ const Main = () => {
     }
     checkLogin();
     }, [comparisonState]);
+
+    React.useEffect(() => {
+      const { stores } = userState;
+      if (stores !== undefined) {
+        const categories = Object.keys(stores);
+        const eachStoresOfCategories = categories.map(ele => Object.keys(stores[ele]));
+        const eachStatusOfStoresOfCategories = categories.map(ele => Object.values(stores[ele]));
+        const activatedStores = eachStatusOfStoresOfCategories
+          .map(storeStat => storeStat
+            .map((ele, index) => ele === true ? index : '')
+            .filter(ele => ele !== '')
+          );
+        const storesToDisplay = activatedStores
+          .map(
+            (status, index) => status.map(iTrue => eachStoresOfCategories[index][iTrue])
+          );
+        setStoresList(storesToDisplay);
+      }
+    }, [userState.stores]);
+
+    React.useEffect(() => {
+      const dataToSend = {
+        reqUser: userState.nickname,
+        reqLibs: storesList
+      }
+      if (dataToSend.reqLibs !== '') {
+        axios.post('http://localhost:3003/get/db', { reqData: dataToSend }, { withCredentials: true })
+          .then(res => setUserLibrary(res.data));
+      }
+    }, [storesList]);
 
   if (loginStatus === false && logoutClicked === false) {
     return(<></>);
@@ -152,8 +184,8 @@ const Main = () => {
             'alignContent': 'center'
           }}
         >
-          <Navigation />
-          <Library />
+          <Navigation storesList={storesList} />
+          <Library userLib={userLibrary} />
           <Meta />
         </div>
       </main>

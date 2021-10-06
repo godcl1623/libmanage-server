@@ -467,6 +467,24 @@ app.post('/disconnect', (req, res) => {
     });
   });
   // console.log(deletedStoresFilter);
-})
+});
+
+app.post('/get/db', (req, res) => {
+  // console.log(req.body.reqData)
+  const [gameStores] = req.body.reqData.reqLibs;
+  const { reqUser: nickname } = req.body.reqData;
+  if (gameStores !== '') {
+    // 추후 스토어 갯수 늘어나면 db 선택식으로 변경하기
+    libDB.query(`select * from ${nickname}`, (err, result) => {
+      if (err) {
+        throw err;
+      } else {
+        res.send(result);
+      }
+    })
+  } else {
+    res.send('pending');
+  }
+});
 
 app.listen(port, () => console.log(`server is running at port${port}`));

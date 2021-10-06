@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 
 const menu = (value, storeList) => {
   const game = <p>game</p>;
@@ -37,30 +36,8 @@ const menu = (value, storeList) => {
   }
 };
 
-const Navigation = () => {
-  const userState = useSelector(state => state.userState);
+const Navigation = ({ storesList }) => {
   const [selectedMenu, setSelectedMenu] = useState('all');
-  const [storesList, setStoresList] = useState('');
-
-  React.useEffect(() => {
-    const { stores } = userState;
-    if (stores !== undefined) {
-      const categories = Object.keys(stores);
-      const eachStoresOfCategories = categories.map(ele => Object.keys(stores[ele]));
-      const eachStatusOfStoresOfCategories = categories.map(ele => Object.values(stores[ele]));
-      const activatedStores = eachStatusOfStoresOfCategories
-        .map(storeStat => storeStat
-          .map((ele, index) => ele === true ? index : '')
-          .filter(ele => ele !== '')
-        );
-      const storesToDisplay = activatedStores
-        .map(
-          (status, index) => status.map(iTrue => eachStoresOfCategories[index][iTrue])
-        );
-      setStoresList(storesToDisplay);
-    }
-  }, [userState.stores]);
-
 
   return (
     <nav
