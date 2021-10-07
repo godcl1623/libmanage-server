@@ -60,11 +60,24 @@ const makeList = (source, displayState) => {
       return result;
     } else if (displayState === 'cover') {
       const result = source.map((item, index) => (
-        <li key={`img-${index}`}>
+        <li
+          key={`img-${index}`}
+          style={{
+            'margin': '10px',
+            'height': '15vw',
+            'flex': '0 0 10%',
+            'display': 'flex',
+            'justify-content': 'center',
+            'align-items': 'center'
+          }}
+        >
           <img
             src={`https://images.igdb.com/igdb/image/upload/t_cover_big/${item.cover}.png`}
             title={`${item.title}`}
             alt={`${item.title}-cover`}
+            style={{
+              'height': '100%'
+            }}
           />
         </li>
       ));
@@ -136,7 +149,8 @@ const Library = ({ userLib }) => {
       id="library"
       style={{
         'flex': '2',
-        'overflow': 'scroll'
+        'overflowY': 'scroll',
+        'overflowX': 'hidden'
         // 'position': 'relative'
       }}
     >
@@ -158,7 +172,14 @@ const Library = ({ userLib }) => {
         style={style}
         hand={hand}
       />
-      <ul id="contents-lists">
+      <ul
+        id="contents-lists"
+        style={{
+          'display': 'flex',
+          'width': '100%',
+          'flex-wrap': 'wrap'
+        }}
+      >
         { makeList(userLib, libDisplay) }
       </ul>
       {/* { testBtns(apiAuth, setApiAuth) } */}
