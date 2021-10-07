@@ -9,7 +9,7 @@ import {
   libDisplayStateCreator
 } from '../../actions';
 
-const Options = ({ dispatch, changeState }) => (
+const Options = ({ dispatch, changeState, coverSize, setCoverSize }) => (
   <>
     <h3>표시방식:</h3>
     <button
@@ -24,7 +24,18 @@ const Options = ({ dispatch, changeState }) => (
         dispatch(changeState('cover'));
       }}
     >썸네일</button>
-    <input type="range" />
+    <input
+      type="range"
+      id="cover_size"
+      name="cover_size"
+      min="5"
+      max="15"
+      value={coverSize}
+      onChange={e => {
+        setCoverSize(Number(e.target.value));
+      }}
+    />
+    <p>{coverSize}</p>
   </>
 );
 
@@ -51,7 +62,7 @@ const testBtns = (state, setState) => (
   </>
 );
 
-const makeList = (source, displayState) => {
+const makeList = (source, displayState, size) => {
   if (source !== '') {
     if (displayState === 'list') {
       const result = source.map((item, index) => (
@@ -64,11 +75,11 @@ const makeList = (source, displayState) => {
           key={`img-${index}`}
           style={{
             'margin': '10px',
-            'height': '15vw',
+            'height': `${size}vw`,
             'flex': '0 0 10%',
             'display': 'flex',
-            'justify-content': 'center',
-            'align-items': 'center'
+            'justifyContent': 'center',
+            'alignItems': 'center'
           }}
         >
           <img
@@ -92,6 +103,7 @@ const Library = ({ userLib }) => {
   const balloonOrigin = useSelector(state => state.balloonOrigin);
   const libDisplay = useSelector(state => state.libDisplay);
   const [ btnCoords, setBtnCoords ] = React.useState({});
+  const [coverSize, setCoverSize] = React.useState(10);
   // const [apiAuth, setApiAuth] = React.useState('');
   const dispatch = useDispatch();
   const ref = React.useRef();
@@ -102,7 +114,7 @@ const Library = ({ userLib }) => {
       topCoord: top
     }));
   };
-  console.log(userLib)
+
   React.useEffect(() => {
     const { left, top } = ref.current.getBoundingClientRect();
     updateBtnCoords(left, top);
@@ -167,7 +179,14 @@ const Library = ({ userLib }) => {
         ref={ref}
       >옵션</button>
       <Balloon
-        contents={<Options dispatch={dispatch} changeState={libDisplayStateCreator} />}
+        contents={
+          <Options
+            dispatch={dispatch}
+            changeState={libDisplayStateCreator}
+            coverSize={coverSize}
+            setCoverSize={setCoverSize}
+          />
+        }
         display={wrapper}
         style={style}
         hand={hand}
@@ -177,10 +196,10 @@ const Library = ({ userLib }) => {
         style={{
           'display': 'flex',
           'width': '100%',
-          'flex-wrap': 'wrap'
+          'flexWrap': 'wrap'
         }}
       >
-        { makeList(userLib, libDisplay) }
+        { makeList(userLib, libDisplay, coverSize) }
       </ul>
       {/* { testBtns(apiAuth, setApiAuth) } */}
     </article>
