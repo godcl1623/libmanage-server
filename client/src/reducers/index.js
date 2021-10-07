@@ -10,5 +10,6 @@ export default combineReducers({
   balloonState: tempStore.balloonStateReducer,
   balloonOrigin: tempStore.balloonOriginReducer,
   comparisonState: tempStore.comparisonStateReducer,
+  libDisplay: tempStore.libDisplayStateReducer,
   _TEST: tempStore._TESTREDUCER
 });

@@ -60,6 +60,13 @@ const comparisonStateReducer = (state = '', action) => {
   return state;
 };
 
+const libDisplayStateReducer = (state = 'list', action) => {
+  if (action.type === 'LIBRARY_DISPLAY') {
+    return action.payload;
+  }
+  return state;
+};
+
 const _TESTREDUCER = (state = '', action) => {
   if (action.type === '__TEST__') {
     return action.payload;
@@ -76,6 +83,7 @@ const tempStore = {
   balloonStateReducer,
   balloonOriginReducer,
   comparisonStateReducer,
+  libDisplayStateReducer,
   _TESTREDUCER
 };
 

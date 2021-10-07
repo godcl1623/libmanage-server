@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React from 'react';
+import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
@@ -78,8 +78,8 @@ const Main = () => {
   const balloonState = useSelector(state => state.balloonState);
   const userState = useSelector(state => state.userState);
   const comparisonState = useSelector(state => state.comparisonState);
-  const [storesList, setStoresList] = React.useState('');
-  const [userLibrary, setUserLibrary] = React.useState('');
+  const [storesList, setStoresList] = useState('');
+  const [userLibrary, setUserLibrary] = useState('');
   const dispatch = useDispatch();
   const history = useHistory();
 

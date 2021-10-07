@@ -38,6 +38,11 @@ export const comparisonStateCreator = anything => ({
   payload: anything
 });
 
+export const libDisplayStateCreator = string => ({
+  type: 'LIBRARY_DISPLAY',
+  payload: string
+})
+
 export const _TESTCREATOR = anything => ({
   type: '__TEST__',
   payload: anything

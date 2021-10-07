@@ -1,14 +1,29 @@
+/* eslint-disable no-else-return */
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import Balloon from '../Modal/Balloon';
-import { balloonStateCreator, balloonOriginCreator } from '../../actions';
+import {
+  balloonStateCreator,
+  balloonOriginCreator,
+  libDisplayStateCreator
+} from '../../actions';
 
-const Options = () => (
+const Options = ({ dispatch, changeState }) => (
   <>
     <h3>표시방식:</h3>
-    <button>리스트</button>
-    <button>썸네일</button>
+    <button
+      onClick={e => {
+        e.preventDefault();
+        dispatch(changeState('list'));
+      }}
+    >리스트</button>
+    <button
+      onClick={e => {
+        e.preventDefault();
+        dispatch(changeState('cover'));
+      }}
+    >썸네일</button>
     <input type="range" />
   </>
 );
@@ -36,12 +51,25 @@ const testBtns = (state, setState) => (
   </>
 );
 
-const makeList = source => {
+const makeList = (source, displayState) => {
   if (source !== '') {
-    const result = source.map((item, index) => (
-      <li key={index}>{item.title}</li>
-    ));
-    return result;
+    if (displayState === 'list') {
+      const result = source.map((item, index) => (
+        <li key={index}>{item.title}</li>
+      ));
+      return result;
+    } else if (displayState === 'cover') {
+      const result = source.map((item, index) => (
+        <li key={`img-${index}`}>
+          <img
+            src={`https://images.igdb.com/igdb/image/upload/t_cover_big/${item.cover}.png`}
+            title={`${item.title}`}
+            alt={`${item.title}-cover`}
+          />
+        </li>
+      ));
+      return result;
+    }
   }
 }
 
@@ -49,6 +77,7 @@ const Library = ({ userLib }) => {
   // const [balloonState, setBalloonState] = React.useState('none');
   const balloonState = useSelector(state => state.balloonState);
   const balloonOrigin = useSelector(state => state.balloonOrigin);
+  const libDisplay = useSelector(state => state.libDisplay);
   const [ btnCoords, setBtnCoords ] = React.useState({});
   // const [apiAuth, setApiAuth] = React.useState('');
   const dispatch = useDispatch();
@@ -107,6 +136,7 @@ const Library = ({ userLib }) => {
       id="library"
       style={{
         'flex': '2',
+        'overflow': 'scroll'
         // 'position': 'relative'
       }}
     >
@@ -122,9 +152,14 @@ const Library = ({ userLib }) => {
         }}
         ref={ref}
       >옵션</button>
-      <Balloon contents={<Options />} display={wrapper} style={style} hand={hand} />
+      <Balloon
+        contents={<Options dispatch={dispatch} changeState={libDisplayStateCreator} />}
+        display={wrapper}
+        style={style}
+        hand={hand}
+      />
       <ul id="contents-lists">
-        { makeList(userLib) }
+        { makeList(userLib, libDisplay) }
       </ul>
       {/* { testBtns(apiAuth, setApiAuth) } */}
     </article>
