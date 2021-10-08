@@ -6,11 +6,13 @@ const menu = (value, storeList) => {
   const series = <p>series</p>;
   const movie = <p>movie</p>;
   const displayMenu = (...params) => params.map((param, index) => {
-    if (storeList[index] !== undefined) {
+    if (storeList[param.props.children] !== undefined) {
       return (
         <div key={index}>
           {param}
-          <p>- {storeList[index]}</p>
+          { storeList[param.props.children].map(store => (
+            <p>- {store}</p>
+          ))}
         </div>
       )
     // eslint-disable-next-line no-else-return
@@ -36,9 +38,16 @@ const menu = (value, storeList) => {
   }
 };
 
+// const testObj = {
+//   'game': ['steam', 'ubisoft', 'origin', 'epic'],
+//   'music': ['spotify', 'apple music', 'youtube music'],
+//   'series': ['netflix', 'watcha', 'disney plus', 'amazon plus'],
+//   'movie': ['netflix', 'watcha', 'disney plus', 'amazon plus']
+// }
+
 const Navigation = ({ storesList }) => {
   const [selectedMenu, setSelectedMenu] = useState('all');
-
+  // console.log(storesList)
   return (
     <nav
       id="navigation"
@@ -59,6 +68,7 @@ const Navigation = ({ storesList }) => {
         <option value="movie">영화</option>
       </select>
       {menu(selectedMenu, storesList)}
+      {/* {menu(selectedMenu, testObj)} */}
     </nav>
   );
 };

@@ -134,14 +134,24 @@ const Main = () => {
           .map(
             (status, index) => status.map(iTrue => eachStoresOfCategories[index][iTrue])
           );
-        setStoresList(storesToDisplay);
+        // setStoresList(storesToDisplay);
+        const testObj = {};
+        categories.forEach((category, index) => {
+          if (storesToDisplay[index] !== undefined) {
+            testObj[category] = storesToDisplay[index];
+          } else {
+            testObj[category] = 'foo';
+          }
+        })
+        setStoresList(testObj);
       }
     }, [userState.stores]);
 
     React.useEffect(() => {
       const dataToSend = {
         reqUser: userState.nickname,
-        reqLibs: storesList
+        // 임시로 작업 - 모든 카테고리 및 모든 스토어에 대응할 수 있도록 수정 필요
+        reqLibs: storesList.game
       }
       if (dataToSend.reqLibs !== '') {
         axios.post('http://localhost:3003/get/db', { reqData: dataToSend }, { withCredentials: true })
