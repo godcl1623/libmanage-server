@@ -194,7 +194,7 @@ const Library = ({ userLib }) => {
       <ul
         id="contents-lists"
         style={{
-          'display': 'flex',
+          'display': `${libDisplay === 'cover' ? 'flex' : 'inline-block'}`,
           'width': '100%',
           'flexWrap': 'wrap'
         }}
