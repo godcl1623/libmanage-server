@@ -43,6 +43,16 @@ export const libDisplayStateCreator = string => ({
   payload: string
 })
 
+export const selectedCategoryCreator = string => ({
+  type: 'SELECTED_CATEGORY',
+  payload: string
+})
+
+export const selectedStoresCreator = newArrayItem => ({
+  type: 'SELECTED_STORES',
+  payload: newArrayItem
+})
+
 export const _TESTCREATOR = anything => ({
   type: '__TEST__',
   payload: anything

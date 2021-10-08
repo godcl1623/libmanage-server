@@ -67,6 +67,31 @@ const libDisplayStateReducer = (state = 'list', action) => {
   return state;
 };
 
+const selectedCategoryReducer = (state = 'game', action) => {
+  if (action.type === 'SELECTED_CATEGORY') {
+    return action.payload;
+  }
+  return state;
+}
+
+const selectedStoresReducer = (state = ['all'], action) => {
+  if (action.type === 'SELECTED_STORES') {
+    const result = [];
+    if (!result.contains(action.payload)) {
+      const tempResult = [...result];
+      tempResult.push(action.payload);
+      return tempResult;
+    // eslint-disable-next-line no-else-return
+    } else {
+      const tempResult = [...result];
+      const payloadIndex = tempResult.indexOf(action.payload);
+      tempResult.splice(payloadIndex);
+      return tempResult;
+    }
+  }
+  return state;
+}
+
 const _TESTREDUCER = (state = '', action) => {
   if (action.type === '__TEST__') {
     return action.payload;
@@ -84,6 +109,8 @@ const tempStore = {
   balloonOriginReducer,
   comparisonStateReducer,
   libDisplayStateReducer,
+  selectedCategoryReducer,
+  selectedStoresReducer,
   _TESTREDUCER
 };
 

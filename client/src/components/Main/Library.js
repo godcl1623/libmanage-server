@@ -62,37 +62,42 @@ const testBtns = (state, setState) => (
   </>
 );
 
-const makeList = (source, displayState, size) => {
+const makeList = (source, displayState, size, selectedCategory, selectedStore) => {
   if (source !== '') {
-    if (displayState === 'list') {
-      const result = source.map((item, index) => (
-        <li key={index}>{item.title}</li>
-      ));
-      return result;
-    } else if (displayState === 'cover') {
-      const result = source.map((item, index) => (
-        <li
-          key={`img-${index}`}
-          style={{
-            'margin': '10px',
-            'height': `${size}vw`,
-            'flex': '0 0 10%',
-            'display': 'flex',
-            'justifyContent': 'center',
-            'alignItems': 'center'
-          }}
-        >
-          <img
-            src={`https://images.igdb.com/igdb/image/upload/t_cover_big/${item.cover}.png`}
-            title={`${item.title}`}
-            alt={`${item.title}-cover`}
+    const crit1 = selectedCategory === 'game' && selectedStore.indexOf('steam');
+    const crit2 = selectedCategory === 'game' && selectedStore.indexOf('all');
+    if (crit1 || crit2) {
+      const { steam } = source;
+      if (displayState === 'list') {
+        const result = steam.map((item, index) => (
+          <li key={index}>{item.title}</li>
+        ));
+        return result;
+      } else if (displayState === 'cover') {
+        const result = steam.map((item, index) => (
+          <li
+            key={`img-${index}`}
             style={{
-              'height': '100%'
+              'margin': '10px',
+              'height': `${size}vw`,
+              'flex': '0 0 10%',
+              'display': 'flex',
+              'justifyContent': 'center',
+              'alignItems': 'center'
             }}
-          />
-        </li>
-      ));
-      return result;
+          >
+            <img
+              src={`https://images.igdb.com/igdb/image/upload/t_cover_big/${item.cover}.png`}
+              title={`${item.title}`}
+              alt={`${item.title}-cover`}
+              style={{
+                'height': '100%'
+              }}
+            />
+          </li>
+        ));
+        return result;
+      }
     }
   }
 }
@@ -102,6 +107,8 @@ const Library = ({ userLib }) => {
   const balloonState = useSelector(state => state.balloonState);
   const balloonOrigin = useSelector(state => state.balloonOrigin);
   const libDisplay = useSelector(state => state.libDisplay);
+  const selectedCategory = useSelector(state => state.selectedCategory);
+  const selectedStores = useSelector(state => state.selectedStores);
   const [ btnCoords, setBtnCoords ] = React.useState({});
   const [coverSize, setCoverSize] = React.useState(10);
   // const [apiAuth, setApiAuth] = React.useState('');
@@ -199,7 +206,7 @@ const Library = ({ userLib }) => {
           'flexWrap': 'wrap'
         }}
       >
-        { makeList(userLib, libDisplay, coverSize) }
+        { makeList(userLib, libDisplay, coverSize, selectedCategory, selectedStores) }
       </ul>
       {/* { testBtns(apiAuth, setApiAuth) } */}
     </article>
