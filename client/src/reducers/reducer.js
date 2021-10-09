@@ -77,7 +77,7 @@ const selectedCategoryReducer = (state = 'all', action) => {
 const selectedStoresReducer = (state = ['all'], action) => {
   if (action.type === 'SELECTED_STORES') {
     const result = [];
-    if (!result.contains(action.payload)) {
+    if (!result.includes(action.payload)) {
       const tempResult = [...result];
       tempResult.push(action.payload);
       return tempResult;

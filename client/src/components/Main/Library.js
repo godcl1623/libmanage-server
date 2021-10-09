@@ -64,10 +64,8 @@ const testBtns = (state, setState) => (
 
 const makeList = (source, displayState, size, selectedCategory, selectedStore) => {
   if (source !== '') {
-    const crit1 = selectedCategory === 'game' && selectedStore.indexOf('steam');
-    const crit2 = selectedCategory === 'game' && selectedStore.indexOf('all');
     if (selectedCategory === 'all' || selectedCategory === 'game') {
-      if (selectedStore.indexOf('all') || selectedStore.indexOf('steam')) {
+      if (selectedStore.includes('all') || selectedStore.includes('steam')) {
         const { steam } = source;
         if (displayState === 'list') {
           const result = steam.map((item, index) => (

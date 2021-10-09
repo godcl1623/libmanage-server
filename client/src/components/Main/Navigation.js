@@ -1,8 +1,8 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectedCategoryCreator } from '../../actions';
+import { selectedCategoryCreator, selectedStoresCreator } from '../../actions';
 
-const menu = (value, storeList) => {
+const menu = (value, storeList, dispatch, filterStores) => {
   const game = <p>game</p>;
   const music = <p>music</p>;
   const series = <p>series</p>;
@@ -25,7 +25,7 @@ const menu = (value, storeList) => {
               htmlFor={param.props.children}
               data-value={param.props.children}
               onClick={e => {
-                console.log(e.target.dataset.value)
+                dispatch(filterStores('all'))
               }}
               style={{
                 'border': '1px solid black',
@@ -43,12 +43,19 @@ const menu = (value, storeList) => {
               style={{
                 'display': 'none'
               }}
-              onClick={e => {
-                console.log(e.target.name)
-              }}
             />
           </div>
-          { eachCategoriesStores.map(store => <p>- {store}</p>)}
+          {
+            eachCategoriesStores.map(store => (
+              <p
+                onClick={e => {
+                  dispatch(filterStores(store))
+                }}
+              >
+                - {store}
+              </p>
+            ))
+          }
         </div>
       )
     // eslint-disable-next-line no-else-return
@@ -99,7 +106,7 @@ const Navigation = ({ storesList }) => {
         <option value="series">드라마</option>
         <option value="movie">영화</option>
       </select>
-      {menu(selectedCategory, storesList)}
+      {menu(selectedCategory, storesList, dispatch, selectedStoresCreator)}
     </nav>
   );
 };
