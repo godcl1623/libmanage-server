@@ -1,3 +1,4 @@
+/* eslint-disable no-else-return */
 const loginStatusReducer = (status = false, action) => {
   if (action.type === 'LOGIN_STATUS') {
     return action.payload;
@@ -76,17 +77,15 @@ const selectedCategoryReducer = (state = 'all', action) => {
 
 const selectedStoresReducer = (state = ['all'], action) => {
   if (action.type === 'SELECTED_STORES') {
-    const result = [];
-    if (!result.includes(action.payload)) {
-      const tempResult = [...result];
-      tempResult.push(action.payload);
-      return tempResult;
-    // eslint-disable-next-line no-else-return
+    const result = [...state];
+    if (action.payload !== 'all') {
+      if (!result.includes(action.payload)) {
+        return [...result.filter(ele => ele !== 'all'), action.payload];
+      } else {
+        return [...result.filter(ele => ele !== action.payload)];
+      }
     } else {
-      const tempResult = [...result];
-      const payloadIndex = tempResult.indexOf(action.payload);
-      tempResult.splice(payloadIndex);
-      return tempResult;
+      return [...result.filter(ele => ele === 'all'), action.payload];
     }
   }
   return state;
