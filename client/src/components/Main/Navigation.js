@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectedCategoryCreator } from '../../actions';
 
-const menu = (value, storeList, dispatch, changeCategory, changeStores) => {
+const menu = (value, storeList) => {
   const game = <p>game</p>;
   const music = <p>music</p>;
   const series = <p>series</p>;
@@ -10,26 +12,36 @@ const menu = (value, storeList, dispatch, changeCategory, changeStores) => {
     if (eachCategoriesStores !== undefined) {
       return (
         <div key={`category ${index}`} className='category'>
-          <div key={`category-header ${index}`} className='category-header'>
+          <div
+            key={`category-header ${index}`}
+            className='category-header'
+            style={{
+              'display': 'flex',
+              'height': '100%'
+            }}
+          >
             {param}
-            {/* <label
+            <label
               htmlFor={param.props.children}
+              data-value={param.props.children}
               onClick={e => {
-                console.log(e.target.value)
+                console.log(e.target.dataset.value)
               }}
               style={{
                 'border': '1px solid black',
-                'width': '100%',
-                'height': '100%',
+                'borderRadius': '50%',
+                'width': '20px',
+                'height': '20px',
                 'background': 'red'
               }}
-            ></label> */}
+            > </label>
             <input
               type='radio'
-              value={param.props.children}
               name={param.props.children}
+              checked={true}
+              onChange={() => {}}
               style={{
-                'display': 'block'
+                'display': 'none'
               }}
               onClick={e => {
                 console.log(e.target.name)
@@ -65,7 +77,8 @@ const menu = (value, storeList, dispatch, changeCategory, changeStores) => {
 };
 
 const Navigation = ({ storesList }) => {
-  const [selectedMenu, setSelectedMenu] = useState('all');
+  const selectedCategory = useSelector(state => state.selectedCategory);
+  const dispatch = useDispatch();
 
   return (
     <nav
@@ -77,8 +90,8 @@ const Navigation = ({ storesList }) => {
       <select
         name="content-type"
         className="dropdown"
-        value={selectedMenu}
-        onChange={e => setSelectedMenu(e.target.value)}
+        value={selectedCategory}
+        onChange={e => dispatch(selectedCategoryCreator(e.target.value))}
       >
         <option value="all">전체</option>
         <option value="game">게임</option>
@@ -86,7 +99,7 @@ const Navigation = ({ storesList }) => {
         <option value="series">드라마</option>
         <option value="movie">영화</option>
       </select>
-      {menu(selectedMenu, storesList)}
+      {menu(selectedCategory, storesList)}
     </nav>
   );
 };

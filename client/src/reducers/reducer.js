@@ -67,7 +67,7 @@ const libDisplayStateReducer = (state = 'list', action) => {
   return state;
 };
 
-const selectedCategoryReducer = (state = 'game', action) => {
+const selectedCategoryReducer = (state = 'all', action) => {
   if (action.type === 'SELECTED_CATEGORY') {
     return action.payload;
   }
