@@ -83,11 +83,11 @@ const Main = () => {
   const dispatch = useDispatch();
   const history = useHistory();
 
-  React.useEffect(() => {
-    if (comparisonState.stores !== undefined && userState.stores === undefined) {
-      dispatch(userStateCreator(comparisonState));
-    }
-  }, []);
+  // React.useEffect(() => {
+  //   if (comparisonState.stores !== undefined && userState.stores === undefined) {
+  //     dispatch(userStateCreator(comparisonState));
+  //   }
+  // }, []);
 
   React.useEffect(() => {
     const checkLogin = () => {

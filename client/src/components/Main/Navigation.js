@@ -12,7 +12,7 @@ const menu = (value, storeList, dispatch, changeCategory, changeStores) => {
         <div key={`category ${index}`} className='category'>
           <div key={`category-header ${index}`} className='category-header'>
             {param}
-            <label
+            {/* <label
               htmlFor={param.props.children}
               onClick={e => {
                 console.log(e.target.value)
@@ -23,7 +23,7 @@ const menu = (value, storeList, dispatch, changeCategory, changeStores) => {
                 'height': '100%',
                 'background': 'red'
               }}
-            ></label>
+            ></label> */}
             <input
               type='radio'
               value={param.props.children}
