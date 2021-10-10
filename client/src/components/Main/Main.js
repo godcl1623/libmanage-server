@@ -152,8 +152,7 @@ const Main = () => {
         reqUser: userState.nickname,
         // 임시로 작업 - 모든 카테고리 및 모든 스토어에 대응할 수 있도록 수정 필요
         reqLibs: storesList.game
-      }
-      console.log(storesList.game)
+      };
       if (dataToSend.reqLibs !== '') {
         axios.post('http://localhost:3003/get/db', { reqData: dataToSend }, { withCredentials: true })
           .then(res => {
