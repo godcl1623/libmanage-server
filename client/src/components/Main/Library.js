@@ -62,14 +62,26 @@ const testBtns = (state, setState) => (
   </>
 );
 
-const makeList = (source, displayState, size, selectedCategory, selectedStore) => {
+const makeList = (source, displayState, size, selectedCategory, selectedStore, userState) => {
   if (source !== '') {
     if (selectedCategory === 'all' || selectedCategory === 'game') {
       if (selectedStore.includes('all') || selectedStore.includes('steam')) {
         const { steam } = source;
         if (displayState === 'list') {
           const result = steam.map((item, index) => (
-            <li key={index}>{item.title}</li>
+            <li
+              key={index}
+              onClick={e => {
+                const reqData = {
+                  reqUser: userState.nickname,
+                  selTitle: item.title
+                }
+                axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
+                  .then(res => console.log(res));
+              }}
+            >
+              {item.title}
+            </li>
           ));
           return result;
         } else if (displayState === 'cover') {
@@ -92,6 +104,14 @@ const makeList = (source, displayState, size, selectedCategory, selectedStore) =
                 style={{
                   'height': '100%'
                 }}
+                onClick={e => {
+                  const reqData = {
+                    reqUser: userState.nickname,
+                    selTitle: item.title
+                  }
+                  axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
+                    .then(res => console.log(res));
+                }}
               />
             </li>
           ));
@@ -109,6 +129,7 @@ const Library = ({ userLib }) => {
   const libDisplay = useSelector(state => state.libDisplay);
   const selectedCategory = useSelector(state => state.selectedCategory);
   const selectedStores = useSelector(state => state.selectedStores);
+  const userState = useSelector(state => state.userState);
   const [ btnCoords, setBtnCoords ] = React.useState({});
   const [coverSize, setCoverSize] = React.useState(10);
   // const [apiAuth, setApiAuth] = React.useState('');
@@ -206,7 +227,7 @@ const Library = ({ userLib }) => {
           'flexWrap': 'wrap'
         }}
       >
-        { makeList(userLib, libDisplay, coverSize, selectedCategory, selectedStores) }
+        { makeList(userLib, libDisplay, coverSize, selectedCategory, selectedStores, userState) }
       </ul>
       {/* { testBtns(apiAuth, setApiAuth) } */}
     </article>
