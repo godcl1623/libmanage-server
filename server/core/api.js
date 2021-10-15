@@ -493,6 +493,9 @@ app.post('/get/meta', (req, res) => {
   const { reqUser, selTitle } = req.body.reqData;
   libDB.query(`select meta from ${reqUser} where title="${selTitle}"`, (err, result) => {
     console.log(JSON.parse(result[0].meta));
+    /*
+      total_rating, artworks, cover, first_release_date, genres, keywords, name, platforms, screenshots, summary, tags, videos, websites
+    */
   })
 });
 
