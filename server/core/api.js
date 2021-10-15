@@ -490,12 +490,58 @@ app.post('/get/db', (req, res) => {
 });
 
 app.post('/get/meta', (req, res) => {
-  const { reqUser, selTitle } = req.body.reqData;
+  const { reqUser, selTitle, credData } = req.body.reqData;
+  const { cid, access_token: token } = credData;
+  const client = igdb(cid, token);
   libDB.query(`select meta from ${reqUser} where title="${selTitle}"`, (err, result) => {
-    console.log(JSON.parse(result[0].meta));
+    const {
+      artworks,
+      cover: covers,
+      collection: collections,
+      release_dates,
+      genres,
+      keywords,
+      name,
+      platforms,
+      screenshots,
+      summary,
+      themes,
+      videos,
+      websites,
+      total_rating,
+      involved_companies,
+      game_modes,
+      player_perspectives,
+      franchises,
+      age_ratings
+    } = JSON.parse(result[0].meta);
+    const keys = Object.keys(JSON.parse(result[0].meta));
+    const waitQuery = [
+      artworks, covers, collections,
+      release_dates, genres, keywords,
+      platforms, screenshots, themes,
+      videos, websites, total_rating,
+      involved_companies, game_modes,
+      player_perspectives, franchises,
+      age_ratings
+    ];
+    waitQuery.forEach(ele => {
+      if (typeof ele === 'object') {
+        console.log(ele)
+      }
+    });
     /*
-      total_rating, artworks, cover, first_release_date, genres, keywords, name, platforms, screenshots, summary, tags, videos, websites
+      쿼리 필요: artworks(obj), cover(num), collections(num), release_dates(obj), genres, keywords, platforms, screenshots, themes, videos, websites, total_rating(num), involved_companies, game_modes, player_perspectives, franchises, age_ratings
+      num 제외 전부 obj, franchises는 경우에 따라서 undefined
+      endpoint, 변수 불일치 항목: cover(covers), collection(collections)
     */
+    const testQuery = async (endpoints, foo) => {
+      const response = await client
+        .fields(['*'])
+        .where(`category = 13 & url = *"/"`)
+        .request('/websites');
+      return response;
+    };
   })
 });
 

@@ -13,5 +13,6 @@ export default combineReducers({
   libDisplay: tempStore.libDisplayStateReducer,
   selectedCategory: tempStore.selectedCategoryReducer,
   selectedStores: tempStore.selectedStoresReducer,
+  extCredState: tempStore.extCredStateReducer,
   _TEST: tempStore._TESTREDUCER
 });

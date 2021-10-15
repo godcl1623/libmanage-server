@@ -53,6 +53,11 @@ export const selectedStoresCreator = newArrayItem => ({
   payload: newArrayItem
 })
 
+export const extCredStateCreator = obj => ({
+  type: 'EXT_CRED',
+  payload: obj
+})
+
 export const _TESTCREATOR = anything => ({
   type: '__TEST__',
   payload: anything

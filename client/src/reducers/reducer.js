@@ -91,6 +91,13 @@ const selectedStoresReducer = (state = ['all'], action) => {
   return state;
 }
 
+const extCredStateReducer = (state = {}, action) => {
+  if (action.type === 'EXT_CRED') {
+    return { ...state, ...action.payload };
+  }
+  return state;
+}
+
 const _TESTREDUCER = (state = '', action) => {
   if (action.type === '__TEST__') {
     return action.payload;
@@ -110,6 +117,7 @@ const tempStore = {
   libDisplayStateReducer,
   selectedCategoryReducer,
   selectedStoresReducer,
+  extCredStateReducer,
   _TESTREDUCER
 };
 

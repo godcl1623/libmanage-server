@@ -1,5 +1,6 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import axios from 'axios';
 import { selectedCategoryCreator, selectedStoresCreator } from '../../actions';
 
 const menu = (value, storeList, dispatch, filterStores) => {
@@ -107,6 +108,14 @@ const Navigation = ({ storesList }) => {
         <option value="movie">영화</option>
       </select>
       {menu(selectedCategory, storesList, dispatch, selectedStoresCreator)}
+      <button
+        onClick={e => {
+          axios.post('http://localhost:3003/api/connect', {execute: 'order66'}, {withCredentials: true})
+            .then(res => console.log(res))
+        }}
+      >
+        api test
+      </button>
     </nav>
   );
 };

@@ -6,7 +6,8 @@ import Balloon from '../Modal/Balloon';
 import {
   balloonStateCreator,
   balloonOriginCreator,
-  libDisplayStateCreator
+  libDisplayStateCreator,
+  extCredStateCreator
 } from '../../actions';
 
 const Options = ({ dispatch, changeState, coverSize, setCoverSize }) => (
@@ -62,7 +63,18 @@ const testBtns = (state, setState) => (
   </>
 );
 
-const makeList = (source, displayState, size, selectedCategory, selectedStore, userState) => {
+const makeList = (...args) => {
+  const [
+    source,
+    displayState,
+    size,
+    selectedCategory,
+    selectedStore,
+    userState,
+    extCredState,
+    dispatch,
+    setExtCred
+  ] = args;
   if (source !== '') {
     if (selectedCategory === 'all' || selectedCategory === 'game') {
       if (selectedStore.includes('all') || selectedStore.includes('steam')) {
@@ -72,12 +84,28 @@ const makeList = (source, displayState, size, selectedCategory, selectedStore, u
             <li
               key={index}
               onClick={e => {
-                const reqData = {
-                  reqUser: userState.nickname,
-                  selTitle: item.title
+                // const getMeta = reqData => (
+                //   axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
+                // )();
+                if (extCredState.cid === undefined) {
+                  axios.post('http://localhost:3003/api/connect', {execute: 'order66'}, {withCredentials: true})
+                    .then(res => {
+                      dispatch(setExtCred(res.data));
+                      const reqData = {
+                        reqUser: userState.nickname,
+                        selTitle: item.title,
+                        credData: res.data
+                      };
+                      axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
+                    });
+                } else {
+                  const reqData = {
+                    reqUser: userState.nickname,
+                    selTitle: item.title,
+                    credData: extCredState
+                  };
+                  axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
                 }
-                axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
-                  .then(res => console.log(res));
               }}
             >
               {item.title}
@@ -130,6 +158,7 @@ const Library = ({ userLib }) => {
   const selectedCategory = useSelector(state => state.selectedCategory);
   const selectedStores = useSelector(state => state.selectedStores);
   const userState = useSelector(state => state.userState);
+  const extCredState = useSelector(state => state.extCredState);
   const [ btnCoords, setBtnCoords ] = React.useState({});
   const [coverSize, setCoverSize] = React.useState(10);
   // const [apiAuth, setApiAuth] = React.useState('');
@@ -227,7 +256,19 @@ const Library = ({ userLib }) => {
           'flexWrap': 'wrap'
         }}
       >
-        { makeList(userLib, libDisplay, coverSize, selectedCategory, selectedStores, userState) }
+        {
+          makeList(
+            userLib,
+            libDisplay,
+            coverSize,
+            selectedCategory,
+            selectedStores,
+            userState,
+            extCredState,
+            dispatch,
+            extCredStateCreator
+          )
+        }
       </ul>
       {/* { testBtns(apiAuth, setApiAuth) } */}
     </article>
