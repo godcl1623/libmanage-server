@@ -515,7 +515,6 @@ app.post('/get/meta', (req, res) => {
       franchises,
       age_ratings
     } = JSON.parse(result[0].meta);
-    const keys = Object.keys(JSON.parse(result[0].meta));
     const waitQuery = [
       artworks, covers, collections,
       release_dates, genres, keywords,
@@ -525,23 +524,35 @@ app.post('/get/meta', (req, res) => {
       player_perspectives, franchises,
       age_ratings
     ];
-    waitQuery.forEach(ele => {
-      if (typeof ele === 'object') {
-        console.log(ele)
-      }
+    const endPoints = [
+      'artworks', 'covers', 'collections',
+      'release_dates', 'genres', 'keywords',
+      'platforms', 'screenshots', 'themes',
+      'videos', 'websites', 'total_rating',
+      'involved_companies', 'game_modes',
+      'player_perspectives', 'franchises',
+      'age_ratings'
+    ];
+    const testQuery = async (endpoints, id) => {
+      const response = await client
+        .fields(['*'])
+        .where(`id=${id}`)
+        .request(`/${endpoints}`);
+      return response;
+    };
+    endPoints.slice(0, 1).forEach((endPoint, index) => {
+      waitQuery.slice(0, 1).forEach(queryIds => {
+        queryIds.slice(0, 1).forEach(queryId => {
+          testQuery(endPoint, queryId).then(res => console.log(res.data))
+        })
+      });
     });
     /*
       쿼리 필요: artworks(obj), cover(num), collections(num), release_dates(obj), genres, keywords, platforms, screenshots, themes, videos, websites, total_rating(num), involved_companies, game_modes, player_perspectives, franchises, age_ratings
       num 제외 전부 obj, franchises는 경우에 따라서 undefined
       endpoint, 변수 불일치 항목: cover(covers), collection(collections)
     */
-    const testQuery = async (endpoints, foo) => {
-      const response = await client
-        .fields(['*'])
-        .where(`category = 13 & url = *"/"`)
-        .request('/websites');
-      return response;
-    };
+  //  console.log(JSON.parse(result[0].meta))
   })
 });
 
