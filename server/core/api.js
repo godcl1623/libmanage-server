@@ -238,6 +238,14 @@ app.post('/meta_search', (req, res) => {
       .request('/covers');
     return response;
   };
+  // 테스트: 쿼리별 검색 함수
+  const eachQuerySearch = async (endpoints, id) => {
+    const response = await client
+      .fields(['*'])
+      .where(`id=${id}`)
+      .request(`/${endpoints}`);
+    return response;
+  };
   // 5. IGDB상 저장된 스팀 게임의 url을 기반으로 IGDB 고유 게임 아이디 반환
   const firstFilter = (rawData, filterFunc) => new Promise((resolve, reject) => {
     const temp = [];
@@ -331,23 +339,33 @@ app.post('/meta_search', (req, res) => {
   const processMeta = (rawData, filterFunc) => new Promise((resolve, reject) => {
     const titles = rawData.map(gameMeta => gameMeta.name);
     const urls = rawData.map(gameMeta => gameMeta.url);
-    const coversTemp = rawData.map(gameMeta => gameMeta.cover);
-    const covers = [];
-    coversTemp.forEach((coverId, index) => {
-      setTimeout(() => {
-        filterFunc(coverId)
-          .then(result => {
-            covers.push(result.data[0].image_id);
-            statObj.count++;
-            console.log(`Processing meta: Searching covers: ${covers.length}/${coversTemp.length}`)
-            if (covers.length === coversTemp.length) {
-              statObj.status = '5';
-              console.log(`Processing meta: Processing complete. Proceed to next step.`);
-              resolve({ titles, urls, covers, rawData });
-            };
-          });
-      }, index * 300);
-    });
+    /* @@@@@@@@@@@@@@@@@@@@ 여기서부터 원본 코드 @@@@@@@@@@@@@@@@@@@@ */
+    // const coversTemp = rawData.map(gameMeta => gameMeta.cover);
+    // const covers = [];
+    // coversTemp.forEach((coverId, index) => {
+    //   setTimeout(() => {
+    //     filterFunc(coverId)
+    //       .then(result => {
+    //         covers.push(result.data[0].image_id);
+    //         statObj.count++;
+    //         console.log(`Processing meta: Searching covers: ${covers.length}/${coversTemp.length}`)
+    //         if (covers.length === coversTemp.length) {
+    //           statObj.status = '5';
+    //           console.log(`Processing meta: Processing complete. Proceed to next step.`);
+    //           resolve({ titles, urls, covers, rawData });
+    //         };
+    //       });
+    //   }, index * 300);
+    // });
+    /* @@@@@@@@@@@@@@@@@@@@ 여기까지 원본 코드 @@@@@@@@@@@@@@@@@@@@ */
+    /* ####################여기서부터 테스트#################### */
+    const resultArr = [];
+    rawData.forEach(
+      (gameMeta, index) =>
+        new Promise((resolve, reject) => resolve(gameMeta.id))
+          .then(res => console.log(res))
+    );
+    /* ####################여기까지 테스트#################### */
   });
   // 9. DB 기록 함수
   const writeToDB = resultObj => new Promise((resolve, reject) => {
@@ -408,11 +426,13 @@ app.post('/meta_search', (req, res) => {
   // firstFilter(tempList, steamURLSearchQuery)
     .then(rawURLSearchResult => secondFilter(rawURLSearchResult, steamURLException))
     .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
-    .then(igdbResult => processMeta(igdbResult, coverSearch))
+    // .then(igdbResult => processMeta(igdbResult, coverSearch))
+    .then(igdbResult => processMeta(igdbResult, eachQuerySearch))
   // 최종 메타데이터 목록 - igdbResult는 배열, 이 중 name, cover 정보 필요. name은 추출하기만 하면 되는데, cover는 image_id를 별도로 검색해서 받아와야 함
-    .then(resultObj => writeToDB(resultObj))
-    .then(writeResult => res.send(writeResult))
-    .catch(err => console.log(err));
+    // .then(resultObj => writeToDB(resultObj))
+    // .then(writeResult => res.send(writeResult))
+    // .catch(err => console.log(err));
+    .then(res => console.log(res))
 });
 
 app.post('/disconnect', (req, res) => {
@@ -490,168 +510,188 @@ app.post('/get/db', (req, res) => {
 });
 
 app.post('/get/meta', (req, res) => {
-  const { reqUser, selTitle, credData } = req.body.reqData;
-  const { cid, access_token: token } = credData;
-  const client = igdb(cid, token);
-  libDB.query(`select meta from ${reqUser} where title="${selTitle}"`, (err, result) => {
-    const {
-      artworks,
-      cover: covers,
-      collection: collections,
-      release_dates: releaseDates,
-      genres,
-      keywords,
-      name,
-      platforms,
-      screenshots,
-      summary,
-      themes,
-      videos,
-      websites,
-      total_rating: totalRating,
-      involved_companies: involvedCompanies,
-      game_modes: gameModes,
-      player_perspectives: playerPerspectives,
-      franchises,
-      age_ratings: ageRatings
-    } = JSON.parse(result[0].meta);
-    const waitQuery = [
-      artworks, covers, collections,
-      releaseDates, genres, keywords,
-      platforms, screenshots, themes,
-      videos, websites,
-      involvedCompanies, gameModes,
-      playerPerspectives, franchises,
-      ageRatings
-    ];
-    const endPoints = [
-      'artworks', 'covers', 'collections',
-      'release_dates', 'genres', 'keywords',
-      'platforms', 'screenshots', 'themes',
-      'game_videos', 'websites',
-      'involved_companies', 'game_modes',
-      'player_perspectives', 'franchises',
-      'age_ratings'
-    ];
-    const testQuery = async (endpoints, id) => {
-      const response = await client
-        .fields(['*'])
-        .where(`id=${id}`)
-        .request(`/${endpoints}`);
-      return response;
-    };
-    const valNeed = endPoint => {
-      const images = ['artworks', 'covers', 'screenshots'];
-      let result = '';
-      if (images.find(ele => ele === endPoint)) {
-        result = 'image_id';
-      } else if (endPoint === 'game_videos') {
-        result = 'video_id';
-      } else if (endPoint === 'release_dates') {
-        result = 'human';
-      } else if (endPoint === 'websites') {
-        result = 'url';
-      } else if (endPoint === 'involved_companies') {
-        result = ['company', 'developer', 'publisher'];
-      } else if (endPoint === 'age_ratings') {
-        result = ['category', 'rating'];
-      } else {
-        result = 'name';
-      }
-      return result;
-    }
-    const test = {};
-    endPoints.slice(2, 3).forEach((endPoint, index) => {
-      waitQuery.slice(2, 3).forEach(queryIds => {
-        if (typeof queryIds === 'number') {
-          // testQuery(endPoint, queryIds).then(res => console.log(res.data[0][valNeed(endPoint)]))
-          testQuery(endPoint, queryIds).then(res => {
-            if (typeof valNeed(endPoint) !== 'object') {
-              console.log(res.data[0][valNeed(endPoint)]);
-              test[valNeed(endPoint)] = res.data[0][valNeed(endPoint)];
-            } else {
-              valNeed(endPoint).slice(0, 1).forEach(val => {
-                console.log(res.data[0][val]);
-                test[val] = res.data[0][val];
-              });
-            }
+  // const { reqUser, selTitle, credData } = req.body.reqData;
+  // const { cid, access_token: token } = credData;
+  // const client = igdb(cid, token);
+  // libDB.query(`select meta from ${reqUser} where title="${selTitle}"`, (err, result) => {
+  //   const {
+  //     artworks,
+  //     cover: covers,
+  //     collection: collections,
+  //     release_dates: releaseDates,
+  //     genres,
+  //     keywords,
+  //     name,
+  //     platforms,
+  //     screenshots,
+  //     summary,
+  //     themes,
+  //     videos,
+  //     websites,
+  //     total_rating: totalRating,
+  //     involved_companies: involvedCompanies,
+  //     game_modes: gameModes,
+  //     player_perspectives: playerPerspectives,
+  //     franchises,
+  //     age_ratings: ageRatings
+  //   } = JSON.parse(result[0].meta);
+  //   const waitQuery = [
+  //     artworks, covers, collections,
+  //     releaseDates, genres, keywords,
+  //     platforms, screenshots, themes,
+  //     videos, websites,
+  //     involvedCompanies, gameModes,
+  //     playerPerspectives, franchises,
+  //     ageRatings
+  //   ];
+  //   const endPoints = [
+  //     'artworks', 'covers', 'collections',
+  //     'release_dates', 'genres', 'keywords',
+  //     'platforms', 'screenshots', 'themes',
+  //     'game_videos', 'websites',
+  //     'involved_companies', 'game_modes',
+  //     'player_perspectives', 'franchises',
+  //     'age_ratings'
+  //   ];
+  //   const testQuery = async (endpoints, id) => {
+  //     const response = await client
+  //       .fields(['*'])
+  //       .where(`id=${id}`)
+  //       .request(`/${endpoints}`);
+  //     return response;
+  //   };
+  //   const valNeed = endPoint => {
+  //     const images = ['artworks', 'covers', 'screenshots'];
+  //     let result = '';
+  //     if (images.find(ele => ele === endPoint)) {
+  //       result = 'image_id';
+  //     } else if (endPoint === 'game_videos') {
+  //       result = 'video_id';
+  //     } else if (endPoint === 'release_dates') {
+  //       result = 'human';
+  //     } else if (endPoint === 'websites') {
+  //       result = 'url';
+  //     } else if (endPoint === 'involved_companies') {
+  //       result = ['company', 'developer', 'publisher'];
+  //     } else if (endPoint === 'age_ratings') {
+  //       result = ['category', 'rating'];
+  //     } else {
+  //       result = 'name';
+  //     }
+  //     return result;
+  //   }
+  //   const test = {};
+  //   endPoints.slice(2, 3).forEach((endPoint, index) => {
+  //     waitQuery.slice(2, 3).forEach(queryIds => {
+  //       if (typeof queryIds === 'number') {
+  //         // testQuery(endPoint, queryIds).then(res => console.log(res.data[0][valNeed(endPoint)]))
+  //         testQuery(endPoint, queryIds).then(res => {
+  //           if (typeof valNeed(endPoint) !== 'object') {
+  //             console.log(res.data[0][valNeed(endPoint)]);
+  //             test[valNeed(endPoint)] = res.data[0][valNeed(endPoint)];
+  //           } else {
+  //             valNeed(endPoint).slice(0, 1).forEach(val => {
+  //               console.log(res.data[0][val]);
+  //               test[val] = res.data[0][val];
+  //             });
+  //           }
+  //         })
+  //       } else {
+  //         queryIds.slice(0, 1).forEach(queryId => {
+  //           testQuery(endPoint, queryId).then(res => {
+  //             if (typeof valNeed(endPoint) !== 'object') {
+  //               console.log(res.data[0][valNeed(endPoint)]);
+  //               test[valNeed(endPoint)] = res.data[0][valNeed(endPoint)];
+  //             } else {
+  //               valNeed(endPoint).slice(0, 1).forEach(val => {
+  //                 console.log(res.data[0][val]);
+  //                 test[val] = res.data[0][val];
+  //               });
+  //             }
+  //           })
+  //         })
+  //       }
+  //     });
+  //   });
+  //   setTimeout(() => console.log(test), 2000);
+  //   /*
+  //     쿼리 필요: artworks(obj), cover(num), collections(num), release_dates(obj), genres, keywords, platforms, screenshots, themes, videos, websites, involved_companies, game_modes, player_perspectives, franchises, age_ratings
+  //     num 제외 전부 obj, franchises는 경우에 따라서 undefined
+  //     endpoint, 변수 불일치 항목: cover(covers), collection(collections)
+  //     artworks: image_id
+  //       url 형식
+  //         썸네일: images.igdb.com/igdb/image/upload/t_thumb/[아이디.확장자]
+  //         오리지널: images.igdb.com/igdb/image/upload/t_original/[아이디.확장자]
+  //     cover: image_id
+  //         썸네일: images.igdb.com/igdb/image/upload/t_thumb/[아이디.확장자]
+  //         오리지널: images.igdb.com/igdb/image/upload/t_cover_big/[아이디.확장자]
+  //     collection: name
+  //     release_dates: human
+  //     genres: name
+  //     keywords: name
+  //     platforms: name
+  //     screenshots: image_id
+  //         썸네일: images.igdb.com/igdb/image/upload/t_thumb/[아이디.확장자]
+  //         오리지널: images.igdb.com/igdb/image/upload/t_original/[아이디.확장자]
+  //     themes: name
+  //     videos: video_id
+  //       유튜브 아이디 -> https://youtu.be/[아이디]
+  //     websites: url
+  //     involved_companies: company, developer, publisher
+  //       company 별도 검색 필요 -> name 값 필요
+  //     game_modes: name
+  //     player_perspectives: name
+  //     franchises: name
+  //     age_ratings: category, rating
+  //       rating enum 1~5는 PEGI, 6~12는 ESRB
+  //       PEGI
+  //         3
+  //           https://www.igdb.com/assets/pegi/PEGI_3-477c57b0d607627660e0ee86f4e39bad95233170528b028b21688faaba6a455b.png
+  //         7
+  //           https://www.igdb.com/assets/pegi/PEGI_7-fc2907b8d2f83bccc55070468cb0d4e90f1dd98a6a987cb53ed908e6eda31451.png
+  //         12
+  //           https://www.igdb.com/assets/pegi/PEGI_12-5c83ad44ed32a4c9bd40019d9817ba2ef69d2081db831285c64bfe08002a79ae.png
+  //         16
+  //           https://www.igdb.com/assets/pegi/PEGI_16-177256b4d01a59019d708199d71ccdc9721680ca8165c452b3eecff8bf47b61c.png
+  //         18
+  //           https://www.igdb.com/assets/pegi/PEGI_18-1efef95fe494465b999ef3d607f28e684a30341a0a9270a071fc559ee09577fc.png
+  //       ESRB
+  //         RP
+  //           https://www.igdb.com/assets/esrb/esrb_rp-2b9f914da8685eb905a3cb874e497ce9848db879a65e43444c6998fc28852c9b.png
+  //         EC
+  //           https://www.igdb.com/assets/esrb/esrb_ec-c2202019bef0475ea95d5ffdbfd882f595912e4a6cbea9204132fa73a0804076.png
+  //         E
+  //           https://www.igdb.com/assets/esrb/esrb_e-3ff51fae393dfcf5decdd4daa462372f28e3d78b417906e64d3d65ff08179838.png
+  //         E10
+  //           https://www.igdb.com/assets/esrb/esrb_e10-2b4600f85680e68b6e65b050e150754607669cd2602a224c5d9198ecbf0a860f.png
+  //         T
+  //           https://www.igdb.com/assets/esrb/esrb_t-addf8c69e4e93438b2a4cf046972279b7f9a6448929fbb0b0b7b7c28a0e60a24.png
+  //         M
+  //           https://www.igdb.com/assets/esrb/esrb_m-5472ffae8a4488c825e55818f41312dcc04401e45302246d3d19b0a08014de96.png
+  //         AO
+  //           https://www.igdb.com/assets/esrb/esrb_ao-53b8347d8123bf6cab401d0aa7e4f22aa88e25cb6b032be1813f967313bab2c5.png
+  //   */
+  //   // console.log(JSON.parse(result[0].meta))
+  // })
+  const foo = [1, 2, 3, 4, 5];
+  const baa = ['a', 'b', 'c', 'd', 'e'];
+  const bar = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ'];
+  foo.forEach((num, idx1) => {
+    let test = '';
+    setTimeout(() => {
+      console.log(num)
+      baa.forEach((alpha, idx2) => {
+        // test = idx2 * 300
+        setTimeout(() => {
+          console.log(alpha)
+          bar.forEach((kor, idx3) => {
+            setTimeout(() => {
+              console.log(kor);
+            }, idx3 * 300);
           })
-        } else {
-          queryIds.slice(0, 1).forEach(queryId => {
-            testQuery(endPoint, queryId).then(res => {
-              if (typeof valNeed(endPoint) !== 'object') {
-                console.log(res.data[0][valNeed(endPoint)]);
-                test[valNeed(endPoint)] = res.data[0][valNeed(endPoint)];
-              } else {
-                valNeed(endPoint).slice(0, 1).forEach(val => {
-                  console.log(res.data[0][val]);
-                  test[val] = res.data[0][val];
-                });
-              }
-            })
-          })
-        }
-      });
-    });
-    setTimeout(() => console.log(test), 2000);
-    /*
-      쿼리 필요: artworks(obj), cover(num), collections(num), release_dates(obj), genres, keywords, platforms, screenshots, themes, videos, websites, involved_companies, game_modes, player_perspectives, franchises, age_ratings
-      num 제외 전부 obj, franchises는 경우에 따라서 undefined
-      endpoint, 변수 불일치 항목: cover(covers), collection(collections)
-      artworks: image_id
-        url 형식
-          썸네일: images.igdb.com/igdb/image/upload/t_thumb/[아이디.확장자]
-          오리지널: images.igdb.com/igdb/image/upload/t_original/[아이디.확장자]
-      cover: image_id
-          썸네일: images.igdb.com/igdb/image/upload/t_thumb/[아이디.확장자]
-          오리지널: images.igdb.com/igdb/image/upload/t_cover_big/[아이디.확장자]
-      collection: name
-      release_dates: human
-      genres: name
-      keywords: name
-      platforms: name
-      screenshots: image_id
-          썸네일: images.igdb.com/igdb/image/upload/t_thumb/[아이디.확장자]
-          오리지널: images.igdb.com/igdb/image/upload/t_original/[아이디.확장자]
-      themes: name
-      videos: video_id
-        유튜브 아이디 -> https://youtu.be/[아이디]
-      websites: url
-      involved_companies: company, developer, publisher
-        company 별도 검색 필요 -> name 값 필요
-      game_modes: name
-      player_perspectives: name
-      franchises: name
-      age_ratings: category, rating
-        rating enum 1~5는 PEGI, 6~12는 ESRB
-        PEGI
-          3
-            https://www.igdb.com/assets/pegi/PEGI_3-477c57b0d607627660e0ee86f4e39bad95233170528b028b21688faaba6a455b.png
-          7
-            https://www.igdb.com/assets/pegi/PEGI_7-fc2907b8d2f83bccc55070468cb0d4e90f1dd98a6a987cb53ed908e6eda31451.png
-          12
-            https://www.igdb.com/assets/pegi/PEGI_12-5c83ad44ed32a4c9bd40019d9817ba2ef69d2081db831285c64bfe08002a79ae.png
-          16
-            https://www.igdb.com/assets/pegi/PEGI_16-177256b4d01a59019d708199d71ccdc9721680ca8165c452b3eecff8bf47b61c.png
-          18
-            https://www.igdb.com/assets/pegi/PEGI_18-1efef95fe494465b999ef3d607f28e684a30341a0a9270a071fc559ee09577fc.png
-        ESRB
-          RP
-            https://www.igdb.com/assets/esrb/esrb_rp-2b9f914da8685eb905a3cb874e497ce9848db879a65e43444c6998fc28852c9b.png
-          EC
-            https://www.igdb.com/assets/esrb/esrb_ec-c2202019bef0475ea95d5ffdbfd882f595912e4a6cbea9204132fa73a0804076.png
-          E
-            https://www.igdb.com/assets/esrb/esrb_e-3ff51fae393dfcf5decdd4daa462372f28e3d78b417906e64d3d65ff08179838.png
-          E10
-            https://www.igdb.com/assets/esrb/esrb_e10-2b4600f85680e68b6e65b050e150754607669cd2602a224c5d9198ecbf0a860f.png
-          T
-            https://www.igdb.com/assets/esrb/esrb_t-addf8c69e4e93438b2a4cf046972279b7f9a6448929fbb0b0b7b7c28a0e60a24.png
-          M
-            https://www.igdb.com/assets/esrb/esrb_m-5472ffae8a4488c825e55818f41312dcc04401e45302246d3d19b0a08014de96.png
-          AO
-            https://www.igdb.com/assets/esrb/esrb_ao-53b8347d8123bf6cab401d0aa7e4f22aa88e25cb6b032be1813f967313bab2c5.png
-    */
-    // console.log(JSON.parse(result[0].meta))
+        }, idx2 * 300 * bar.length);
+      })
+    }, idx1 * 300 * baa.length * bar.length);
   })
 });
 
