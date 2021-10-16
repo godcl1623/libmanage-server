@@ -244,8 +244,8 @@ app.post('/meta_search', (req, res) => {
     const fail = [];
     statObj.total = rawData.length;
     // rawData.slice(rawData.length - 30,rawData.length).forEach((steamAppId, index) => {
-    // rawData.slice(0 - 5).forEach((steamAppId, index) => {
-    rawData.forEach((steamAppId, index) => {
+    rawData.slice(0 - 5).forEach((steamAppId, index) => {
+    // rawData.forEach((steamAppId, index) => {
       setTimeout(() => {
         filterFunc(steamAppId)
           .then(result => {
@@ -258,8 +258,8 @@ app.post('/meta_search', (req, res) => {
             statObj.count++;
             console.log(`Searching for steam URL based on steam app id: ${temp.length + fail.length}/${rawData.length}`);
             // if (temp.length + fail.length === 30) {
-            // if (temp.length + fail.length === 5) {
-            if (temp.length + fail.length === rawData.length) {
+            if (temp.length + fail.length === 5) {
+            // if (temp.length + fail.length === rawData.length) {
               statObj.total = fail.length;
               statObj.count = 0;
               statObj.status = '2';
@@ -498,7 +498,7 @@ app.post('/get/meta', (req, res) => {
       artworks,
       cover: covers,
       collection: collections,
-      release_dates,
+      release_dates: releaseDates,
       genres,
       keywords,
       name,
@@ -508,27 +508,27 @@ app.post('/get/meta', (req, res) => {
       themes,
       videos,
       websites,
-      total_rating,
-      involved_companies,
-      game_modes,
-      player_perspectives,
+      total_rating: totalRating,
+      involved_companies: involvedCompanies,
+      game_modes: gameModes,
+      player_perspectives: playerPerspectives,
       franchises,
-      age_ratings
+      age_ratings: ageRatings
     } = JSON.parse(result[0].meta);
     const waitQuery = [
       artworks, covers, collections,
-      release_dates, genres, keywords,
+      releaseDates, genres, keywords,
       platforms, screenshots, themes,
-      videos, websites, total_rating,
-      involved_companies, game_modes,
-      player_perspectives, franchises,
-      age_ratings
+      videos, websites,
+      involvedCompanies, gameModes,
+      playerPerspectives, franchises,
+      ageRatings
     ];
     const endPoints = [
       'artworks', 'covers', 'collections',
       'release_dates', 'genres', 'keywords',
       'platforms', 'screenshots', 'themes',
-      'videos', 'websites', 'total_rating',
+      'game_videos', 'websites',
       'involved_companies', 'game_modes',
       'player_perspectives', 'franchises',
       'age_ratings'
@@ -540,19 +540,118 @@ app.post('/get/meta', (req, res) => {
         .request(`/${endpoints}`);
       return response;
     };
-    endPoints.slice(0, 1).forEach((endPoint, index) => {
-      waitQuery.slice(0, 1).forEach(queryIds => {
-        queryIds.slice(0, 1).forEach(queryId => {
-          testQuery(endPoint, queryId).then(res => console.log(res.data))
-        })
+    const valNeed = endPoint => {
+      const images = ['artworks', 'covers', 'screenshots'];
+      let result = '';
+      if (images.find(ele => ele === endPoint)) {
+        result = 'image_id';
+      } else if (endPoint === 'game_videos') {
+        result = 'video_id';
+      } else if (endPoint === 'release_dates') {
+        result = 'human';
+      } else if (endPoint === 'websites') {
+        result = 'url';
+      } else if (endPoint === 'involved_companies') {
+        result = ['company', 'developer', 'publisher'];
+      } else if (endPoint === 'age_ratings') {
+        result = ['category', 'rating'];
+      } else {
+        result = 'name';
+      }
+      return result;
+    }
+    const test = {};
+    endPoints.slice(2, 3).forEach((endPoint, index) => {
+      waitQuery.slice(2, 3).forEach(queryIds => {
+        if (typeof queryIds === 'number') {
+          // testQuery(endPoint, queryIds).then(res => console.log(res.data[0][valNeed(endPoint)]))
+          testQuery(endPoint, queryIds).then(res => {
+            if (typeof valNeed(endPoint) !== 'object') {
+              console.log(res.data[0][valNeed(endPoint)]);
+              test[valNeed(endPoint)] = res.data[0][valNeed(endPoint)];
+            } else {
+              valNeed(endPoint).slice(0, 1).forEach(val => {
+                console.log(res.data[0][val]);
+                test[val] = res.data[0][val];
+              });
+            }
+          })
+        } else {
+          queryIds.slice(0, 1).forEach(queryId => {
+            testQuery(endPoint, queryId).then(res => {
+              if (typeof valNeed(endPoint) !== 'object') {
+                console.log(res.data[0][valNeed(endPoint)]);
+                test[valNeed(endPoint)] = res.data[0][valNeed(endPoint)];
+              } else {
+                valNeed(endPoint).slice(0, 1).forEach(val => {
+                  console.log(res.data[0][val]);
+                  test[val] = res.data[0][val];
+                });
+              }
+            })
+          })
+        }
       });
     });
+    setTimeout(() => console.log(test), 2000);
     /*
-      쿼리 필요: artworks(obj), cover(num), collections(num), release_dates(obj), genres, keywords, platforms, screenshots, themes, videos, websites, total_rating(num), involved_companies, game_modes, player_perspectives, franchises, age_ratings
+      쿼리 필요: artworks(obj), cover(num), collections(num), release_dates(obj), genres, keywords, platforms, screenshots, themes, videos, websites, involved_companies, game_modes, player_perspectives, franchises, age_ratings
       num 제외 전부 obj, franchises는 경우에 따라서 undefined
       endpoint, 변수 불일치 항목: cover(covers), collection(collections)
+      artworks: image_id
+        url 형식
+          썸네일: images.igdb.com/igdb/image/upload/t_thumb/[아이디.확장자]
+          오리지널: images.igdb.com/igdb/image/upload/t_original/[아이디.확장자]
+      cover: image_id
+          썸네일: images.igdb.com/igdb/image/upload/t_thumb/[아이디.확장자]
+          오리지널: images.igdb.com/igdb/image/upload/t_cover_big/[아이디.확장자]
+      collection: name
+      release_dates: human
+      genres: name
+      keywords: name
+      platforms: name
+      screenshots: image_id
+          썸네일: images.igdb.com/igdb/image/upload/t_thumb/[아이디.확장자]
+          오리지널: images.igdb.com/igdb/image/upload/t_original/[아이디.확장자]
+      themes: name
+      videos: video_id
+        유튜브 아이디 -> https://youtu.be/[아이디]
+      websites: url
+      involved_companies: company, developer, publisher
+        company 별도 검색 필요 -> name 값 필요
+      game_modes: name
+      player_perspectives: name
+      franchises: name
+      age_ratings: category, rating
+        rating enum 1~5는 PEGI, 6~12는 ESRB
+        PEGI
+          3
+            https://www.igdb.com/assets/pegi/PEGI_3-477c57b0d607627660e0ee86f4e39bad95233170528b028b21688faaba6a455b.png
+          7
+            https://www.igdb.com/assets/pegi/PEGI_7-fc2907b8d2f83bccc55070468cb0d4e90f1dd98a6a987cb53ed908e6eda31451.png
+          12
+            https://www.igdb.com/assets/pegi/PEGI_12-5c83ad44ed32a4c9bd40019d9817ba2ef69d2081db831285c64bfe08002a79ae.png
+          16
+            https://www.igdb.com/assets/pegi/PEGI_16-177256b4d01a59019d708199d71ccdc9721680ca8165c452b3eecff8bf47b61c.png
+          18
+            https://www.igdb.com/assets/pegi/PEGI_18-1efef95fe494465b999ef3d607f28e684a30341a0a9270a071fc559ee09577fc.png
+        ESRB
+          RP
+            https://www.igdb.com/assets/esrb/esrb_rp-2b9f914da8685eb905a3cb874e497ce9848db879a65e43444c6998fc28852c9b.png
+          EC
+            https://www.igdb.com/assets/esrb/esrb_ec-c2202019bef0475ea95d5ffdbfd882f595912e4a6cbea9204132fa73a0804076.png
+          E
+            https://www.igdb.com/assets/esrb/esrb_e-3ff51fae393dfcf5decdd4daa462372f28e3d78b417906e64d3d65ff08179838.png
+          E10
+            https://www.igdb.com/assets/esrb/esrb_e10-2b4600f85680e68b6e65b050e150754607669cd2602a224c5d9198ecbf0a860f.png
+          T
+            https://www.igdb.com/assets/esrb/esrb_t-addf8c69e4e93438b2a4cf046972279b7f9a6448929fbb0b0b7b7c28a0e60a24.png
+          M
+            https://www.igdb.com/assets/esrb/esrb_m-5472ffae8a4488c825e55818f41312dcc04401e45302246d3d19b0a08014de96.png
+          AO
+            https://www.igdb.com/assets/esrb/esrb_ao-53b8347d8123bf6cab401d0aa7e4f22aa88e25cb6b032be1813f967313bab2c5.png
     */
-  //  console.log(JSON.parse(result[0].meta))
+    // console.log(JSON.parse(result[0].meta))
   })
 });
 
