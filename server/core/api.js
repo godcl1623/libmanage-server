@@ -275,7 +275,7 @@ app.post('/meta_search', (req, res) => {
               resolve({ temp, fail });
             }
           });
-      }, index * 300);
+      }, index * 500);
     });
   });
   // 6. 5에서 검색에 실패한 게임들 대상 IGDB 고유 게임 아이디 검색 함수
@@ -306,7 +306,7 @@ app.post('/meta_search', (req, res) => {
                 resolve(totalSuccess);
               }
             });
-        }, index * 300);
+        }, index * 500);
       });
     } else {
       console.log(`Second attempt: No fails detected. Proceed to next step.`)
@@ -332,7 +332,7 @@ app.post('/meta_search', (req, res) => {
               resolve(rawMeta);
             }
           });
-      }, index * 300);
+      }, index * 500);
     });
   });
   // 8. 메타 데이터 가공 함수 - 제목, 표지, url 추출
@@ -360,6 +360,7 @@ app.post('/meta_search', (req, res) => {
     /* @@@@@@@@@@@@@@@@@@@@ 여기까지 원본 코드 @@@@@@@@@@@@@@@@@@@@ */
     /* ####################여기서부터 테스트#################### */
     const resultArr = [];
+    let metaCount = 0;
     rawData.forEach((gameMeta, index) =>{
       const {
         artworks,
@@ -421,14 +422,50 @@ app.post('/meta_search', (req, res) => {
         return result;
       }
       const processedMeta = {};
+      let tempCount = 0;
       setTimeout(() => {
-        console.log(gameMeta);
-        endPoints.forEach((endPoint, endIdx) => {
+        metaCount++;
+        console.log(`meta: ${metaCount}`);
+        waitQuery.forEach((queryIds, queIdx) => {
           setTimeout(() => {
-            console.log(gameMeta.name, endPoint, waitQuery[endIdx]);
-          }, endIdx * 300);
+            tempCount++;
+            console.log(`temp: ${tempCount}`);
+            console.log(endPoints[queIdx]);
+            if (typeof queryIds === 'number') {
+              filterFunc(endPoints[queIdx], queryIds)
+                .then(res => {
+                  if (typeof valNeed(endPoints[queIdx]) !== 'object') {
+                    processedMeta[valNeed(endPoints[queIdx])] = res.data[0][valNeed(endPoints[queIdx])];
+                  } else {
+                    valNeed(endPoints[queIdx]).forEach(val => {
+                      processedMeta[val] = res.data[0][val];
+                    });
+                  }
+                })
+            } else if (queryIds) {
+              queryIds.forEach(queryId => {
+                filterFunc(endPoints[queIdx], queryId)
+                  .then(res => {
+                    if (typeof valNeed(endPoints[queIdx]) !== 'object') {
+                      processedMeta[valNeed(endPoints[queIdx])] = res.data[0][valNeed(endPoints[queIdx])];
+                    } else {
+                      valNeed(endPoints[queIdx]).forEach(val => {
+                        processedMeta[val] = res.data[0][val];
+                      });
+                    }
+                  })
+              });
+            }
+            if (tempCount === waitQuery.length) {
+              resultArr.push(processedMeta);
+              console.log(resultArr);
+            }
+          }, queIdx * 1000);
         });
-      }, index * 300 * endPoints.length);
+        if (metaCount === rawData.length) {
+          resolve(resultArr);
+        }
+      }, index * 1000 * waitQuery.length);
     });
     /* ####################여기까지 테스트#################### */
   });
