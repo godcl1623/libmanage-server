@@ -247,7 +247,8 @@ app.post('/meta_search', (req, res) => {
     return response;
   };
   // 테스트: 멀티쿼리
-  const multiQuerySearch = async (endpoints, valNeed, query) => {
+  const multiQuerySearch = (endpoints, valNeed, query) => {
+  // const multiQuerySearch = async (endpoints, valNeed, query) => {
     let queryStr = '';
     let queryData = '';
     if (typeof query === 'object') {
@@ -264,7 +265,8 @@ app.post('/meta_search', (req, res) => {
     } else if (typeof query === 'number') {
       queryData = `query ${endpoints} "0" { fields ${valNeed};where id=${query}; }`
     }
-    const response = await axios({
+    // const response = await axios({
+    const response = axios({
       url: "https://api.igdb.com/v4/multiquery",
       method: 'POST',
       headers: {
@@ -452,29 +454,35 @@ app.post('/meta_search', (req, res) => {
         return result;
       }
       const processedMeta = {};
+      const test = [];
       let tempCount = 0;
       setTimeout(() => {
-        console.log(`meta: ${metaCount}`);
+        // console.log(`meta: ${metaCount}`);
         waitQuery.forEach((queryIds, queIdx) => {
           setTimeout(() => {
             console.log(`temp: ${tempCount}`);
-            console.log(endPoints[queIdx]);
+            // console.log(endPoints[queIdx]);
             if (queryIds) {
-              filterFunc(endPoints[queIdx], valNeed(endPoints[queIdx]), queryIds)
-              .then(res => {
-                processedMeta[endPoints[queIdx]] = [];
-                res.data.forEach(r => {
-                  processedMeta[endPoints[queIdx]].push(r.result[0][valNeed(endPoints[queIdx])]);
-                  // console.log(r.result[0])
-                });
-              });
+              test.push(filterFunc(endPoints[queIdx], valNeed(endPoints[queIdx]), queryIds))
+              console.log('testlength', test.length)
+              // filterFunc(endPoints[queIdx], valNeed(endPoints[queIdx]), queryIds)
+              // .then(res => {
+              //   processedMeta[endPoints[queIdx]] = [];
+              //   res.data.forEach(r => {
+              //     processedMeta[endPoints[queIdx]].push(r.result[0][valNeed(endPoints[queIdx])]);
+              //     // console.log(r.result[0])
+              //   });
+              // });
             } else {
               processedMeta[endPoints[queIdx]] = 'N/A';
             }
             tempCount++;
-            if (Object.keys(processedMeta).length === waitQuery.length) {
-              resultArr.push(processedMeta);
-              console.log(resultArr);
+            if (tempCount === waitQuery.length) {
+              // resultArr.push(processedMeta);
+              // console.log(resultArr);
+              Promise.all(test).then(res => res.forEach(r => {
+                r.data.forEach(u => console.log(u))
+              }))
             }
           }, queIdx * 300);
         });
