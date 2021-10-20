@@ -277,7 +277,7 @@ app.post('/meta_search', (req, res) => {
     return response;
   };
   // 5. IGDB상 저장된 스팀 게임의 url을 기반으로 IGDB 고유 게임 아이디 반환
-  const firstFilter = (rawData, filterFunc) => new Promise((resolve, reject) => {
+  const firstFilter = (rawData, filterFunc) => new Promise(resolve => {
     const temp = [];
     const fail = [];
     statObj.total = rawData.length;
@@ -309,7 +309,7 @@ app.post('/meta_search', (req, res) => {
     });
   });
   // 6. 5에서 검색에 실패한 게임들 대상 IGDB 고유 게임 아이디 검색 함수
-  const secondFilter = (rawData, filterFunc) => new Promise((resolve, reject) => {
+  const secondFilter = (rawData, filterFunc) => new Promise(resolve => {
     const { temp, fail } = rawData;
     const secTemp = [];
     const secFail = [];
@@ -344,7 +344,7 @@ app.post('/meta_search', (req, res) => {
     }
   });
   // 7. 5, 6에서 검색된 IGDB 고유 아이디를 통한 게임 메타데이터 검색 함수
-  const returnMeta = (rawData, filterFunc) => new Promise((resolve, reject) => {
+  const returnMeta = (rawData, filterFunc) => new Promise(resolve => {
     const temp = [];
     rawData.forEach((igdbID, index) => {
       setTimeout(() => {
@@ -365,30 +365,9 @@ app.post('/meta_search', (req, res) => {
       }, index * 300);
     });
   });
-  // 8. 메타 데이터 가공 함수 - 제목, 표지, url 추출
-  const processMeta = (rawData, filterFunc) => new Promise((resolve, reject) => {
+  // 8. 메타 데이터 가공 함수 - 제목, 표지, 추출 및 고유 아이디 평문으로 변환
+  const processMeta = (rawData, filterFunc) => new Promise(resolve => {
     const titles = rawData.map(gameMeta => gameMeta.name);
-    const urls = rawData.map(gameMeta => gameMeta.url);
-    /* @@@@@@@@@@@@@@@@@@@@ 여기서부터 원본 코드 @@@@@@@@@@@@@@@@@@@@ */
-    // const coversTemp = rawData.map(gameMeta => gameMeta.cover);
-    // const covers = [];
-    // coversTemp.forEach((coverId, index) => {
-    //   setTimeout(() => {
-    //     filterFunc(coverId)
-    //       .then(result => {
-    //         covers.push(result.data[0].image_id);
-    //         statObj.count++;
-    //         console.log(`Processing meta: Searching covers: ${covers.length}/${coversTemp.length}`)
-    //         if (covers.length === coversTemp.length) {
-    //           statObj.status = '5';
-    //           console.log(`Processing meta: Processing complete. Proceed to next step.`);
-    //           resolve({ titles, urls, covers, rawData });
-    //         };
-    //       });
-    //   }, index * 300);
-    // });
-    /* @@@@@@@@@@@@@@@@@@@@ 여기까지 원본 코드 @@@@@@@@@@@@@@@@@@@@ */
-    /* ####################여기서부터 테스트#################### */
     const resultArr = [];
     let metaCount = 0;
     const tempData = [...rawData];
@@ -471,7 +450,6 @@ app.post('/meta_search', (req, res) => {
                   } else {
                     processedMeta[endPoints[queIdx]].push(r.result[0]);
                   }
-                  // console.log(r.result[0])
                 });
               });
             } else {
@@ -483,17 +461,17 @@ app.post('/meta_search', (req, res) => {
               processedMeta.summary = summary;
               processedMeta.ratings = totalRating;
               resultArr.push(processedMeta);
-              // console.log(resultArr);
             }
           }, queIdx * 300);
         });
         metaCount++;
         if (resultArr.length === rawData.length) {
-          resolve(resultArr);
+          const covers = [];
+          resultArr.forEach(result => covers.push(result.covers));
+          resolve({titles, covers, resultArr});
         }
       }, index * 300 * waitQuery.length);
     });
-    /* ####################여기까지 테스트#################### */
   });
   // 9. DB 기록 함수
   const writeToDB = resultObj => new Promise((resolve, reject) => {
