@@ -422,7 +422,7 @@ app.post('/meta_search', (req, res) => {
         videos, websites,
         involvedCompanies, gameModes,
         playerPerspectives, franchises,
-        ageRatings
+        ageRatings, ageRatings
       ];
       const endPoints = [
         'artworks', 'covers', 'collections',
@@ -431,7 +431,7 @@ app.post('/meta_search', (req, res) => {
         'game_videos', 'websites',
         'involved_companies', 'game_modes',
         'player_perspectives', 'franchises',
-        'age_ratings'
+        'age_ratings', 'age_ratings'
       ];
       const valNeed = endPoint => {
         const images = ['artworks', 'covers', 'screenshots'];
@@ -454,17 +454,19 @@ app.post('/meta_search', (req, res) => {
         return result;
       }
       const processedMeta = {};
-      const test = [];
+      const temp = [];
       let tempCount = 0;
       setTimeout(() => {
         // console.log(`meta: ${metaCount}`);
         waitQuery.forEach((queryIds, queIdx) => {
           setTimeout(() => {
+            tempCount++;
             console.log(`temp: ${tempCount}`);
             // console.log(endPoints[queIdx]);
             if (queryIds) {
-              test.push(filterFunc(endPoints[queIdx], valNeed(endPoints[queIdx]), queryIds))
-              console.log('testlength', test.length)
+              temp.push(filterFunc(endPoints[queIdx], valNeed(endPoints[queIdx]), queryIds))
+              console.log('testlength', temp.length)
+              // console.log(endPoints[queIdx], queryIds)
               // filterFunc(endPoints[queIdx], valNeed(endPoints[queIdx]), queryIds)
               // .then(res => {
               //   processedMeta[endPoints[queIdx]] = [];
@@ -476,21 +478,45 @@ app.post('/meta_search', (req, res) => {
             } else {
               processedMeta[endPoints[queIdx]] = 'N/A';
             }
-            tempCount++;
             if (tempCount === waitQuery.length) {
               // resultArr.push(processedMeta);
               // console.log(resultArr);
-              Promise.all(test).then(res => res.forEach(r => {
-                r.data.forEach(u => console.log(u))
-              }))
+              Promise.allSettled(temp)
+                .then(promiseResult => {
+                  // console.log('###promiseResult###', promiseResult);
+                  promiseResult.forEach((eachResult, resIdx) => {
+                    if (processedMeta[endPoints[resIdx]] !== 'N/A') {
+                      processedMeta[endPoints[resIdx]] = [];
+                    }
+                    eachResult.value.data.forEach(rawMeta => {
+                      if (typeof processedMeta[endPoints[resIdx]] === 'object') {
+                        if (typeof valNeed(endPoints[resIdx]) === 'string') {
+                          processedMeta[endPoints[resIdx]]
+                            .push(rawMeta.result[0][valNeed(endPoints[resIdx])]);
+                        } else {
+                          processedMeta[endPoints[resIdx]].push(rawMeta.result[0]);
+                        }
+                      }
+                      // console.log(rawMeta.result[0])
+                      if (Object.keys(processedMeta).length === promiseResult.length) {
+                        processedMeta.name = name;
+                        processedMeta.summary = summary;
+                        processedMeta.ratings = totalRating;
+                        resultArr.push(processedMeta);
+                      }
+                    })
+                  })
+                })
+              // console.log(temp)
             }
           }, queIdx * 300);
         });
         metaCount++;
-        if (resultArr.length === rawData.length) {
+        console.log(metaCount)
+        if (metaCount === rawData.length) {
           resolve(resultArr);
         }
-      }, index * 300 * waitQuery.length);
+      }, index * 350 * waitQuery.length);
     });
     /* ####################여기까지 테스트#################### */
   });
