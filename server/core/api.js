@@ -247,8 +247,7 @@ app.post('/meta_search', (req, res) => {
     return response;
   };
   // 테스트: 멀티쿼리
-  const multiQuerySearch = (endpoints, valNeed, query) => {
-  // const multiQuerySearch = async (endpoints, valNeed, query) => {
+  const multiQuerySearch = async (endpoints, valNeed, query) => {
     let queryStr = '';
     let queryData = '';
     if (typeof query === 'object') {
@@ -265,8 +264,7 @@ app.post('/meta_search', (req, res) => {
     } else if (typeof query === 'number') {
       queryData = `query ${endpoints} "0" { fields ${valNeed};where id=${query}; }`
     }
-    // const response = await axios({
-    const response = axios({
+    const response = await axios({
       url: "https://api.igdb.com/v4/multiquery",
       method: 'POST',
       headers: {
@@ -393,7 +391,9 @@ app.post('/meta_search', (req, res) => {
     /* ####################여기서부터 테스트#################### */
     const resultArr = [];
     let metaCount = 0;
-    rawData.forEach((gameMeta, index) =>{
+    const tempData = [...rawData];
+    tempData.push(rawData[rawData.length-1]);
+    tempData.forEach((gameMeta, index) =>{
       const {
         artworks,
         cover: covers,
@@ -422,7 +422,7 @@ app.post('/meta_search', (req, res) => {
         videos, websites,
         involvedCompanies, gameModes,
         playerPerspectives, franchises,
-        ageRatings, ageRatings
+        ageRatings, ageRatings, ageRatings
       ];
       const endPoints = [
         'artworks', 'covers', 'collections',
@@ -431,7 +431,7 @@ app.post('/meta_search', (req, res) => {
         'game_videos', 'websites',
         'involved_companies', 'game_modes',
         'player_perspectives', 'franchises',
-        'age_ratings', 'age_ratings'
+        'age_ratings', 'age_ratings', 'age_ratings'
       ];
       const valNeed = endPoint => {
         const images = ['artworks', 'covers', 'screenshots'];
@@ -454,69 +454,44 @@ app.post('/meta_search', (req, res) => {
         return result;
       }
       const processedMeta = {};
-      const temp = [];
       let tempCount = 0;
       setTimeout(() => {
-        // console.log(`meta: ${metaCount}`);
+        console.log(`meta: ${metaCount}`);
         waitQuery.forEach((queryIds, queIdx) => {
           setTimeout(() => {
-            tempCount++;
             console.log(`temp: ${tempCount}`);
-            // console.log(endPoints[queIdx]);
+            console.log(endPoints[queIdx]);
             if (queryIds) {
-              temp.push(filterFunc(endPoints[queIdx], valNeed(endPoints[queIdx]), queryIds))
-              console.log('testlength', temp.length)
-              // console.log(endPoints[queIdx], queryIds)
-              // filterFunc(endPoints[queIdx], valNeed(endPoints[queIdx]), queryIds)
-              // .then(res => {
-              //   processedMeta[endPoints[queIdx]] = [];
-              //   res.data.forEach(r => {
-              //     processedMeta[endPoints[queIdx]].push(r.result[0][valNeed(endPoints[queIdx])]);
-              //     // console.log(r.result[0])
-              //   });
-              // });
+              filterFunc(endPoints[queIdx], valNeed(endPoints[queIdx]), queryIds)
+              .then(res => {
+                processedMeta[endPoints[queIdx]] = [];
+                res.data.forEach(r => {
+                  if (typeof valNeed(endPoints[queIdx]) === 'string') {
+                    processedMeta[endPoints[queIdx]].push(r.result[0][valNeed(endPoints[queIdx])]);
+                  } else {
+                    processedMeta[endPoints[queIdx]].push(r.result[0]);
+                  }
+                  // console.log(r.result[0])
+                });
+              });
             } else {
               processedMeta[endPoints[queIdx]] = 'N/A';
             }
+            tempCount++;
             if (tempCount === waitQuery.length) {
-              // resultArr.push(processedMeta);
+              processedMeta.name = name;
+              processedMeta.summary = summary;
+              processedMeta.ratings = totalRating;
+              resultArr.push(processedMeta);
               // console.log(resultArr);
-              Promise.allSettled(temp)
-                .then(promiseResult => {
-                  // console.log('###promiseResult###', promiseResult);
-                  promiseResult.forEach((eachResult, resIdx) => {
-                    if (processedMeta[endPoints[resIdx]] !== 'N/A') {
-                      processedMeta[endPoints[resIdx]] = [];
-                    }
-                    eachResult.value.data.forEach(rawMeta => {
-                      if (typeof processedMeta[endPoints[resIdx]] === 'object') {
-                        if (typeof valNeed(endPoints[resIdx]) === 'string') {
-                          processedMeta[endPoints[resIdx]]
-                            .push(rawMeta.result[0][valNeed(endPoints[resIdx])]);
-                        } else {
-                          processedMeta[endPoints[resIdx]].push(rawMeta.result[0]);
-                        }
-                      }
-                      // console.log(rawMeta.result[0])
-                      if (Object.keys(processedMeta).length === promiseResult.length) {
-                        processedMeta.name = name;
-                        processedMeta.summary = summary;
-                        processedMeta.ratings = totalRating;
-                        resultArr.push(processedMeta);
-                      }
-                    })
-                  })
-                })
-              // console.log(temp)
             }
           }, queIdx * 300);
         });
         metaCount++;
-        console.log(metaCount)
-        if (metaCount === rawData.length) {
+        if (resultArr.length === rawData.length) {
           resolve(resultArr);
         }
-      }, index * 350 * waitQuery.length);
+      }, index * 300 * waitQuery.length);
     });
     /* ####################여기까지 테스트#################### */
   });
@@ -585,7 +560,10 @@ app.post('/meta_search', (req, res) => {
     // .then(resultObj => writeToDB(resultObj))
     // .then(writeResult => res.send(writeResult))
     // .catch(err => console.log(err));
-    .then(res => console.log(res))
+    .then(res => {
+      console.log('##################################################')
+      console.log(res)
+    })
 });
 
 app.post('/disconnect', (req, res) => {
