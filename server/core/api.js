@@ -370,8 +370,8 @@ app.post('/meta_search', (req, res) => {
     const titles = rawData.map(gameMeta => gameMeta.name);
     const resultArr = [];
     let metaCount = 0;
-    const tempData = [...rawData];
-    tempData.push(rawData[rawData.length-1]);
+    const tempData = [...rawData.slice(1, 2)];
+    tempData.push(rawData.slice(1, 2)[rawData.slice(1, 2).length-1]);
     tempData.forEach((gameMeta, index) =>{
       const {
         artworks,
@@ -465,7 +465,7 @@ app.post('/meta_search', (req, res) => {
           }, queIdx * 300);
         });
         metaCount++;
-        if (resultArr.length === rawData.length) {
+        if (resultArr.length === rawData.slice(1, 2).length) {
           const covers = [];
           resultArr.forEach(result => covers.push(result.covers));
           resolve({titles, covers, resultArr});
@@ -473,6 +473,11 @@ app.post('/meta_search', (req, res) => {
       }, index * 300 * waitQuery.length);
     });
   });
+  // 회사, 연령제한 체크
+  const processOmit = (resultObj, filterFunc) => new Promise(resolve => {
+    const { titles, covers, resultArr } = resultObj;
+    console.log(resultArr)
+  })
   // 9. DB 기록 함수
   const writeToDB = resultObj => new Promise((resolve, reject) => {
     const { titles, urls, covers, rawData } = resultObj;
@@ -538,10 +543,7 @@ app.post('/meta_search', (req, res) => {
     // .then(resultObj => writeToDB(resultObj))
     // .then(writeResult => res.send(writeResult))
     // .catch(err => console.log(err));
-    .then(res => {
-      console.log('##################################################')
-      console.log(res)
-    })
+    .then(resultObj => processOmit(resultObj, multiQuerySearch))
 });
 
 app.post('/disconnect', (req, res) => {
