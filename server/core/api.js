@@ -238,46 +238,8 @@ app.post('/meta_search', (req, res) => {
       .request('/covers');
     return response;
   };
-  // 5. 쿼리별 검색 함수
-  const eachQuerySearch = async (endpoints, id, field) => {
-    const response = await client
-      .fields(`${field}`)
-      .where(`id=${id}`)
-      .request(`/${endpoints}`);
-    return response;
-  };
-  // 6. 멀티쿼리
-  const multiQuerySearch = async (endpoints, valNeed, query) => {
-    let queryStr = '';
-    let queryData = '';
-    if (typeof query === 'object') {
-      if (query.length <= 10) {
-        queryStr = query.map((que, idx) => 
-          `query ${endpoints} "${idx}" { fields ${valNeed};where id=${que}; }`
-        );
-      } else {
-        queryStr = query.slice(0, 10).map((que, idx) => 
-          `query ${endpoints} "${idx}" { fields ${valNeed};where id=${que}; }`
-        );
-      }
-      queryData = queryStr.join(';');
-    } else if (typeof query === 'number') {
-      queryData = `query ${endpoints} "0" { fields ${valNeed};where id=${query}; }`
-    }
-    const response = await axios({
-      url: "https://api.igdb.com/v4/multiquery",
-      method: 'POST',
-      headers: {
-          'Accept': 'application/json',
-          'Client-ID': cid,
-          'Authorization': `Bearer ${token}`,
-      },
-      data: queryData+';'
-    });
-    return response;
-  };
-  // 7. IGDB상 저장된 스팀 게임의 url을 기반으로 IGDB 고유 게임 아이디 반환
-  const firstFilter = (rawData, filterFunc) => new Promise(resolve => {
+  // 5. IGDB상 저장된 스팀 게임의 url을 기반으로 IGDB 고유 게임 아이디 반환
+  const firstFilter = (rawData, filterFunc) => new Promise((resolve, reject) => {
     const temp = [];
     const fail = [];
     statObj.total = rawData.length;
@@ -308,8 +270,8 @@ app.post('/meta_search', (req, res) => {
       }, index * 300);
     });
   });
-  // 8. 5에서 검색에 실패한 게임들 대상 IGDB 고유 게임 아이디 검색 함수
-  const secondFilter = (rawData, filterFunc) => new Promise(resolve => {
+  // 6. 5에서 검색에 실패한 게임들 대상 IGDB 고유 게임 아이디 검색 함수
+  const secondFilter = (rawData, filterFunc) => new Promise((resolve, reject) => {
     const { temp, fail } = rawData;
     const secTemp = [];
     const secFail = [];
@@ -343,8 +305,8 @@ app.post('/meta_search', (req, res) => {
       resolve(temp);
     }
   });
-  // 9. 7, 8에서 검색된 IGDB 고유 아이디를 통한 게임 메타데이터 검색 함수
-  const returnMeta = (rawData, filterFunc) => new Promise(resolve => {
+  // 7. 5, 6에서 검색된 IGDB 고유 아이디를 통한 게임 메타데이터 검색 함수
+  const returnMeta = (rawData, filterFunc) => new Promise((resolve, reject) => {
     const temp = [];
     rawData.forEach((igdbID, index) => {
       setTimeout(() => {
@@ -365,254 +327,39 @@ app.post('/meta_search', (req, res) => {
       }, index * 300);
     });
   });
-  // 10. 메타 데이터 가공 함수 - 제목, 표지, 추출 및 고유 아이디 평문으로 변환
-  const processMeta = (rawData, filterFunc) => new Promise(resolve => {
+  // 8. 메타 데이터 가공 함수 - 제목, 표지, url 추출
+  const processMeta = (rawData, filterFunc) => new Promise((resolve, reject) => {
     const titles = rawData.map(gameMeta => gameMeta.name);
-    const resultArr = [];
-    let metaCount = 0;
-    // const tempData = [...rawData.slice(1, 2)];
-    const tempData = [...rawData];
-    // tempData.push(rawData.slice(1, 2)[rawData.slice(1, 2).length-1]);
-    tempData.push(rawData[rawData.length-1]);
-    tempData.forEach((gameMeta, index) => {
-      const {
-        artworks,
-        cover: covers,
-        collection: collections,
-        release_dates: releaseDates,
-        genres,
-        keywords,
-        name,
-        platforms,
-        screenshots,
-        summary,
-        themes,
-        videos,
-        websites,
-        total_rating: totalRating,
-        involved_companies: involvedCompanies,
-        game_modes: gameModes,
-        player_perspectives: playerPerspectives,
-        franchises,
-        age_ratings: ageRatings
-      } = gameMeta;
-      const waitQuery = [
-        artworks, covers, collections,
-        releaseDates, genres, keywords,
-        platforms, screenshots, themes,
-        videos, websites,
-        involvedCompanies, gameModes,
-        playerPerspectives, franchises,
-        ageRatings, ageRatings, ageRatings
-      ];
-      const endPoints = [
-        'artworks', 'covers', 'collections',
-        'release_dates', 'genres', 'keywords',
-        'platforms', 'screenshots', 'themes',
-        'game_videos', 'websites',
-        'involved_companies', 'game_modes',
-        'player_perspectives', 'franchises',
-        'age_ratings', 'age_ratings', 'age_ratings'
-      ];
-      const valNeed = endPoint => {
-        const images = ['artworks', 'covers', 'screenshots'];
-        let result = '';
-        if (images.find(ele => ele === endPoint)) {
-          result = 'image_id';
-        } else if (endPoint === 'game_videos') {
-          result = 'video_id';
-        } else if (endPoint === 'release_dates') {
-          result = ['human', 'platform'];
-        } else if (endPoint === 'websites') {
-          result = 'url';
-        } else if (endPoint === 'involved_companies') {
-          result = ['company', 'developer', 'publisher'];
-        } else if (endPoint === 'age_ratings') {
-          result = ['category', 'rating'];
-        } else {
-          result = 'name';
-        }
-        return result;
-      }
-      const processedMeta = {};
-      let tempCount = 0;
+    const urls = rawData.map(gameMeta => gameMeta.url);
+    const coversTemp = rawData.map(gameMeta => gameMeta.cover);
+    const covers = [];
+    coversTemp.forEach((coverId, index) => {
       setTimeout(() => {
-        console.log(`Processing meta - Converting data: ${resultArr.length}/${rawData.length}`);
-        waitQuery.forEach((queryIds, queIdx) => {
-          setTimeout(() => {
-            // console.log(`temp: ${tempCount}`);
-            // console.log(endPoints[queIdx]);
-            if (queryIds) {
-              filterFunc(endPoints[queIdx], valNeed(endPoints[queIdx]), queryIds)
-              .then(res => {
-                processedMeta[endPoints[queIdx]] = [];
-                res.data.forEach(r => {
-                  if (typeof valNeed(endPoints[queIdx]) === 'string') {
-                    processedMeta[endPoints[queIdx]].push(r.result[0][valNeed(endPoints[queIdx])]);
-                  } else {
-                    processedMeta[endPoints[queIdx]].push(r.result[0]);
-                  }
-                });
-              });
-            } else {
-              processedMeta[endPoints[queIdx]] = 'N/A';
-            }
-            tempCount++;
-            if (tempCount === waitQuery.length) {
-              processedMeta.name = name;
-              processedMeta.summary = summary;
-              processedMeta.ratings = totalRating;
-              resultArr.push(processedMeta);
-            }
-          }, queIdx * 300);
-        });
-        metaCount++;
-        statObj.count++;
-        // if (resultArr.length === rawData.slice(1, 2).length) {
-        if (resultArr.length === rawData.length) {
-          statObj.total = resultArr.length;
-          statObj.count = 0;
-          statObj.status = '2';
-          console.log(`Processing meta: Processing complete. Proceed to next step.`);
-          const covers = [];
-          resultArr.forEach(result => covers.push(result.covers));
-          resolve({titles, covers, resultArr});
-        }
-      }, index * 300 * waitQuery.length);
+        filterFunc(coverId)
+          .then(result => {
+            covers.push(result.data[0].image_id);
+            statObj.count++;
+            console.log(`Processing meta: Searching covers: ${covers.length}/${coversTemp.length}`)
+            if (covers.length === coversTemp.length) {
+              statObj.status = '5';
+              console.log(`Processing meta: Processing complete. Proceed to next step.`);
+              resolve({ titles, urls, covers, rawData });
+            };
+          });
+      }, index * 300);
     });
   });
-  // 11. 회사, 출시일 체크
-  const processOmit = (resultObj, filterFunc) => new Promise(resolve => {
-    const { titles, covers, resultArr } = resultObj;
-    // console.log(resultArr)
-    const withoutNA = resultArr.filter(result => result.involved_companies !== 'N/A');
-    const copyResultArr = [...resultArr, resultArr[resultArr.length - 1]];
-    const tempResultArr = [];
-    const tempDatesArr = [];
-    const processCompanies = () => new Promise(subReso => {
-      copyResultArr.forEach((result, resIdx) => {
-        const { involved_companies: companies } = result;
-        setTimeout(() => {
-          console.log(`Processing meta - Converting data: ${tempResultArr.length}/${resultArr.length}`);
-          if (typeof companies === 'object') {
-            const temp = [];
-            companies.forEach((eachCompany, comIdx) => {
-              const processedCompany = {};
-              const { company } = eachCompany;
-              setTimeout(() => {
-                filterFunc('companies', company, 'name')
-                  .then(res => new Promise(subsubRes => {
-                    eachCompany.name = res.data[0].name;
-                    temp.push(eachCompany);
-                    if (temp.length === companies.length) {
-                      processedCompany.origin = resultArr[resIdx].name;
-                      processedCompany.processRes = temp;
-                      subsubRes(processedCompany);
-                    }
-                  }))
-                  .then(res => {
-                    tempResultArr.push(res)
-                    if (tempResultArr.length === withoutNA.length) {
-                      statObj.count = 0;
-                      statObj.status = '4';
-                      console.log(`Processing meta: Processing complete. Proceed to next step.`);
-                      subReso(tempResultArr);
-                    }
-                    // console.log('tempResultArr', tempResultArr)
-                  });
-              }, comIdx * 300);
-            });
-          }
-          if (statObj.count < statObj.total) {
-            statObj.count++;
-          }
-        }, resIdx * 300 * companies.length);
-      });
-    });
-    const processRelease = () => new Promise(subReso => {
-      copyResultArr.forEach((result, resIdx) => {
-        const { release_dates: dates } = result;
-        setTimeout(() => {
-          console.log(`Processing meta - Converting data: ${tempDatesArr.length}/${resultArr.length}`);
-          if (typeof dates === 'object') {
-            const temp = [];
-            dates.forEach((date, dateIdx) => {
-              const processedDate = {};
-              const { platform } = date;
-              setTimeout(() => {
-                filterFunc('platforms', platform, 'name')
-                  .then(res => new Promise(subsubRes => {
-                    date.platform_name = res.data[0].name;
-                    temp.push(date);
-                    if (temp.length === dates.length) {
-                      processedDate.origin = resultArr[resIdx].name;
-                      processedDate.processRes = temp;
-                      subsubRes(processedDate);
-                    }
-                  }))
-                  .then(res => {
-                    tempDatesArr.push(res)
-                    if (tempDatesArr.length === withoutNA.length) {
-                      statObj.status = '5';
-                      console.log(`Processing meta: Processing complete. Proceed to next step.`);
-                      subReso(tempDatesArr);
-                    }
-                    // console.log('tempResultArr', tempResultArr)
-                  });
-              }, dateIdx * 300);
-            });
-          }
-          if (statObj.count < statObj.total) {
-            statObj.count++;
-          }
-        }, resIdx * 300 * dates.length);
-      });
-    });
-    processCompanies()
-      .then(res => new Promise(subRes => {
-        let processCount = 0;
-        res.forEach(eachRes => {
-          const changeTarget = resultArr.indexOf(resultArr.find(result => result.name === eachRes.origin));
-          resultArr[changeTarget].involved_companies = eachRes.processRes;
-          processCount++;
-          if (processCount === res.length) {
-            // console.log(resultArr[changeTarget]);
-            // resolve({ titles, covers, resultArr });
-            subRes(true);
-          }
-        })
-      }))
-      .then(res => {
-        if (res) {
-          processRelease()
-            .then(res => {
-              let processCount = 0;
-              res.forEach(eachRes => {
-                const changeTarget = resultArr
-                  .indexOf(resultArr.find(result => result.name === eachRes.origin));
-                resultArr[changeTarget].release_dates = eachRes.processRes;
-                processCount++;
-                if (processCount === res.length) {
-                  // console.log(resultArr[changeTarget]);
-                  resolve({ titles, covers, resultArr });
-                }
-              })
-            })
-        }
-      });
-  })
   // 9. DB 기록 함수
-  const writeToDB = resultObj => new Promise(resolve => {
-    const { titles, covers, resultArr } = resultObj;
-    // console.log(resultObj)
+  const writeToDB = resultObj => new Promise((resolve, reject) => {
+    const { titles, urls, covers, rawData } = resultObj;
     const writeDB = () => {
       (() => {
         const columns = 'title, cover, igdb_url, meta';
         // const queryString = `insert into foo (${columns}) values(?, ?, ?, ?)`;
         const queryString = `insert into ${requestedUser} (${columns}) values(?, ?, ?, ?)`;
-        resultArr.slice(0, resultArr.length - 1).forEach((data, index) => {
-          const values = [titles[index], covers[index], 'null', JSON.stringify(data)];
-          libDB.query(queryString, values, err => {
+        rawData.forEach((data, index) => {
+          const values = [titles[index], covers[index], urls[index], JSON.stringify(data)];
+          libDB.query(queryString, values, (err, result) => {
             if (err) {
               throw err;
             } else {
@@ -622,7 +369,7 @@ app.post('/meta_search', (req, res) => {
         });
       })();
     };
-    libDB.query(`select * from ${requestedUser}`, err => {
+    libDB.query(`select * from ${requestedUser}`, (err, result) => {
     // libDB.query(`select * from foo`, (err, result) => {
       if (err) {
         console.log(err)
@@ -644,7 +391,7 @@ app.post('/meta_search', (req, res) => {
             ${columns.sixth}
           );
         `;
-        libDB.query(queryString, err => {
+        libDB.query(queryString, (err, result) => {
           if (err) {
             throw err;
           } else {
@@ -661,17 +408,11 @@ app.post('/meta_search', (req, res) => {
   // firstFilter(tempList, steamURLSearchQuery)
     .then(rawURLSearchResult => secondFilter(rawURLSearchResult, steamURLException))
     .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
-    // .then(igdbResult => processMeta(igdbResult, coverSearch))
-    .then(igdbResult => processMeta(igdbResult, multiQuerySearch))
-    .then(resultObj => processOmit(resultObj, eachQuerySearch))
+    .then(igdbResult => processMeta(igdbResult, coverSearch))
   // 최종 메타데이터 목록 - igdbResult는 배열, 이 중 name, cover 정보 필요. name은 추출하기만 하면 되는데, cover는 image_id를 별도로 검색해서 받아와야 함
     .then(resultObj => writeToDB(resultObj))
     .then(writeResult => res.send(writeResult))
     .catch(err => console.log(err));
-    // .then(res => {
-    //   // console.log(res)
-    //   res.resultArr.forEach(r => console.log(r))
-    // })
 });
 
 app.post('/disconnect', (req, res) => {
@@ -749,66 +490,10 @@ app.post('/get/db', (req, res) => {
 });
 
 app.post('/get/meta', (req, res) => {
-  const { reqUser, selTitle, credData } = req.body.reqData;
-  const { cid, access_token: token } = credData;
-  //   /*
-  //     쿼리 필요: artworks(obj), cover(num), collections(num), release_dates(obj), genres, keywords, platforms, screenshots, themes, videos, websites, involved_companies, game_modes, player_perspectives, franchises, age_ratings
-  //     num 제외 전부 obj, franchises는 경우에 따라서 undefined
-  //     endpoint, 변수 불일치 항목: cover(covers), collection(collections)
-  //     artworks: image_id
-  //       url 형식
-  //         썸네일: images.igdb.com/igdb/image/upload/t_thumb/[아이디.확장자]
-  //         오리지널: images.igdb.com/igdb/image/upload/t_original/[아이디.확장자]
-  //     cover: image_id
-  //         썸네일: images.igdb.com/igdb/image/upload/t_thumb/[아이디.확장자]
-  //         오리지널: images.igdb.com/igdb/image/upload/t_cover_big/[아이디.확장자]
-  //     collection: name
-  //     release_dates: human
-  //     genres: name
-  //     keywords: name
-  //     platforms: name
-  //     screenshots: image_id
-  //         썸네일: images.igdb.com/igdb/image/upload/t_thumb/[아이디.확장자]
-  //         오리지널: images.igdb.com/igdb/image/upload/t_original/[아이디.확장자]
-  //     themes: name
-  //     videos: video_id
-  //       유튜브 아이디 -> https://youtu.be/[아이디]
-  //     websites: url
-  //     involved_companies: company, developer, publisher
-  //       company 별도 검색 필요 -> name 값 필요
-  //     game_modes: name
-  //     player_perspectives: name
-  //     franchises: name
-  //     age_ratings: category, rating
-  //       rating enum 1~5는 PEGI, 6~12는 ESRB
-  //       PEGI
-  //         3
-  //           https://www.igdb.com/assets/pegi/PEGI_3-477c57b0d607627660e0ee86f4e39bad95233170528b028b21688faaba6a455b.png
-  //         7
-  //           https://www.igdb.com/assets/pegi/PEGI_7-fc2907b8d2f83bccc55070468cb0d4e90f1dd98a6a987cb53ed908e6eda31451.png
-  //         12
-  //           https://www.igdb.com/assets/pegi/PEGI_12-5c83ad44ed32a4c9bd40019d9817ba2ef69d2081db831285c64bfe08002a79ae.png
-  //         16
-  //           https://www.igdb.com/assets/pegi/PEGI_16-177256b4d01a59019d708199d71ccdc9721680ca8165c452b3eecff8bf47b61c.png
-  //         18
-  //           https://www.igdb.com/assets/pegi/PEGI_18-1efef95fe494465b999ef3d607f28e684a30341a0a9270a071fc559ee09577fc.png
-  //       ESRB
-  //         RP
-  //           https://www.igdb.com/assets/esrb/esrb_rp-2b9f914da8685eb905a3cb874e497ce9848db879a65e43444c6998fc28852c9b.png
-  //         EC
-  //           https://www.igdb.com/assets/esrb/esrb_ec-c2202019bef0475ea95d5ffdbfd882f595912e4a6cbea9204132fa73a0804076.png
-  //         E
-  //           https://www.igdb.com/assets/esrb/esrb_e-3ff51fae393dfcf5decdd4daa462372f28e3d78b417906e64d3d65ff08179838.png
-  //         E10
-  //           https://www.igdb.com/assets/esrb/esrb_e10-2b4600f85680e68b6e65b050e150754607669cd2602a224c5d9198ecbf0a860f.png
-  //         T
-  //           https://www.igdb.com/assets/esrb/esrb_t-addf8c69e4e93438b2a4cf046972279b7f9a6448929fbb0b0b7b7c28a0e60a24.png
-  //         M
-  //           https://www.igdb.com/assets/esrb/esrb_m-5472ffae8a4488c825e55818f41312dcc04401e45302246d3d19b0a08014de96.png
-  //         AO
-  //           https://www.igdb.com/assets/esrb/esrb_ao-53b8347d8123bf6cab401d0aa7e4f22aa88e25cb6b032be1813f967313bab2c5.png
-  //   */
-  //   // console.log(JSON.parse(result[0].meta))
+  const { reqUser, selTitle } = req.body.reqData;
+  libDB.query(`select meta from ${reqUser} where title="${selTitle}"`, (err, result) => {
+    console.log(JSON.parse(result[0].meta));
+  })
 });
 
 app.listen(port, () => console.log(`server is running at port${port}`));
