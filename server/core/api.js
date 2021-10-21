@@ -585,16 +585,17 @@ app.post('/meta_search', (req, res) => {
       });
   })
   // 9. DB 기록 함수
-  const writeToDB = resultObj => new Promise((resolve, reject) => {
-    const { titles, urls, covers, rawData } = resultObj;
+  const writeToDB = resultObj => new Promise(resolve => {
+    const { titles, covers, resultArr } = resultObj;
+    // console.log(resultObj)
     const writeDB = () => {
       (() => {
         const columns = 'title, cover, igdb_url, meta';
         // const queryString = `insert into foo (${columns}) values(?, ?, ?, ?)`;
         const queryString = `insert into ${requestedUser} (${columns}) values(?, ?, ?, ?)`;
-        rawData.forEach((data, index) => {
-          const values = [titles[index], covers[index], urls[index], JSON.stringify(data)];
-          libDB.query(queryString, values, (err, result) => {
+        resultArr.slice(0, resultArr.length - 1).forEach((data, index) => {
+          const values = [titles[index], covers[index], 'null', JSON.stringify(data)];
+          libDB.query(queryString, values, err => {
             if (err) {
               throw err;
             } else {
@@ -604,7 +605,7 @@ app.post('/meta_search', (req, res) => {
         });
       })();
     };
-    libDB.query(`select * from ${requestedUser}`, (err, result) => {
+    libDB.query(`select * from ${requestedUser}`, err => {
     // libDB.query(`select * from foo`, (err, result) => {
       if (err) {
         console.log(err)
@@ -626,7 +627,7 @@ app.post('/meta_search', (req, res) => {
             ${columns.sixth}
           );
         `;
-        libDB.query(queryString, (err, result) => {
+        libDB.query(queryString, err => {
           if (err) {
             throw err;
           } else {
@@ -645,15 +646,15 @@ app.post('/meta_search', (req, res) => {
     .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
     // .then(igdbResult => processMeta(igdbResult, coverSearch))
     .then(igdbResult => processMeta(igdbResult, multiQuerySearch))
-  // 최종 메타데이터 목록 - igdbResult는 배열, 이 중 name, cover 정보 필요. name은 추출하기만 하면 되는데, cover는 image_id를 별도로 검색해서 받아와야 함
-    // .then(resultObj => writeToDB(resultObj))
-    // .then(writeResult => res.send(writeResult))
-    // .catch(err => console.log(err));
     .then(resultObj => processOmit(resultObj, eachQuerySearch))
-    .then(res => {
-      // console.log(res)
-      res.resultArr.forEach(r => console.log(r))
-    })
+  // 최종 메타데이터 목록 - igdbResult는 배열, 이 중 name, cover 정보 필요. name은 추출하기만 하면 되는데, cover는 image_id를 별도로 검색해서 받아와야 함
+    .then(resultObj => writeToDB(resultObj))
+    .then(writeResult => res.send(writeResult))
+    .catch(err => console.log(err));
+    // .then(res => {
+    //   // console.log(res)
+    //   res.resultArr.forEach(r => console.log(r))
+    // })
 });
 
 app.post('/disconnect', (req, res) => {
