@@ -282,8 +282,8 @@ app.post('/meta_search', (req, res) => {
     const fail = [];
     statObj.total = rawData.length;
     // rawData.slice(rawData.length - 30,rawData.length).forEach((steamAppId, index) => {
-    rawData.slice(0 - 5).forEach((steamAppId, index) => {
-    // rawData.forEach((steamAppId, index) => {
+    // rawData.slice(0 - 5).forEach((steamAppId, index) => {
+    rawData.forEach((steamAppId, index) => {
       setTimeout(() => {
         filterFunc(steamAppId)
           .then(result => {
@@ -296,8 +296,8 @@ app.post('/meta_search', (req, res) => {
             statObj.count++;
             console.log(`Searching for steam URL based on steam app id: ${temp.length + fail.length}/${rawData.length}`);
             // if (temp.length + fail.length === 30) {
-            if (temp.length + fail.length === 5) {
-            // if (temp.length + fail.length === rawData.length) {
+            // if (temp.length + fail.length === 5) {
+            if (temp.length + fail.length === rawData.length) {
               statObj.total = fail.length;
               statObj.count = 0;
               statObj.status = '2';
@@ -552,7 +552,6 @@ app.post('/meta_search', (req, res) => {
                   }))
                   .then(res => {
                     tempDatesArr.push(res)
-                    console.log(tempDatesArr);
                     if (tempDatesArr.length === withoutNA.length) {
                       statObj.status = '5';
                       console.log(`Processing meta: Processing complete. Proceed to next step.`);
