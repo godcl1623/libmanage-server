@@ -239,9 +239,9 @@ app.post('/meta_search', (req, res) => {
     return response;
   };
   // 테스트: 쿼리별 검색 함수
-  const eachQuerySearch = async (endpoints, id) => {
+  const eachQuerySearch = async (endpoints, id, field) => {
     const response = await client
-      .fields(['*'])
+      .fields(`${field}`)
       .where(`id=${id}`)
       .request(`/${endpoints}`);
     return response;
@@ -370,8 +370,10 @@ app.post('/meta_search', (req, res) => {
     const titles = rawData.map(gameMeta => gameMeta.name);
     const resultArr = [];
     let metaCount = 0;
-    const tempData = [...rawData.slice(1, 2)];
-    tempData.push(rawData.slice(1, 2)[rawData.slice(1, 2).length-1]);
+    // const tempData = [...rawData.slice(1, 2)];
+    const tempData = [...rawData];
+    // tempData.push(rawData.slice(1, 2)[rawData.slice(1, 2).length-1]);
+    tempData.push(rawData[rawData.length-1]);
     tempData.forEach((gameMeta, index) =>{
       const {
         artworks,
@@ -465,7 +467,8 @@ app.post('/meta_search', (req, res) => {
           }, queIdx * 300);
         });
         metaCount++;
-        if (resultArr.length === rawData.slice(1, 2).length) {
+        // if (resultArr.length === rawData.slice(1, 2).length) {
+        if (resultArr.length === rawData.length) {
           const covers = [];
           resultArr.forEach(result => covers.push(result.covers));
           resolve({titles, covers, resultArr});
@@ -477,6 +480,68 @@ app.post('/meta_search', (req, res) => {
   const processOmit = (resultObj, filterFunc) => new Promise(resolve => {
     const { titles, covers, resultArr } = resultObj;
     console.log(resultArr)
+    // const { involved_companies: companies, age_ratings: ratings } = resultArr[0];
+    const companies = [];
+    const ratings = [];
+    resultArr.forEach(result => {
+      companies.push(result.involved_companies);
+      ratings.push(result.age_ratings);
+    });
+    const tempCompanies = [...companies, companies[companies.length - 1], companies[companies.length - 1]];
+    const tempRatings = [...ratings, ratings[ratings.length - 1]];
+    console.log(companies, ratings)
+    const result = [];
+    const processCompanies = () => new Promise(subRes => {
+      tempCompanies.forEach((companyInfo, comArrIdx) => {
+        setTimeout(() => {
+          if (typeof companyInfo === 'object') {
+            const temp = [];
+            companyInfo.forEach((eachCompany, comIdx) => {
+              const processedCompany = {};
+              const { company, developer, publisher } = eachCompany;
+              setTimeout(() => {
+                filterFunc('companies', company, 'name')
+                  .then(res => {
+                    processedCompany.developer = developer;
+                    processedCompany.publisher = publisher;
+                    processedCompany.name = res.data[0].name;
+                    temp.push(processedCompany);
+                    if (temp.length === companyInfo.length) {
+                      result.push(temp);
+                    }
+                  })
+              }, comIdx * 300);
+            });
+            // const processedCompany = {};
+            // const { company, developer, publisher } = companyInfo;
+            // setTimeout(() => {
+            //   filterFunc('companies', company, 'name')
+            //     .then(res => {
+            //       processedCompany.developer = developer;
+            //       processedCompany.publisher = publisher;
+            //       processedCompany.name = res.data[0].name;
+            //       result.push(processedCompany);
+            //       console.log('result', result);
+            //       if (result.length === companies.length) {
+            //         console.log('##############################')
+            //         subRes(result);
+            //       }
+            //     })
+            // }, comArrIdx * 300);
+          } else {
+            // setTimeout(() => {
+              result.push(companyInfo);
+            // }, comArrIdx * 300);
+            // console.log('string', companyInfo);
+          }
+          console.log('processing', result)
+          if (result.length === companies.length) {
+            subRes(result);
+          }
+        }, comArrIdx * 300 * companyInfo.length);
+      });
+    });
+    processCompanies().then(res => console.log('result', res));
   })
   // 9. DB 기록 함수
   const writeToDB = resultObj => new Promise((resolve, reject) => {
@@ -543,7 +608,8 @@ app.post('/meta_search', (req, res) => {
     // .then(resultObj => writeToDB(resultObj))
     // .then(writeResult => res.send(writeResult))
     // .catch(err => console.log(err));
-    .then(resultObj => processOmit(resultObj, multiQuerySearch))
+    .then(resultObj => processOmit(resultObj, eachQuerySearch))
+    .then(res => console.log(res))
 });
 
 app.post('/disconnect', (req, res) => {
