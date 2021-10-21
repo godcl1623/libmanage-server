@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
@@ -62,6 +62,7 @@ const modalContents = (state, dispatch, setState1, setState2) => {
                 .then(res => {
                   if (res) {
                     dispatch(setState2(false));
+                    window.location.reload();
                   }
                 });
             }}
@@ -83,13 +84,13 @@ const Main = () => {
   const dispatch = useDispatch();
   const history = useHistory();
 
-  // React.useEffect(() => {
+  // useEffect(() => {
   //   if (comparisonState.stores !== undefined && userState.stores === undefined) {
   //     dispatch(userStateCreator(comparisonState));
   //   }
   // }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkLogin = () => {
       axios.post('http://localhost:3002/check_login', { message: comparisonState }, { withCredentials: true })
         .then(res => {
@@ -119,7 +120,7 @@ const Main = () => {
     checkLogin();
     }, [comparisonState]);
 
-    React.useEffect(() => {
+    useEffect(() => {
       const { stores } = userState;
       if (stores !== undefined) {
         const categories = Object.keys(stores);
@@ -147,7 +148,7 @@ const Main = () => {
       }
     }, [userState.stores]);
 
-    React.useEffect(() => {
+    useEffect(() => {
       const dataToSend = {
         reqUser: userState.nickname,
         // 임시로 작업 - 모든 카테고리 및 모든 스토어에 대응할 수 있도록 수정 필요
