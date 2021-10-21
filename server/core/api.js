@@ -374,7 +374,7 @@ app.post('/meta_search', (req, res) => {
     const tempData = [...rawData];
     // tempData.push(rawData.slice(1, 2)[rawData.slice(1, 2).length-1]);
     tempData.push(rawData[rawData.length-1]);
-    tempData.forEach((gameMeta, index) =>{
+    tempData.forEach((gameMeta, index) => {
       const {
         artworks,
         cover: covers,
@@ -422,7 +422,7 @@ app.post('/meta_search', (req, res) => {
         } else if (endPoint === 'game_videos') {
           result = 'video_id';
         } else if (endPoint === 'release_dates') {
-          result = 'human';
+          result = ['human', 'platform'];
         } else if (endPoint === 'websites') {
           result = 'url';
         } else if (endPoint === 'involved_companies') {
@@ -483,6 +483,7 @@ app.post('/meta_search', (req, res) => {
     const withoutNA = resultArr.filter(result => result.involved_companies !== 'N/A');
     const copyResultArr = [...resultArr, resultArr[resultArr.length - 1]];
     const tempResultArr = [];
+    const tempDatesArr = [];
     const processCompanies = () => new Promise(subReso => {
       copyResultArr.forEach((result, resIdx) => {
         const { involved_companies: companies } = result;
@@ -516,80 +517,72 @@ app.post('/meta_search', (req, res) => {
         }, resIdx * 300 * companies.length);
       });
     });
-    processCompanies().then(res => {
-      let processCount = 0;
-      res.forEach(eachRes => {
-        const changeTarget = resultArr.indexOf(resultArr.find(result => result.name === eachRes.origin));
-        resultArr[changeTarget].involved_companies = eachRes.processRes;
-        processCount++;
-        if (processCount === res.length) {
-          // console.log(resultArr[changeTarget]);
-          resolve({ titles, covers, resultArr });
-        }
-      })
+    const processRelease = () => new Promise(subReso => {
+      copyResultArr.forEach((result, resIdx) => {
+        const { release_dates: dates } = result;
+        setTimeout(() => {
+          if (typeof dates === 'object') {
+            const temp = [];
+            dates.forEach((date, dateIdx) => {
+              const processedDate = {};
+              const { platform } = date;
+              setTimeout(() => {
+                filterFunc('platforms', platform, 'name')
+                  .then(res => new Promise(subsubRes => {
+                    date.platform_name = res.data[0].name;
+                    temp.push(date);
+                    if (temp.length === dates.length) {
+                      processedDate.origin = resultArr[resIdx].name;
+                      processedDate.processRes = temp;
+                      subsubRes(processedDate);
+                    }
+                  }))
+                  .then(res => {
+                    tempDatesArr.push(res)
+                    console.log(tempDatesArr);
+                    if (tempDatesArr.length === withoutNA.length) {
+                      subReso(tempDatesArr);
+                    }
+                    // console.log('tempResultArr', tempResultArr)
+                  });
+              }, dateIdx * 300);
+            });
+          }
+        }, resIdx * 300 * dates.length);
+      });
     });
-    // const { involved_companies: companies, age_ratings: ratings } = resultArr[0];
-    // const companies = [];
-    // const ratings = [];
-    // resultArr.forEach(result => {
-    //   companies.push(result.involved_companies);
-    //   ratings.push(result.age_ratings);
-    // });
-    // const tempCompanies = [...companies, companies[companies.length - 1], companies[companies.length - 1]];
-    // const tempRatings = [...ratings, ratings[ratings.length - 1]];
-    // console.log(companies, ratings)
-    // const result = [];
-    // const processCompanies = () => new Promise(subRes => {
-    //   tempCompanies.forEach((companyInfo, comArrIdx) => {
-    //     setTimeout(() => {
-    //       if (typeof companyInfo === 'object') {
-    //         const temp = [];
-    //         companyInfo.forEach((eachCompany, comIdx) => {
-    //           const processedCompany = {};
-    //           const { company, developer, publisher } = eachCompany;
-    //           setTimeout(() => {
-    //             filterFunc('companies', company, 'name')
-    //               .then(res => {
-    //                 processedCompany.developer = developer;
-    //                 processedCompany.publisher = publisher;
-    //                 processedCompany.name = res.data[0].name;
-    //                 temp.push(processedCompany);
-    //                 if (temp.length === companyInfo.length) {
-    //                   result.push(temp);
-    //                 }
-    //               })
-    //           }, comIdx * 300);
-    //         });
-    //         // const processedCompany = {};
-    //         // const { company, developer, publisher } = companyInfo;
-    //         // setTimeout(() => {
-    //         //   filterFunc('companies', company, 'name')
-    //         //     .then(res => {
-    //         //       processedCompany.developer = developer;
-    //         //       processedCompany.publisher = publisher;
-    //         //       processedCompany.name = res.data[0].name;
-    //         //       result.push(processedCompany);
-    //         //       console.log('result', result);
-    //         //       if (result.length === companies.length) {
-    //         //         console.log('##############################')
-    //         //         subRes(result);
-    //         //       }
-    //         //     })
-    //         // }, comArrIdx * 300);
-    //       } else {
-    //         // setTimeout(() => {
-    //           result.push(companyInfo);
-    //         // }, comArrIdx * 300);
-    //         // console.log('string', companyInfo);
-    //       }
-    //       console.log('processing', result)
-    //       if (result.length === companies.length) {
-    //         subRes(result);
-    //       }
-    //     }, comArrIdx * 300 * companyInfo.length);
-    //   });
-    // });
-    // processCompanies().then(res => console.log('result', res));
+    processCompanies()
+      .then(res => new Promise(subRes => {
+        let processCount = 0;
+        res.forEach(eachRes => {
+          const changeTarget = resultArr.indexOf(resultArr.find(result => result.name === eachRes.origin));
+          resultArr[changeTarget].involved_companies = eachRes.processRes;
+          processCount++;
+          if (processCount === res.length) {
+            // console.log(resultArr[changeTarget]);
+            // resolve({ titles, covers, resultArr });
+            subRes(true);
+          }
+        })
+      }))
+      .then(res => {
+        if (res) {
+          processRelease()
+            .then(res => {
+              let processCount = 0;
+              res.forEach(eachRes => {
+                const changeTarget = resultArr
+                  .indexOf(resultArr.find(result => result.name === eachRes.origin));
+                resultArr[changeTarget].release_dates = eachRes.processRes;
+                processCount++;
+                if (processCount === res.length) {
+                  // console.log(resultArr[changeTarget]);
+                  resolve({ titles, covers, resultArr });
+                }
+              })
+            })
+        }
+      });
   })
   // 9. DB 기록 함수
   const writeToDB = resultObj => new Promise((resolve, reject) => {
@@ -658,7 +651,8 @@ app.post('/meta_search', (req, res) => {
     // .catch(err => console.log(err));
     .then(resultObj => processOmit(resultObj, eachQuerySearch))
     .then(res => {
-      res.forEach(r => console.log(r))
+      // console.log(res)
+      res.resultArr.forEach(r => console.log(r))
     })
 });
 
