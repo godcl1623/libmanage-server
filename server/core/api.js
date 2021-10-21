@@ -238,7 +238,7 @@ app.post('/meta_search', (req, res) => {
       .request('/covers');
     return response;
   };
-  // 테스트: 쿼리별 검색 함수
+  // 5. 쿼리별 검색 함수
   const eachQuerySearch = async (endpoints, id, field) => {
     const response = await client
       .fields(`${field}`)
@@ -246,7 +246,7 @@ app.post('/meta_search', (req, res) => {
       .request(`/${endpoints}`);
     return response;
   };
-  // 테스트: 멀티쿼리
+  // 6. 멀티쿼리
   const multiQuerySearch = async (endpoints, valNeed, query) => {
     let queryStr = '';
     let queryData = '';
@@ -276,7 +276,7 @@ app.post('/meta_search', (req, res) => {
     });
     return response;
   };
-  // 5. IGDB상 저장된 스팀 게임의 url을 기반으로 IGDB 고유 게임 아이디 반환
+  // 7. IGDB상 저장된 스팀 게임의 url을 기반으로 IGDB 고유 게임 아이디 반환
   const firstFilter = (rawData, filterFunc) => new Promise(resolve => {
     const temp = [];
     const fail = [];
@@ -308,7 +308,7 @@ app.post('/meta_search', (req, res) => {
       }, index * 300);
     });
   });
-  // 6. 5에서 검색에 실패한 게임들 대상 IGDB 고유 게임 아이디 검색 함수
+  // 8. 5에서 검색에 실패한 게임들 대상 IGDB 고유 게임 아이디 검색 함수
   const secondFilter = (rawData, filterFunc) => new Promise(resolve => {
     const { temp, fail } = rawData;
     const secTemp = [];
@@ -343,7 +343,7 @@ app.post('/meta_search', (req, res) => {
       resolve(temp);
     }
   });
-  // 7. 5, 6에서 검색된 IGDB 고유 아이디를 통한 게임 메타데이터 검색 함수
+  // 9. 7, 8에서 검색된 IGDB 고유 아이디를 통한 게임 메타데이터 검색 함수
   const returnMeta = (rawData, filterFunc) => new Promise(resolve => {
     const temp = [];
     rawData.forEach((igdbID, index) => {
@@ -365,7 +365,7 @@ app.post('/meta_search', (req, res) => {
       }, index * 300);
     });
   });
-  // 8. 메타 데이터 가공 함수 - 제목, 표지, 추출 및 고유 아이디 평문으로 변환
+  // 10. 메타 데이터 가공 함수 - 제목, 표지, 추출 및 고유 아이디 평문으로 변환
   const processMeta = (rawData, filterFunc) => new Promise(resolve => {
     const titles = rawData.map(gameMeta => gameMeta.name);
     const resultArr = [];
@@ -437,11 +437,11 @@ app.post('/meta_search', (req, res) => {
       const processedMeta = {};
       let tempCount = 0;
       setTimeout(() => {
-        console.log(`meta: ${metaCount}`);
+        console.log(`Processing meta - Converting data: ${resultArr.length}/${rawData.length}`);
         waitQuery.forEach((queryIds, queIdx) => {
           setTimeout(() => {
-            console.log(`temp: ${tempCount}`);
-            console.log(endPoints[queIdx]);
+            // console.log(`temp: ${tempCount}`);
+            // console.log(endPoints[queIdx]);
             if (queryIds) {
               filterFunc(endPoints[queIdx], valNeed(endPoints[queIdx]), queryIds)
               .then(res => {
@@ -467,8 +467,13 @@ app.post('/meta_search', (req, res) => {
           }, queIdx * 300);
         });
         metaCount++;
+        statObj.count++;
         // if (resultArr.length === rawData.slice(1, 2).length) {
         if (resultArr.length === rawData.length) {
+          statObj.total = resultArr.length;
+          statObj.count = 0;
+          statObj.status = '2';
+          console.log(`Processing meta: Processing complete. Proceed to next step.`);
           const covers = [];
           resultArr.forEach(result => covers.push(result.covers));
           resolve({titles, covers, resultArr});
@@ -476,7 +481,7 @@ app.post('/meta_search', (req, res) => {
       }, index * 300 * waitQuery.length);
     });
   });
-  // 회사, 연령제한 체크
+  // 11. 회사, 출시일 체크
   const processOmit = (resultObj, filterFunc) => new Promise(resolve => {
     const { titles, covers, resultArr } = resultObj;
     // console.log(resultArr)
@@ -488,6 +493,7 @@ app.post('/meta_search', (req, res) => {
       copyResultArr.forEach((result, resIdx) => {
         const { involved_companies: companies } = result;
         setTimeout(() => {
+          console.log(`Processing meta - Converting data: ${tempResultArr.length}/${resultArr.length}`);
           if (typeof companies === 'object') {
             const temp = [];
             companies.forEach((eachCompany, comIdx) => {
@@ -507,12 +513,18 @@ app.post('/meta_search', (req, res) => {
                   .then(res => {
                     tempResultArr.push(res)
                     if (tempResultArr.length === withoutNA.length) {
+                      statObj.count = 0;
+                      statObj.status = '4';
+                      console.log(`Processing meta: Processing complete. Proceed to next step.`);
                       subReso(tempResultArr);
                     }
                     // console.log('tempResultArr', tempResultArr)
                   });
               }, comIdx * 300);
             });
+          }
+          if (statObj.count < statObj.total) {
+            statObj.count++;
           }
         }, resIdx * 300 * companies.length);
       });
@@ -521,6 +533,7 @@ app.post('/meta_search', (req, res) => {
       copyResultArr.forEach((result, resIdx) => {
         const { release_dates: dates } = result;
         setTimeout(() => {
+          console.log(`Processing meta - Converting data: ${tempDatesArr.length}/${resultArr.length}`);
           if (typeof dates === 'object') {
             const temp = [];
             dates.forEach((date, dateIdx) => {
@@ -541,12 +554,17 @@ app.post('/meta_search', (req, res) => {
                     tempDatesArr.push(res)
                     console.log(tempDatesArr);
                     if (tempDatesArr.length === withoutNA.length) {
+                      statObj.status = '5';
+                      console.log(`Processing meta: Processing complete. Proceed to next step.`);
                       subReso(tempDatesArr);
                     }
                     // console.log('tempResultArr', tempResultArr)
                   });
               }, dateIdx * 300);
             });
+          }
+          if (statObj.count < statObj.total) {
+            statObj.count++;
           }
         }, resIdx * 300 * dates.length);
       });
