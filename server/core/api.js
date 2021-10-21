@@ -479,69 +479,117 @@ app.post('/meta_search', (req, res) => {
   // 회사, 연령제한 체크
   const processOmit = (resultObj, filterFunc) => new Promise(resolve => {
     const { titles, covers, resultArr } = resultObj;
-    console.log(resultArr)
-    // const { involved_companies: companies, age_ratings: ratings } = resultArr[0];
-    const companies = [];
-    const ratings = [];
-    resultArr.forEach(result => {
-      companies.push(result.involved_companies);
-      ratings.push(result.age_ratings);
-    });
-    const tempCompanies = [...companies, companies[companies.length - 1], companies[companies.length - 1]];
-    const tempRatings = [...ratings, ratings[ratings.length - 1]];
-    console.log(companies, ratings)
-    const result = [];
-    const processCompanies = () => new Promise(subRes => {
-      tempCompanies.forEach((companyInfo, comArrIdx) => {
+    // console.log(resultArr)
+    const withoutNA = resultArr.filter(result => result.involved_companies !== 'N/A');
+    const copyResultArr = [...resultArr, resultArr[resultArr.length - 1]];
+    const tempResultArr = [];
+    const processCompanies = () => new Promise(subReso => {
+      copyResultArr.forEach((result, resIdx) => {
+        const { involved_companies: companies } = result;
         setTimeout(() => {
-          if (typeof companyInfo === 'object') {
+          if (typeof companies === 'object') {
             const temp = [];
-            companyInfo.forEach((eachCompany, comIdx) => {
+            companies.forEach((eachCompany, comIdx) => {
               const processedCompany = {};
-              const { company, developer, publisher } = eachCompany;
+              const { company } = eachCompany;
               setTimeout(() => {
                 filterFunc('companies', company, 'name')
-                  .then(res => {
-                    processedCompany.developer = developer;
-                    processedCompany.publisher = publisher;
-                    processedCompany.name = res.data[0].name;
-                    temp.push(processedCompany);
-                    if (temp.length === companyInfo.length) {
-                      result.push(temp);
+                  .then(res => new Promise(subsubRes => {
+                    eachCompany.name = res.data[0].name;
+                    temp.push(eachCompany);
+                    if (temp.length === companies.length) {
+                      processedCompany.origin = resultArr[resIdx].name;
+                      processedCompany.processRes = temp;
+                      subsubRes(processedCompany);
                     }
-                  })
+                  }))
+                  .then(res => {
+                    tempResultArr.push(res)
+                    if (tempResultArr.length === withoutNA.length) {
+                      subReso(tempResultArr);
+                    }
+                    // console.log('tempResultArr', tempResultArr)
+                  });
               }, comIdx * 300);
             });
-            // const processedCompany = {};
-            // const { company, developer, publisher } = companyInfo;
-            // setTimeout(() => {
-            //   filterFunc('companies', company, 'name')
-            //     .then(res => {
-            //       processedCompany.developer = developer;
-            //       processedCompany.publisher = publisher;
-            //       processedCompany.name = res.data[0].name;
-            //       result.push(processedCompany);
-            //       console.log('result', result);
-            //       if (result.length === companies.length) {
-            //         console.log('##############################')
-            //         subRes(result);
-            //       }
-            //     })
-            // }, comArrIdx * 300);
-          } else {
-            // setTimeout(() => {
-              result.push(companyInfo);
-            // }, comArrIdx * 300);
-            // console.log('string', companyInfo);
           }
-          console.log('processing', result)
-          if (result.length === companies.length) {
-            subRes(result);
-          }
-        }, comArrIdx * 300 * companyInfo.length);
+        }, resIdx * 300 * companies.length);
       });
     });
-    processCompanies().then(res => console.log('result', res));
+    processCompanies().then(res => {
+      let processCount = 0;
+      res.forEach(eachRes => {
+        const changeTarget = resultArr.indexOf(resultArr.find(result => result.name === eachRes.origin));
+        resultArr[changeTarget].involved_companies = eachRes.processRes;
+        processCount++;
+        if (processCount === res.length) {
+          // console.log(resultArr[changeTarget]);
+          resolve({ titles, covers, resultArr });
+        }
+      })
+    });
+    // const { involved_companies: companies, age_ratings: ratings } = resultArr[0];
+    // const companies = [];
+    // const ratings = [];
+    // resultArr.forEach(result => {
+    //   companies.push(result.involved_companies);
+    //   ratings.push(result.age_ratings);
+    // });
+    // const tempCompanies = [...companies, companies[companies.length - 1], companies[companies.length - 1]];
+    // const tempRatings = [...ratings, ratings[ratings.length - 1]];
+    // console.log(companies, ratings)
+    // const result = [];
+    // const processCompanies = () => new Promise(subRes => {
+    //   tempCompanies.forEach((companyInfo, comArrIdx) => {
+    //     setTimeout(() => {
+    //       if (typeof companyInfo === 'object') {
+    //         const temp = [];
+    //         companyInfo.forEach((eachCompany, comIdx) => {
+    //           const processedCompany = {};
+    //           const { company, developer, publisher } = eachCompany;
+    //           setTimeout(() => {
+    //             filterFunc('companies', company, 'name')
+    //               .then(res => {
+    //                 processedCompany.developer = developer;
+    //                 processedCompany.publisher = publisher;
+    //                 processedCompany.name = res.data[0].name;
+    //                 temp.push(processedCompany);
+    //                 if (temp.length === companyInfo.length) {
+    //                   result.push(temp);
+    //                 }
+    //               })
+    //           }, comIdx * 300);
+    //         });
+    //         // const processedCompany = {};
+    //         // const { company, developer, publisher } = companyInfo;
+    //         // setTimeout(() => {
+    //         //   filterFunc('companies', company, 'name')
+    //         //     .then(res => {
+    //         //       processedCompany.developer = developer;
+    //         //       processedCompany.publisher = publisher;
+    //         //       processedCompany.name = res.data[0].name;
+    //         //       result.push(processedCompany);
+    //         //       console.log('result', result);
+    //         //       if (result.length === companies.length) {
+    //         //         console.log('##############################')
+    //         //         subRes(result);
+    //         //       }
+    //         //     })
+    //         // }, comArrIdx * 300);
+    //       } else {
+    //         // setTimeout(() => {
+    //           result.push(companyInfo);
+    //         // }, comArrIdx * 300);
+    //         // console.log('string', companyInfo);
+    //       }
+    //       console.log('processing', result)
+    //       if (result.length === companies.length) {
+    //         subRes(result);
+    //       }
+    //     }, comArrIdx * 300 * companyInfo.length);
+    //   });
+    // });
+    // processCompanies().then(res => console.log('result', res));
   })
   // 9. DB 기록 함수
   const writeToDB = resultObj => new Promise((resolve, reject) => {
@@ -609,7 +657,9 @@ app.post('/meta_search', (req, res) => {
     // .then(writeResult => res.send(writeResult))
     // .catch(err => console.log(err));
     .then(resultObj => processOmit(resultObj, eachQuerySearch))
-    .then(res => console.log(res))
+    .then(res => {
+      res.forEach(r => console.log(r))
+    })
 });
 
 app.post('/disconnect', (req, res) => {
