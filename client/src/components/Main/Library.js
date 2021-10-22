@@ -97,6 +97,7 @@ const makeList = (...args) => {
                         credData: res.data
                       };
                       axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
+                        .then(res => console.log(res.data))
                     });
                 } else {
                   const reqData = {
@@ -105,6 +106,7 @@ const makeList = (...args) => {
                     credData: extCredState
                   };
                   axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
+                    .then(res => console.log(res.data))
                 }
               }}
             >

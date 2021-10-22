@@ -354,11 +354,11 @@ app.post('/meta_search', (req, res) => {
     const { titles, urls, covers, rawData } = resultObj;
     const writeDB = () => {
       (() => {
-        const columns = 'title, cover, igdb_url, meta';
+        const columns = 'title, cover, igdb_url, processed, meta';
         // const queryString = `insert into foo (${columns}) values(?, ?, ?, ?)`;
-        const queryString = `insert into ${requestedUser} (${columns}) values(?, ?, ?, ?)`;
+        const queryString = `insert into ${requestedUser} (${columns}) values(?, ?, ?, ?, ?)`;
         rawData.forEach((data, index) => {
-          const values = [titles[index], covers[index], urls[index], JSON.stringify(data)];
+          const values = [titles[index], covers[index], urls[index], false, JSON.stringify(data)];
           libDB.query(queryString, values, (err, result) => {
             if (err) {
               throw err;
@@ -378,8 +378,9 @@ app.post('/meta_search', (req, res) => {
           second: 'title text not null',
           third: 'cover text null',
           fourth: 'igdb_url text not null',
-          fifth: 'meta text not null',
-          sixth: 'primary key (libid)'
+          fifth: 'processed char(5) not null',
+          sixth: 'meta text not null',
+          seventh: 'primary key (libid)'
         }
         const queryString = `
           create table ${requestedUser} (
@@ -388,7 +389,8 @@ app.post('/meta_search', (req, res) => {
             ${columns.third},
             ${columns.fourth},
             ${columns.fifth},
-            ${columns.sixth}
+            ${columns.sixth},
+            ${columns.seventh}
           );
         `;
         libDB.query(queryString, (err, result) => {
@@ -490,9 +492,211 @@ app.post('/get/db', (req, res) => {
 });
 
 app.post('/get/meta', (req, res) => {
-  const { reqUser, selTitle } = req.body.reqData;
-  libDB.query(`select meta from ${reqUser} where title="${selTitle}"`, (err, result) => {
-    console.log(JSON.parse(result[0].meta));
+  const { reqUser, selTitle, credData } = req.body.reqData;
+  const { cid, access_token: token } = credData;
+  const client = igdb(cid, token);
+  const multiQuerySearch = async (endpoints, valNeed, query) => {
+    let queryStr = '';
+    let queryData = '';
+    if (typeof query === 'object') {
+      if (query.length <= 10) {
+        queryStr = query.map((que, idx) => 
+          `query ${endpoints} "${idx}" { fields ${valNeed};where id=${que}; }`
+        );
+      } else {
+        queryStr = query.slice(0, 10).map((que, idx) => 
+          `query ${endpoints} "${idx}" { fields ${valNeed};where id=${que}; }`
+        );
+      }
+      queryData = queryStr.join(';');
+    } else if (typeof query === 'number') {
+      queryData = `query ${endpoints} "0" { fields ${valNeed};where id=${query}; }`
+    }
+    const response = await axios({
+      url: "https://api.igdb.com/v4/multiquery",
+      method: 'POST',
+      headers: {
+          'Accept': 'application/json',
+          'Client-ID': cid,
+          'Authorization': `Bearer ${token}`,
+      },
+      data: queryData+';'
+    });
+    return response;
+  };
+  // const eachQuerySearch = async (endpoints, id, field) => {
+  //   const response = await client
+  //     .fields(`${field}`)
+  //     .where(`id=${id}`)
+  //     .request(`/${endpoints}`);
+  //   return response;
+  // };
+  libDB.query(`select processed from ${reqUser} where title="${selTitle}"`, (err, result) => {
+    if (result[0].processed === 'true') {
+      libDB.query(`select meta from ${reqUser} where title="${selTitle}"`, (err, result) => {
+        res.send(result[0].meta);
+      })
+    } else {
+      libDB.query(`select meta from ${reqUser} where title="${selTitle}"`, (err, result) => {
+        const originalMeta = JSON.parse(result[0].meta);
+        // console.log(originalMeta)
+        const {
+          artworks,
+          cover: covers,
+          collection: collections,
+          release_dates: releaseDates,
+          genres,
+          name,
+          platforms,
+          screenshots,
+          summary,
+          themes,
+          videos,
+          websites,
+          total_rating: totalRating,
+          involved_companies: involvedCompanies,
+          game_modes: gameModes,
+          player_perspectives: playerPerspectives,
+          franchises,
+          age_ratings: ageRatings
+        } = originalMeta;
+        const waitQuery = [
+          artworks, covers, collections,
+          releaseDates, genres,
+          platforms, screenshots, themes,
+          videos, websites,
+          involvedCompanies, gameModes,
+          playerPerspectives, franchises,
+          ageRatings
+        ];
+        const endPoints = [
+          'artworks', 'covers', 'collections',
+          'release_dates', 'genres',
+          'platforms', 'screenshots', 'themes',
+          'game_videos', 'websites',
+          'involved_companies', 'game_modes',
+          'player_perspectives', 'franchises',
+          'age_ratings'
+        ];
+        const valNeed = endPoint => {
+          const images = ['artworks', 'covers', 'screenshots'];
+          let result = '';
+          if (images.find(ele => ele === endPoint)) {
+            result = 'image_id';
+          } else if (endPoint === 'game_videos') {
+            result = 'video_id';
+          } else if (endPoint === 'release_dates') {
+            result = ['human', 'platform'];
+          } else if (endPoint === 'websites') {
+            result = 'url';
+          } else if (endPoint === 'involved_companies') {
+            result = ['company', 'developer', 'publisher'];
+          } else if (endPoint === 'age_ratings') {
+            result = ['category', 'rating'];
+          } else {
+            result = 'name';
+          }
+          return result;
+        };
+        const tempMeta = {};
+        const queryMeta = () => new Promise(resolve => {
+          waitQuery.forEach((query, queryIdx) => {
+            if (query) {
+              setTimeout(() => {
+                tempMeta[endPoints[queryIdx]] =
+                multiQuerySearch(endPoints[queryIdx], valNeed(endPoints[queryIdx]), query);
+                console.log(endPoints[queryIdx], Object.keys(tempMeta).length);
+                if (Object.keys(tempMeta).length === waitQuery.length) {
+                  resolve(true);
+                }
+              }, queryIdx * 260 * query.length);
+            } else {
+              tempMeta[endPoints[queryIdx]] = 'N/A';
+            }
+          })
+        });
+        const processMeta = (keys, vals, tempMeta) => new Promise(resolve => {
+            Promise.allSettled(vals).then(res => {
+              res.forEach((ele, idx) => {
+                if (ele.value !== 'N/A') {
+                  const temp = [];
+                  ele.value.data.forEach(evd => {
+                    if (typeof valNeed(keys[idx]) === 'string') {
+                      temp.push(evd.result[0][valNeed(keys[idx])])
+                    } else {
+                      temp.push(evd.result[0])
+                    }
+                    if (temp.length === ele.value.data.length) {
+                      tempMeta[keys[idx]] = temp;
+                      if (Object.keys(tempMeta).length === keys.length) {
+                        resolve(tempMeta);
+                      }
+                    }
+                  })
+                }
+              })
+            })
+        });
+        queryMeta()
+          .then(res => new Promise(resolve => {
+            if (res) {
+              const keys = Object.keys(tempMeta);
+              const vals = Object.values(tempMeta);
+              processMeta(keys, vals, tempMeta)
+                .then(res => resolve(res));
+            }
+          }))
+          .then(res => new Promise(resolve => {
+            const { release_dates: releaseDates } = res;
+            releaseDates.forEach((rd, idx) => {
+              const { platform } = rd;
+              setTimeout(() => {
+                multiQuerySearch('platforms', 'name', platform)
+                  .then(result => {
+                    rd.platform_name = result.data[0].result[0].name;
+                    if (idx === releaseDates.length - 1) {
+                      resolve(res);
+                    }
+                  })
+              }, idx * 251);
+            });
+          }))
+          .then(res => new Promise(resolve => {
+            const { involved_companies: involvedCompanies } = res;
+            involvedCompanies.forEach((ic, idx) => {
+              const { company } = ic;
+              setTimeout(() => {
+                multiQuerySearch('companies', 'name', company)
+                  .then(result => {
+                    ic.company_name = result.data[0].result[0].name;
+                    if (idx === involvedCompanies.length - 1) {
+                      resolve(res);
+                    }
+                  })
+              }, idx * 251);
+            });
+          }))
+          .then(result => {
+            const resultMeta = { ...result, name, summary, totalRating };
+            libDB.query(
+              `update ${reqUser} set meta=?, processed=? where title="${selTitle}"`,
+              [JSON.stringify(resultMeta), 'true'],
+              err => {
+                if (err) {
+                  throw err;
+                }
+                libDB.query(`select meta from ${reqUser} where title="${selTitle}"`,
+                (err, result) => {
+                  if (err) {
+                    throw err;
+                  }
+                  res.send(result[0].meta);
+                })
+              }
+            );
+          });
+      })
+    }
   })
 });
 
