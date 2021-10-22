@@ -73,7 +73,7 @@ const selectedCategoryReducer = (state = 'all', action) => {
     return action.payload;
   }
   return state;
-}
+};
 
 const selectedStoresReducer = (state = ['all'], action) => {
   if (action.type === 'SELECTED_STORES') {
@@ -89,11 +89,25 @@ const selectedStoresReducer = (state = ['all'], action) => {
     }
   }
   return state;
-}
+};
 
 const extCredStateReducer = (state = {}, action) => {
   if (action.type === 'EXT_CRED') {
     return { ...state, ...action.payload };
+  }
+  return state;
+};
+
+const selectedItemReducer = (state = '', action) => {
+  if (action.type === 'SELECTED_ITEM') {
+    return action.payload;
+  }
+  return state;
+};
+
+const selectedItemDataReducer = (state = {}, action) => {
+  if (action.type === 'SELECTED_ITEM_DATA') {
+    return action.payload;
   }
   return state;
 }
@@ -118,6 +132,8 @@ const tempStore = {
   selectedCategoryReducer,
   selectedStoresReducer,
   extCredStateReducer,
+  selectedItemReducer,
+  selectedItemDataReducer,
   _TESTREDUCER
 };
 

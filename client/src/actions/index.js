@@ -41,22 +41,32 @@ export const comparisonStateCreator = anything => ({
 export const libDisplayStateCreator = string => ({
   type: 'LIBRARY_DISPLAY',
   payload: string
-})
+});
 
 export const selectedCategoryCreator = string => ({
   type: 'SELECTED_CATEGORY',
   payload: string
-})
+});
 
 export const selectedStoresCreator = newArrayItem => ({
   type: 'SELECTED_STORES',
   payload: newArrayItem
-})
+});
 
 export const extCredStateCreator = obj => ({
   type: 'EXT_CRED',
   payload: obj
-})
+});
+
+export const selectedItemCreator = string => ({
+  type: 'SELECTED_ITEM',
+  payload: string
+});
+
+export const selectedItemDataCreator = obj => ({
+  type: 'SELECTED_ITEM_DATA',
+  payload: obj
+});
 
 export const _TESTCREATOR = anything => ({
   type: '__TEST__',

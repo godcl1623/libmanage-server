@@ -14,5 +14,7 @@ export default combineReducers({
   selectedCategory: tempStore.selectedCategoryReducer,
   selectedStores: tempStore.selectedStoresReducer,
   extCredState: tempStore.extCredStateReducer,
+  selectedItem: tempStore.selectedItemReducer,
+  selectedItemData: tempStore.selectedItemDataReducer,
   _TEST: tempStore._TESTREDUCER
 });

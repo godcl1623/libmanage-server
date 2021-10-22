@@ -73,7 +73,9 @@ const makeList = (...args) => {
     userState,
     extCredState,
     dispatch,
-    setExtCred
+    setExtCred,
+    selectItem,
+    selItemData
   ] = args;
   if (source !== '') {
     if (selectedCategory === 'all' || selectedCategory === 'game') {
@@ -84,9 +86,7 @@ const makeList = (...args) => {
             <li
               key={index}
               onClick={e => {
-                // const getMeta = reqData => (
-                //   axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
-                // )();
+                selectItem(e.target.innerText);
                 if (extCredState.cid === undefined) {
                   axios.post('http://localhost:3003/api/connect', {execute: 'order66'}, {withCredentials: true})
                     .then(res => {
@@ -97,7 +97,9 @@ const makeList = (...args) => {
                         credData: res.data
                       };
                       axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
-                        .then(res => console.log(res.data))
+                        .then(res => {
+                          selItemData(res.data);
+                        })
                     });
                 } else {
                   const reqData = {
@@ -106,7 +108,9 @@ const makeList = (...args) => {
                     credData: extCredState
                   };
                   axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
-                    .then(res => console.log(res.data))
+                    .then(res => {
+                      selItemData(res.data);
+                    })
                 }
               }}
             >
@@ -135,12 +139,32 @@ const makeList = (...args) => {
                   'height': '100%'
                 }}
                 onClick={e => {
-                  const reqData = {
-                    reqUser: userState.nickname,
-                    selTitle: item.title
+                  console.log(e.target.title)
+                  if (extCredState.cid === undefined) {
+                    axios.post('http://localhost:3003/api/connect', {execute: 'order66'}, {withCredentials: true})
+                      .then(res => {
+                        dispatch(setExtCred(res.data));
+                        const reqData = {
+                          reqUser: userState.nickname,
+                          selTitle: item.title,
+                          credData: res.data
+                        };
+                        axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
+                          .then(res => {
+                            selItemData(res.data);
+                          })
+                      });
+                  } else {
+                    const reqData = {
+                      reqUser: userState.nickname,
+                      selTitle: item.title,
+                      credData: extCredState
+                    };
+                    axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
+                      .then(res => {
+                        selItemData(res.data);
+                      })
                   }
-                  axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
-                    .then(res => console.log(res));
                 }}
               />
             </li>
@@ -163,6 +187,8 @@ const Library = ({ userLib }) => {
   const extCredState = useSelector(state => state.extCredState);
   const [ btnCoords, setBtnCoords ] = React.useState({});
   const [coverSize, setCoverSize] = React.useState(10);
+  const [selectedItem, setSelectedItem] = React.useState('');
+  const [selectedItemData, setSelectedItemData] = React.useState({});
   // const [apiAuth, setApiAuth] = React.useState('');
   const dispatch = useDispatch();
   const ref = React.useRef();
@@ -178,6 +204,11 @@ const Library = ({ userLib }) => {
     const { left, top } = ref.current.getBoundingClientRect();
     updateBtnCoords(left, top);
   }, []);
+
+  React.useEffect(() => {
+    console.log(selectedItem)
+    console.log(selectedItemData)
+  }, [selectedItem, selectedItemData])
 
   const wrapper = {
     'display': balloonOrigin === 'Library' ? balloonState : 'none',
@@ -268,7 +299,9 @@ const Library = ({ userLib }) => {
             userState,
             extCredState,
             dispatch,
-            extCredStateCreator
+            extCredStateCreator,
+            setSelectedItem,
+            setSelectedItemData
           )
         }
       </ul>
