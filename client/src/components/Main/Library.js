@@ -7,7 +7,9 @@ import {
   balloonStateCreator,
   balloonOriginCreator,
   libDisplayStateCreator,
-  extCredStateCreator
+  extCredStateCreator,
+  selectedItemCreator,
+  selectedItemDataCreator
 } from '../../actions';
 
 const Options = ({ dispatch, changeState, coverSize, setCoverSize }) => (
@@ -185,10 +187,12 @@ const Library = ({ userLib }) => {
   const selectedStores = useSelector(state => state.selectedStores);
   const userState = useSelector(state => state.userState);
   const extCredState = useSelector(state => state.extCredState);
+  const testSelItem = useSelector(state => state.selectedItem);
+  const testSelItemD = useSelector(state => state.selectedItemData);
   const [ btnCoords, setBtnCoords ] = React.useState({});
   const [coverSize, setCoverSize] = React.useState(10);
-  const [selectedItem, setSelectedItem] = React.useState('');
-  const [selectedItemData, setSelectedItemData] = React.useState({});
+  const [localSelectedItem, setLocalSelectedItem] = React.useState('');
+  const [localSelectedItemData, setLocalSelectedItemData] = React.useState({});
   // const [apiAuth, setApiAuth] = React.useState('');
   const dispatch = useDispatch();
   const ref = React.useRef();
@@ -206,9 +210,9 @@ const Library = ({ userLib }) => {
   }, []);
 
   React.useEffect(() => {
-    console.log(selectedItem)
-    console.log(selectedItemData)
-  }, [selectedItem, selectedItemData])
+    dispatch(selectedItemCreator(localSelectedItem));
+    dispatch(selectedItemDataCreator(localSelectedItemData));
+  }, [localSelectedItem, localSelectedItemData])
 
   const wrapper = {
     'display': balloonOrigin === 'Library' ? balloonState : 'none',
@@ -300,8 +304,8 @@ const Library = ({ userLib }) => {
             extCredState,
             dispatch,
             extCredStateCreator,
-            setSelectedItem,
-            setSelectedItemData
+            setLocalSelectedItem,
+            setLocalSelectedItemData
           )
         }
       </ul>
