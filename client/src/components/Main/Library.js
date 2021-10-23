@@ -141,7 +141,7 @@ const makeList = (...args) => {
                   'height': '100%'
                 }}
                 onClick={e => {
-                  console.log(e.target.title)
+                  selectItem(e.target.title);
                   if (extCredState.cid === undefined) {
                     axios.post('http://localhost:3003/api/connect', {execute: 'order66'}, {withCredentials: true})
                       .then(res => {

@@ -79,16 +79,12 @@ const Main = () => {
   const balloonState = useSelector(state => state.balloonState);
   const userState = useSelector(state => state.userState);
   const comparisonState = useSelector(state => state.comparisonState);
+  const selectedItem = useSelector(state => state.selectedItem);
+  const selectedItemData = useSelector(state => state.selectedItemData);
   const [storesList, setStoresList] = useState('');
   const [userLibrary, setUserLibrary] = useState('');
   const dispatch = useDispatch();
   const history = useHistory();
-
-  // useEffect(() => {
-  //   if (comparisonState.stores !== undefined && userState.stores === undefined) {
-  //     dispatch(userStateCreator(comparisonState));
-  //   }
-  // }, []);
 
   useEffect(() => {
     const checkLogin = () => {
@@ -162,6 +158,18 @@ const Main = () => {
           });
       }
     }, [storesList]);
+
+    useEffect(() => {
+      if (selectedItemData.name) {
+        if (selectedItem !== selectedItemData.name) {
+          dispatch(modalStateCreator(true))
+        } else {
+          dispatch(modalStateCreator(false))
+        }
+      } else if (selectedItem) {
+        dispatch(modalStateCreator(true))
+      }
+    }, [selectedItem, selectedItemData]);
 
   if (loginStatus === false && logoutClicked === false) {
     return(<></>);
