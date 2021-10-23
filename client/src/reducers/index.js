@@ -16,5 +16,6 @@ export default combineReducers({
   extCredState: tempStore.extCredStateReducer,
   selectedItem: tempStore.selectedItemReducer,
   selectedItemData: tempStore.selectedItemDataReducer,
+  modalOrigin: tempStore.modalOriginReducer,
   _TEST: tempStore._TESTREDUCER
 });

@@ -10,7 +10,8 @@ import {
   balloonStateCreator,
   balloonOriginCreator,
   userStateCreator,
-  comparisonStateCreator
+  comparisonStateCreator,
+  modalOriginCreator
 } from '../../actions';
 
 const Header = () => {
@@ -43,6 +44,7 @@ const Header = () => {
           'height': '50%'
         }}
         onClick={() => {
+          dispatch(modalOriginCreator(''));
           if (!modalState) {
             dispatch(modalStateCreator(true));
             dispatch(balloonStateCreator('none'));

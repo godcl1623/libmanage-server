@@ -68,6 +68,11 @@ export const selectedItemDataCreator = obj => ({
   payload: obj
 });
 
+export const modalOriginCreator = string => ({
+  type: 'MODAL_ORIGIN',
+  payload: string
+})
+
 export const _TESTCREATOR = anything => ({
   type: '__TEST__',
   payload: anything

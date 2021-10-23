@@ -27,50 +27,61 @@ const modalOption = {
   'zIndex': '2'
 }
 
-const modalContents = (state, dispatch, setState1, setState2) => {
-  // 모든 스토어에 대응 가능하도록 개선 필요
-  if (state.stores === undefined || state.stores.game.steam === false) {
-    return (
-      <article>
-        <h2>스토어 목록</h2>
-        <hr />
-        <section className="store_container">
-          <h3>스팀</h3>
-          <a
-            href="http://localhost:3003/auth/steam"
-            // target="_blank"
-            // rel="noreferrer"
-          >스팀으로 로그인</a>
-        </section>
-      </article>
-    );
-  // eslint-disable-next-line no-else-return
-  } else {
-    return (
-      <article>
-        <h2>스토어 목록</h2>
-        <hr />
-        <section className="store_container">
-          <h3>스팀</h3>
-          <button
-            onClick={e => {
-              const temp = state;
-              temp.stores.game.steam = false;
-              // 반영을 위해서는 comparisonState 변경이 필요
-              dispatch(setState1(temp));
-              axios.post('http://localhost:3003/disconnect', { reqUserInfo: JSON.stringify(state) }, {withCredentials: true})
-                .then(res => {
-                  if (res) {
-                    dispatch(setState2(false));
-                    window.location.reload();
-                  }
-                });
-            }}
-          >연동 해제</button>
-        </section>
-      </article>
-    );
+const modalContents = (state, dispatch, setState1, setState2, origin) => {
+  if (origin !== 'Library') {
+    // 모든 스토어에 대응 가능하도록 개선 필요
+    if (state.stores === undefined || state.stores.game.steam === false) {
+      return (
+        <article>
+          <h2>스토어 목록</h2>
+          <hr />
+          <section className="store_container">
+            <h3>스팀</h3>
+            <a
+              href="http://localhost:3003/auth/steam"
+              // target="_blank"
+              // rel="noreferrer"
+            >스팀으로 로그인</a>
+          </section>
+        </article>
+      );
+    // eslint-disable-next-line no-else-return
+    } else {
+      return (
+        <article>
+          <h2>스토어 목록</h2>
+          <hr />
+          <section className="store_container">
+            <h3>스팀</h3>
+            <button
+              onClick={e => {
+                const temp = state;
+                temp.stores.game.steam = false;
+                // 반영을 위해서는 comparisonState 변경이 필요
+                dispatch(setState1(temp));
+                axios.post('http://localhost:3003/disconnect', { reqUserInfo: JSON.stringify(state) }, {withCredentials: true})
+                  .then(res => {
+                    if (res) {
+                      dispatch(setState2(false));
+                      window.location.reload();
+                    }
+                  });
+              }}
+            >연동 해제</button>
+          </section>
+        </article>
+      );
+    }
   }
+  return (
+    <article
+      style={{
+        'pointerEvents': 'none'
+      }}
+    >
+      <h1>Loading...</h1>
+    </article>
+  );
 };
 
 const Main = () => {
@@ -81,6 +92,7 @@ const Main = () => {
   const comparisonState = useSelector(state => state.comparisonState);
   const selectedItem = useSelector(state => state.selectedItem);
   const selectedItemData = useSelector(state => state.selectedItemData);
+  const modalOrigin = useSelector(state => state.modalOrigin);
   const [storesList, setStoresList] = useState('');
   const [userLibrary, setUserLibrary] = useState('');
   const dispatch = useDispatch();
@@ -214,8 +226,9 @@ const Main = () => {
       <Modal
         style={modalOption}
         contents={
-          () => modalContents(userState, dispatch, comparisonStateCreator, modalStateCreator)
+          () => modalContents(userState, dispatch, comparisonStateCreator, modalStateCreator, modalOrigin)
         }
+        origin={modalOrigin}
       />
     </>
   );

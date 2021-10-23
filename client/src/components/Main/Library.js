@@ -9,7 +9,8 @@ import {
   libDisplayStateCreator,
   extCredStateCreator,
   selectedItemCreator,
-  selectedItemDataCreator
+  selectedItemDataCreator,
+  modalOriginCreator
 } from '../../actions';
 
 const Options = ({ dispatch, changeState, coverSize, setCoverSize }) => (
@@ -88,6 +89,7 @@ const makeList = (...args) => {
             <li
               key={index}
               onClick={e => {
+                dispatch(modalOriginCreator('Library'));
                 selectItem(e.target.innerText);
                 if (extCredState.cid === undefined) {
                   axios.post('http://localhost:3003/api/connect', {execute: 'order66'}, {withCredentials: true})
@@ -187,8 +189,7 @@ const Library = ({ userLib }) => {
   const selectedStores = useSelector(state => state.selectedStores);
   const userState = useSelector(state => state.userState);
   const extCredState = useSelector(state => state.extCredState);
-  const testSelItem = useSelector(state => state.selectedItem);
-  const testSelItemD = useSelector(state => state.selectedItemData);
+  const modalState = useSelector(state => state.modalState);
   const [ btnCoords, setBtnCoords ] = React.useState({});
   const [coverSize, setCoverSize] = React.useState(10);
   const [localSelectedItem, setLocalSelectedItem] = React.useState('');
@@ -256,7 +257,8 @@ const Library = ({ userLib }) => {
       style={{
         'flex': '2',
         'overflowY': 'scroll',
-        'overflowX': 'hidden'
+        'overflowX': 'hidden',
+        'pointerEvents': modalState ? 'none' : 'auto'
         // 'position': 'relative'
       }}
     >

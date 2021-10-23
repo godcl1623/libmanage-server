@@ -112,6 +112,13 @@ const selectedItemDataReducer = (state = {}, action) => {
   return state;
 }
 
+const modalOriginReducer = (state = '', action) => {
+  if (action.type === 'MODAL_ORIGIN') {
+    return action.payload
+  }
+  return state;
+}
+
 const _TESTREDUCER = (state = '', action) => {
   if (action.type === '__TEST__') {
     return action.payload;
@@ -134,6 +141,7 @@ const tempStore = {
   extCredStateReducer,
   selectedItemReducer,
   selectedItemDataReducer,
+  modalOriginReducer,
   _TESTREDUCER
 };
 
