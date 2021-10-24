@@ -128,7 +128,9 @@ const Header = () => {
       style={{
         'display': 'flex',
         'justifyContent': 'space-between',
-        'alignContent': 'center'
+        'alignContent': 'center',
+        'height': '30px',
+        'width': '100%'
       }}
     >
       <button

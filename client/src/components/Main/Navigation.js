@@ -108,14 +108,14 @@ const Navigation = ({ storesList }) => {
         <option value="movie">영화</option>
       </select>
       {menu(selectedCategory, storesList, dispatch, selectedStoresCreator)}
-      <button
+      {/* <button
         onClick={e => {
           axios.post('http://localhost:3003/api/connect', {execute: 'order66'}, {withCredentials: true})
             .then(res => console.log(res))
         }}
       >
         api test
-      </button>
+      </button> */}
     </nav>
   );
 };

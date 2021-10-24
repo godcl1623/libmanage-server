@@ -93,6 +93,7 @@ const Main = () => {
   const selectedItem = useSelector(state => state.selectedItem);
   const selectedItemData = useSelector(state => state.selectedItemData);
   const modalOrigin = useSelector(state => state.modalOrigin);
+  const modalState = useSelector(state => state.modalState);
   const [storesList, setStoresList] = useState('');
   const [userLibrary, setUserLibrary] = useState('');
   const dispatch = useDispatch();
@@ -197,7 +198,8 @@ const Main = () => {
           'display': 'flex',
           'flexDirection': 'column',
           'justifyContent': 'center',
-          'alignContent': 'center'
+          'alignContent': 'center',
+          'pointerEvents': modalState && modalOrigin === 'Library' ? 'none' : 'auto'
         }}
         onClick={e => {
           // e.preventDefault();
@@ -212,7 +214,7 @@ const Main = () => {
           id="main-contents"
           style={{
             'width': '100%',
-            'height': '100%',
+            'height': 'calc(100% - 30px)',
             'display': 'flex',
             'justifyContent': 'center',
             'alignContent': 'center'

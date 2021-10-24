@@ -189,7 +189,6 @@ const Library = ({ userLib }) => {
   const selectedStores = useSelector(state => state.selectedStores);
   const userState = useSelector(state => state.userState);
   const extCredState = useSelector(state => state.extCredState);
-  const modalState = useSelector(state => state.modalState);
   const [ btnCoords, setBtnCoords ] = React.useState({});
   const [coverSize, setCoverSize] = React.useState(10);
   const [localSelectedItem, setLocalSelectedItem] = React.useState('');
@@ -257,8 +256,7 @@ const Library = ({ userLib }) => {
       style={{
         'flex': '2',
         'overflowY': 'scroll',
-        'overflowX': 'hidden',
-        'pointerEvents': modalState ? 'none' : 'auto'
+        'overflowX': 'hidden'
         // 'position': 'relative'
       }}
     >
