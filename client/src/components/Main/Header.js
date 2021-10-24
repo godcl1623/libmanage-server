@@ -11,7 +11,8 @@ import {
   balloonOriginCreator,
   userStateCreator,
   comparisonStateCreator,
-  modalOriginCreator
+  modalOriginCreator,
+  _TESTCREATOR
 } from '../../actions';
 
 const Header = () => {
@@ -145,7 +146,13 @@ const Header = () => {
       >옵션</button>
       <Balloon contents={<Options />} display={wrapper} style={style} hand={hand} />
       <form>
-        <input type="text" placeholder="검색어를 입력하세요" />
+        <input
+          type="text"
+          placeholder="검색어를 입력하세요"
+          onChange={e => {
+            dispatch(_TESTCREATOR(e.target.value))
+          }}
+        />
         <button>검색</button>
         <button>검색옵션</button>
       </form>

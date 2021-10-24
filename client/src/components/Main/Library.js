@@ -78,7 +78,8 @@ const makeList = (...args) => {
     dispatch,
     setExtCred,
     selectItem,
-    selItemData
+    selItemData,
+    search
   ] = args;
   if (source !== '') {
     if (selectedCategory === 'all' || selectedCategory === 'game') {
@@ -121,7 +122,12 @@ const makeList = (...args) => {
               {item.title}
             </li>
           ));
-          return result;
+          if (search === '') {
+            return result;
+          } else {
+            const word = new RegExp(search, 'gi');
+            return result.filter(ele => ele.props.children.match(word));
+          }
         } else if (displayState === 'cover') {
           const result = steam.map((item, index) => (
             <li
@@ -173,7 +179,12 @@ const makeList = (...args) => {
               />
             </li>
           ));
-          return result;
+          if (search === '') {
+            return result;
+          } else {
+            const word = new RegExp(search, 'gi')
+            return result.filter(ele => ele.props.children.props.title.match(word))
+          }
         }
       }
     }
@@ -189,6 +200,7 @@ const Library = ({ userLib }) => {
   const selectedStores = useSelector(state => state.selectedStores);
   const userState = useSelector(state => state.userState);
   const extCredState = useSelector(state => state.extCredState);
+  const testState = useSelector(state => state._TEST);
   const [ btnCoords, setBtnCoords ] = React.useState({});
   const [coverSize, setCoverSize] = React.useState(10);
   const [localSelectedItem, setLocalSelectedItem] = React.useState('');
@@ -203,7 +215,7 @@ const Library = ({ userLib }) => {
       topCoord: top
     }));
   };
-
+  console.log(userLib)
   React.useEffect(() => {
     const { left, top } = ref.current.getBoundingClientRect();
     updateBtnCoords(left, top);
@@ -305,7 +317,8 @@ const Library = ({ userLib }) => {
             dispatch,
             extCredStateCreator,
             setLocalSelectedItem,
-            setLocalSelectedItemData
+            setLocalSelectedItemData,
+            testState
           )
         }
       </ul>
