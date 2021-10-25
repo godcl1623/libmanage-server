@@ -25,8 +25,8 @@ const userStateReducer = (status = {}, action) => {
     return {
       // ...status,
       ...action.payload
-    }
-  // eslint-disable-next-line no-else-return
+    };
+    // eslint-disable-next-line no-else-return
   } else if (action.type === 'USER_STATE' && action.payload === null) {
     return {};
   }
@@ -110,14 +110,14 @@ const selectedItemDataReducer = (state = {}, action) => {
     return action.payload;
   }
   return state;
-}
+};
 
 const modalOriginReducer = (state = '', action) => {
   if (action.type === 'MODAL_ORIGIN') {
-    return action.payload
+    return action.payload;
   }
   return state;
-}
+};
 
 const _TESTREDUCER = (state = '', action) => {
   if (action.type === '__TEST__') {

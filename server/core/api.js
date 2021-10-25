@@ -23,27 +23,32 @@ const statObj = {
   status: 1
 };
 
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: true,
+    credentials: true
+  })
+);
 app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded());
 app.use(helmet(), compression());
 libDB.connect();
 
-passport.use(new SteamStrategy({
-    returnURL: `http://localhost:${port}/auth/steam/return`,
-    realm: `http://localhost:${port}/`,
-    apiKey: cyber
-  },
-  (identifier, profile, done) => {
-    process.nextTick(() => {
-      profile.identifier = identifier;
-      return done(null, profile);
-    });
-  }
-));
+passport.use(
+  new SteamStrategy(
+    {
+      returnURL: `http://localhost:${port}/auth/steam/return`,
+      realm: `http://localhost:${port}/`,
+      apiKey: cyber
+    },
+    (identifier, profile, done) => {
+      process.nextTick(() => {
+        profile.identifier = identifier;
+        return done(null, profile);
+      });
+    }
+  )
+);
 
 passport.serializeUser((user, done) => {
   done(null, user);
@@ -53,24 +58,29 @@ passport.deserializeUser((user, done) => {
   done(null, user);
 });
 
-app.use(session({
-  secret: 'guitar',
-  resave: true,
-  saveUninitialized: false
-}));
+app.use(
+  session({
+    secret: 'guitar',
+    resave: true,
+    saveUninitialized: false
+  })
+);
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get('/auth/steam',
+app.get(
+  '/auth/steam',
   passport.authenticate('steam', {
     failureRedirect: '/login',
     session: false
   }),
   (req, res) => {
-    res.send('test')
-});
+    res.send('test');
+  }
+);
 
-app.get('/auth/steam/return',
+app.get(
+  '/auth/steam/return',
   passport.authenticate('steam', {
     failureRedirect: '/login',
     session: false
@@ -81,28 +91,32 @@ app.get('/auth/steam/return',
     // 2. 반환받은 사용자 아이디로 게임 목록 호출, 제목만 추출한 후 알파벳 순 정렬
     // 제목에서 appid로 변경 - url 대조를 위해
     const getOwnedGames = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?include_appinfo=1&include_played_free_games=1&key=${cyber}&steamid=${uid}&format=json`;
-    axios.get(getOwnedGames)
+    axios
+      .get(getOwnedGames)
       .then(result => {
         const rawGamesData = result.data.response.games;
         const steamResult = rawGamesData.map(gameDataObj => gameDataObj.appid);
-        const sortedTempArr = steamResult.sort((prev, next) => prev < next ? -1 : 1);
+        const sortedTempArr = steamResult.sort((prev, next) =>
+          prev < next ? -1 : 1
+        );
         // 정렬된 게임 목록을 변수 gameList로 업데이트
         gameList = sortedTempArr;
         statObj.total = gameList.length;
       })
       .then(() => {
-        axios.post(`http://localhost:${port}/api/connect`, { execute: 'order66' })
+        axios
+          .post(`http://localhost:${port}/api/connect`, { execute: 'order66' })
           .then(result => {
             apiCredential = result.data;
             res.redirect('http://localhost:3000/api/progress');
-          })
-      })
+          });
+      });
   }
-)
+);
 
 app.get('/login', (req, res) => {
   res.send('failed');
-})
+});
 
 app.get('/', (req, res) => {
   res.send('api server');
@@ -118,7 +132,7 @@ app.post('/test', (req, res) => {
         fourth: 'igdb_url text not null',
         fifth: 'meta text not null',
         sixth: 'primary key (libid)'
-      }
+      };
       const queryString = `
         create table dee (
           ${columns.first},
@@ -135,44 +149,47 @@ app.post('/test', (req, res) => {
         } else {
           console.log(result);
         }
-      })
+      });
     } else {
-      console.log('result is', result)
+      console.log('result is', result);
     }
-  })
+  });
 });
 
 app.post('/api/search', (req, res) => {
   const { reqUserInfo } = req.body;
   requestedUser = reqUserInfo.nickname;
-  axios.post(`http://localhost:${port}/meta_search`, { apiCred: apiCredential })
-  .then(searchResult => {
-    if (searchResult.data === true) {
-      console.log('DB write completed. Return to app service.')
-      const stores = {
-        game: {
-          steam: true
-        }
-      }
-      db.query(`update user_info set stores=? where user_nick=?`,
-      [JSON.stringify(stores), requestedUser],
-      (err, result) => {
-        if (err) throw err;
-        res.send({
-          result: true,
-          newInfo: {
-            ...reqUserInfo,
-            stores: {
-              ...stores
-            }
+  axios
+    .post(`http://localhost:${port}/meta_search`, { apiCred: apiCredential })
+    .then(searchResult => {
+      if (searchResult.data === true) {
+        console.log('DB write completed. Return to app service.');
+        const stores = {
+          game: {
+            steam: true
           }
-        })
-      })
-    } else {
-      res.redirect('/error/search');
-    }
-  })
-})
+        };
+        db.query(
+          `update user_info set stores=? where user_nick=?`,
+          [JSON.stringify(stores), requestedUser],
+          (err, result) => {
+            if (err) throw err;
+            res.send({
+              result: true,
+              newInfo: {
+                ...reqUserInfo,
+                stores: {
+                  ...stores
+                }
+              }
+            });
+          }
+        );
+      } else {
+        res.redirect('/error/search');
+      }
+    });
+});
 
 app.post('/stat/track', (req, res) => {
   res.send({
@@ -180,10 +197,10 @@ app.post('/stat/track', (req, res) => {
     total: String(statObj.total),
     status: String(statObj.status)
   });
-})
+});
 
 app.get('/error/search', (req, res) => {
-  res.send('<h1>Error has occured. Please try again later.</h1>')
+  res.send('<h1>Error has occured. Please try again later.</h1>');
 });
 
 // 프론트에서 처리하도록 수정
@@ -193,11 +210,10 @@ app.post('/api/connect', (req, res) => {
     const secret = `client_secret=${owl.spell}`;
     const cred = 'grant_type=client_credentials';
     const address = `https://id.twitch.tv/oauth2/token?${cid}&${secret}&${cred}`;
-    axios.post(address)
-      .then(response => {
-        response.data.cid = owl.me;
-        res.json(response.data)
-      });
+    axios.post(address).then(response => {
+      response.data.cid = owl.me;
+      res.json(response.data);
+    });
   }
 });
 
@@ -239,16 +255,16 @@ app.post('/meta_search', (req, res) => {
     return response;
   };
   // 5. IGDB상 저장된 스팀 게임의 url을 기반으로 IGDB 고유 게임 아이디 반환
-  const firstFilter = (rawData, filterFunc) => new Promise((resolve, reject) => {
-    const temp = [];
-    const fail = [];
-    statObj.total = rawData.length;
-    // rawData.slice(rawData.length - 30,rawData.length).forEach((steamAppId, index) => {
-    // rawData.slice(0 - 5).forEach((steamAppId, index) => {
-    rawData.forEach((steamAppId, index) => {
-      setTimeout(() => {
-        filterFunc(steamAppId)
-          .then(result => {
+  const firstFilter = (rawData, filterFunc) =>
+    new Promise((resolve, reject) => {
+      const temp = [];
+      const fail = [];
+      statObj.total = rawData.length;
+      // rawData.slice(rawData.length - 30,rawData.length).forEach((steamAppId, index) => {
+      // rawData.slice(0 - 5).forEach((steamAppId, index) => {
+      rawData.forEach((steamAppId, index) => {
+        setTimeout(() => {
+          filterFunc(steamAppId).then(result => {
             if (result.data[0] === undefined) {
               fail.push(steamAppId);
             } else {
@@ -256,133 +272,165 @@ app.post('/meta_search', (req, res) => {
               // 기능 완성 이후 삭제할 것
             }
             statObj.count++;
-            console.log(`Searching for steam URL based on steam app id: ${temp.length + fail.length}/${rawData.length}`);
+            console.log(
+              `Searching for steam URL based on steam app id: ${
+                temp.length + fail.length
+              }/${rawData.length}`
+            );
             // if (temp.length + fail.length === 30) {
             // if (temp.length + fail.length === 5) {
             if (temp.length + fail.length === rawData.length) {
               statObj.total = fail.length;
               statObj.count = 0;
               statObj.status = '2';
-              console.log(`First attempt: Succeed(${temp.length}), Fail(${fail.length})`)
+              console.log(
+                `First attempt: Succeed(${temp.length}), Fail(${fail.length})`
+              );
               resolve({ temp, fail });
             }
           });
-      }, index * 300);
+        }, index * 300);
+      });
     });
-  });
   // 6. 5에서 검색에 실패한 게임들 대상 IGDB 고유 게임 아이디 검색 함수
-  const secondFilter = (rawData, filterFunc) => new Promise((resolve, reject) => {
-    const { temp, fail } = rawData;
-    const secTemp = [];
-    const secFail = [];
-    if (fail[0] !== undefined) {
-      fail.forEach((steamAppId, index, thisArr) => {
-        setTimeout(() => {
-          filterFunc(steamAppId)
-            .then(result => {
-              if (result.data[0] === undefined && thisArr.includes(steamAppId)) {
+  const secondFilter = (rawData, filterFunc) =>
+    new Promise((resolve, reject) => {
+      const { temp, fail } = rawData;
+      const secTemp = [];
+      const secFail = [];
+      if (fail[0] !== undefined) {
+        fail.forEach((steamAppId, index, thisArr) => {
+          setTimeout(() => {
+            filterFunc(steamAppId).then(result => {
+              if (
+                result.data[0] === undefined &&
+                thisArr.includes(steamAppId)
+              ) {
                 secFail.push(steamAppId);
-              // eslint-disable-next-line no-else-return
+                // eslint-disable-next-line no-else-return
               } else {
                 secTemp.push(result.data[0].game);
                 // 기능 구현 이후에 삭제할 것
               }
               statObj.count++;
-              console.log(`Searching for steam URL from steam app id failed on first attempt: ${secTemp.length + secFail.length}/${fail.length}`);
+              console.log(
+                `Searching for steam URL from steam app id failed on first attempt: ${
+                  secTemp.length + secFail.length
+                }/${fail.length}`
+              );
               if (secTemp.length + secFail.length === thisArr.length) {
-                console.log(`Second attempt: Succeed(${secTemp.length}), Fail(${secFail.length})`)
-                const totalSuccess = temp.concat(secTemp).sort((prev, next) => prev < next ? -1 : 1);
+                console.log(
+                  `Second attempt: Succeed(${secTemp.length}), Fail(${secFail.length})`
+                );
+                const totalSuccess = temp
+                  .concat(secTemp)
+                  .sort((prev, next) => (prev < next ? -1 : 1));
                 statObj.total = totalSuccess.length;
                 statObj.count = 0;
                 statObj.status = '3';
                 resolve(totalSuccess);
               }
             });
-        }, index * 300);
-      });
-    } else {
-      console.log(`Second attempt: No fails detected. Proceed to next step.`)
-      resolve(temp);
-    }
-  });
+          }, index * 300);
+        });
+      } else {
+        console.log(`Second attempt: No fails detected. Proceed to next step.`);
+        resolve(temp);
+      }
+    });
   // 7. 5, 6에서 검색된 IGDB 고유 아이디를 통한 게임 메타데이터 검색 함수
-  const returnMeta = (rawData, filterFunc) => new Promise((resolve, reject) => {
-    const temp = [];
-    rawData.forEach((igdbID, index) => {
-      setTimeout(() => {
-        filterFunc(igdbID)
-          .then(result => {
+  const returnMeta = (rawData, filterFunc) =>
+    new Promise((resolve, reject) => {
+      const temp = [];
+      rawData.forEach((igdbID, index) => {
+        setTimeout(() => {
+          filterFunc(igdbID).then(result => {
             temp.push(result.data[0]);
             statObj.count++;
             console.log(`Searching meta: ${temp.length}/${rawData.length}`);
             if (temp.length === rawData.length) {
-              console.log(`Searching meta: Search complete. Proceed to next step.`)
-              const rawMeta = temp.sort((prev, next) => prev.name < next.name ? -1 : 1)
+              console.log(
+                `Searching meta: Search complete. Proceed to next step.`
+              );
+              const rawMeta = temp.sort((prev, next) =>
+                prev.name < next.name ? -1 : 1
+              );
               statObj.total = rawMeta.length;
               statObj.count = 0;
               statObj.status = '4';
               resolve(rawMeta);
             }
           });
-      }, index * 300);
+        }, index * 300);
+      });
     });
-  });
   // 8. 메타 데이터 가공 함수 - 제목, 표지, url 추출
-  const processMeta = (rawData, filterFunc) => new Promise((resolve, reject) => {
-    const titles = rawData.map(gameMeta => gameMeta.name);
-    const urls = rawData.map(gameMeta => gameMeta.url);
-    const coversTemp = rawData.map(gameMeta => gameMeta.cover);
-    const covers = [];
-    coversTemp.forEach((coverId, index) => {
-      setTimeout(() => {
-        filterFunc(coverId)
-          .then(result => {
+  const processMeta = (rawData, filterFunc) =>
+    new Promise((resolve, reject) => {
+      const titles = rawData.map(gameMeta => gameMeta.name);
+      const urls = rawData.map(gameMeta => gameMeta.url);
+      const coversTemp = rawData.map(gameMeta => gameMeta.cover);
+      const covers = [];
+      coversTemp.forEach((coverId, index) => {
+        setTimeout(() => {
+          filterFunc(coverId).then(result => {
             covers.push(result.data[0].image_id);
             statObj.count++;
-            console.log(`Processing meta: Searching covers: ${covers.length}/${coversTemp.length}`)
+            console.log(
+              `Processing meta: Searching covers: ${covers.length}/${coversTemp.length}`
+            );
             if (covers.length === coversTemp.length) {
               statObj.status = '5';
-              console.log(`Processing meta: Processing complete. Proceed to next step.`);
+              console.log(
+                `Processing meta: Processing complete. Proceed to next step.`
+              );
               resolve({ titles, urls, covers, rawData });
-            };
-          });
-      }, index * 300);
-    });
-  });
-  // 9. DB 기록 함수
-  const writeToDB = resultObj => new Promise((resolve, reject) => {
-    const { titles, urls, covers, rawData } = resultObj;
-    const writeDB = () => {
-      (() => {
-        const columns = 'title, cover, igdb_url, processed, meta';
-        // const queryString = `insert into foo (${columns}) values(?, ?, ?, ?)`;
-        const queryString = `insert into ${requestedUser} (${columns}) values(?, ?, ?, ?, ?)`;
-        rawData.forEach((data, index) => {
-          const values = [titles[index], covers[index], urls[index], false, JSON.stringify(data)];
-          libDB.query(queryString, values, (err, result) => {
-            if (err) {
-              throw err;
-            } else {
-              resolve(true);
             }
           });
-        });
-      })();
-    };
-    libDB.query(`select * from ${requestedUser}`, (err, result) => {
-    // libDB.query(`select * from foo`, (err, result) => {
-      if (err) {
-        console.log(err)
-        const columns = {
-          first: 'libid int not null auto_increment',
-          second: 'title text not null',
-          third: 'cover text null',
-          fourth: 'igdb_url text not null',
-          fifth: 'processed char(5) not null',
-          sixth: 'meta text not null',
-          seventh: 'primary key (libid)'
-        }
-        const queryString = `
+        }, index * 300);
+      });
+    });
+  // 9. DB 기록 함수
+  const writeToDB = resultObj =>
+    new Promise((resolve, reject) => {
+      const { titles, urls, covers, rawData } = resultObj;
+      const writeDB = () => {
+        (() => {
+          const columns = 'title, cover, igdb_url, processed, meta';
+          // const queryString = `insert into foo (${columns}) values(?, ?, ?, ?)`;
+          const queryString = `insert into ${requestedUser} (${columns}) values(?, ?, ?, ?, ?)`;
+          rawData.forEach((data, index) => {
+            const values = [
+              titles[index],
+              covers[index],
+              urls[index],
+              false,
+              JSON.stringify(data)
+            ];
+            libDB.query(queryString, values, (err, result) => {
+              if (err) {
+                throw err;
+              } else {
+                resolve(true);
+              }
+            });
+          });
+        })();
+      };
+      libDB.query(`select * from ${requestedUser}`, (err, result) => {
+        // libDB.query(`select * from foo`, (err, result) => {
+        if (err) {
+          console.log(err);
+          const columns = {
+            first: 'libid int not null auto_increment',
+            second: 'title text not null',
+            third: 'cover text null',
+            fourth: 'igdb_url text not null',
+            fifth: 'processed char(5) not null',
+            sixth: 'meta text not null',
+            seventh: 'primary key (libid)'
+          };
+          const queryString = `
           create table ${requestedUser} (
             ${columns.first},
             ${columns.second},
@@ -393,25 +441,27 @@ app.post('/meta_search', (req, res) => {
             ${columns.seventh}
           );
         `;
-        libDB.query(queryString, (err, result) => {
-          if (err) {
-            throw err;
-          } else {
-            writeDB();
-          }
-        })
-      } else {
-        writeDB();
-      }
+          libDB.query(queryString, (err, result) => {
+            if (err) {
+              throw err;
+            } else {
+              writeDB();
+            }
+          });
+        } else {
+          writeDB();
+        }
+      });
     });
-  });
   // 실제 검색 실행 코드
   firstFilter(gameList, steamURLSearchQuery)
-  // firstFilter(tempList, steamURLSearchQuery)
-    .then(rawURLSearchResult => secondFilter(rawURLSearchResult, steamURLException))
+    // firstFilter(tempList, steamURLSearchQuery)
+    .then(rawURLSearchResult =>
+      secondFilter(rawURLSearchResult, steamURLException)
+    )
     .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
     .then(igdbResult => processMeta(igdbResult, coverSearch))
-  // 최종 메타데이터 목록 - igdbResult는 배열, 이 중 name, cover 정보 필요. name은 추출하기만 하면 되는데, cover는 image_id를 별도로 검색해서 받아와야 함
+    // 최종 메타데이터 목록 - igdbResult는 배열, 이 중 name, cover 정보 필요. name은 추출하기만 하면 되는데, cover는 image_id를 별도로 검색해서 받아와야 함
     .then(resultObj => writeToDB(resultObj))
     .then(writeResult => res.send(writeResult))
     .catch(err => console.log(err));
@@ -456,13 +506,17 @@ app.post('/disconnect', (req, res) => {
               }
             };
             const updateQueryStr = `update user_info set stores=? where user_nick=?`;
-            db.query(updateQueryStr, [JSON.stringify(stores), nickname], (err, result) => {
-              if (err) {
-                throw err;
-              } else {
-                res.send(true);
+            db.query(
+              updateQueryStr,
+              [JSON.stringify(stores), nickname],
+              (err, result) => {
+                if (err) {
+                  throw err;
+                } else {
+                  res.send(true);
+                }
               }
-            });
+            );
           }
         });
       }
@@ -484,7 +538,7 @@ app.post('/get/db', (req, res) => {
         } else {
           res.send(result);
         }
-      })
+      });
     } else {
       res.send('pending');
     }
@@ -500,27 +554,31 @@ app.post('/get/meta', (req, res) => {
     let queryData = '';
     if (typeof query === 'object') {
       if (query.length <= 10) {
-        queryStr = query.map((que, idx) => 
-          `query ${endpoints} "${idx}" { fields ${valNeed};where id=${que}; }`
+        queryStr = query.map(
+          (que, idx) =>
+            `query ${endpoints} "${idx}" { fields ${valNeed};where id=${que}; }`
         );
       } else {
-        queryStr = query.slice(0, 10).map((que, idx) => 
-          `query ${endpoints} "${idx}" { fields ${valNeed};where id=${que}; }`
-        );
+        queryStr = query
+          .slice(0, 10)
+          .map(
+            (que, idx) =>
+              `query ${endpoints} "${idx}" { fields ${valNeed};where id=${que}; }`
+          );
       }
       queryData = queryStr.join(';');
     } else if (typeof query === 'number') {
-      queryData = `query ${endpoints} "0" { fields ${valNeed};where id=${query}; }`
+      queryData = `query ${endpoints} "0" { fields ${valNeed};where id=${query}; }`;
     }
     const response = await axios({
-      url: "https://api.igdb.com/v4/multiquery",
+      url: 'https://api.igdb.com/v4/multiquery',
       method: 'POST',
       headers: {
-          'Accept': 'application/json',
-          'Client-ID': cid,
-          'Authorization': `Bearer ${token}`,
+        Accept: 'application/json',
+        'Client-ID': cid,
+        Authorization: `Bearer ${token}`
       },
-      data: queryData+';'
+      data: queryData + ';'
     });
     return response;
   };
@@ -531,173 +589,220 @@ app.post('/get/meta', (req, res) => {
   //     .request(`/${endpoints}`);
   //   return response;
   // };
-  libDB.query(`select processed from ${reqUser} where title="${selTitle}"`, (err, result) => {
-    if (result[0].processed === 'true') {
-      libDB.query(`select meta from ${reqUser} where title="${selTitle}"`, (err, result) => {
-        res.send(result[0].meta);
-      })
-    } else {
-      libDB.query(`select meta from ${reqUser} where title="${selTitle}"`, (err, result) => {
-        const originalMeta = JSON.parse(result[0].meta);
-        // console.log(originalMeta)
-        const {
-          artworks,
-          cover: covers,
-          collection: collections,
-          release_dates: releaseDates,
-          genres,
-          name,
-          platforms,
-          screenshots,
-          summary,
-          themes,
-          videos,
-          websites,
-          total_rating: totalRating,
-          involved_companies: involvedCompanies,
-          game_modes: gameModes,
-          player_perspectives: playerPerspectives,
-          franchises,
-          age_ratings: ageRatings
-        } = originalMeta;
-        const waitQuery = [
-          artworks, covers, collections,
-          releaseDates, genres,
-          platforms, screenshots, themes,
-          videos, websites,
-          involvedCompanies, gameModes,
-          playerPerspectives, franchises,
-          ageRatings
-        ];
-        const endPoints = [
-          'artworks', 'covers', 'collections',
-          'release_dates', 'genres',
-          'platforms', 'screenshots', 'themes',
-          'game_videos', 'websites',
-          'involved_companies', 'game_modes',
-          'player_perspectives', 'franchises',
-          'age_ratings'
-        ];
-        const valNeed = endPoint => {
-          const images = ['artworks', 'covers', 'screenshots'];
-          let result = '';
-          if (images.find(ele => ele === endPoint)) {
-            result = 'image_id';
-          } else if (endPoint === 'game_videos') {
-            result = 'video_id';
-          } else if (endPoint === 'release_dates') {
-            result = ['human', 'platform'];
-          } else if (endPoint === 'websites') {
-            result = 'url';
-          } else if (endPoint === 'involved_companies') {
-            result = ['company', 'developer', 'publisher'];
-          } else if (endPoint === 'age_ratings') {
-            result = ['category', 'rating'];
-          } else {
-            result = 'name';
+  libDB.query(
+    `select processed from ${reqUser} where title="${selTitle}"`,
+    (err, result) => {
+      if (result[0].processed === 'true') {
+        libDB.query(
+          `select meta from ${reqUser} where title="${selTitle}"`,
+          (err, result) => {
+            res.send(result[0].meta);
           }
-          return result;
-        };
-        const tempMeta = {};
-        const queryMeta = () => new Promise(resolve => {
-          waitQuery.forEach((query, queryIdx) => {
-            if (query) {
-              setTimeout(() => {
-                tempMeta[endPoints[queryIdx]] =
-                multiQuerySearch(endPoints[queryIdx], valNeed(endPoints[queryIdx]), query);
-                console.log(endPoints[queryIdx], Object.keys(tempMeta).length);
-                if (Object.keys(tempMeta).length === waitQuery.length) {
-                  resolve(true);
-                }
-              }, queryIdx * 260 * query.length);
-            } else {
-              tempMeta[endPoints[queryIdx]] = 'N/A';
-            }
-          })
-        });
-        const processMeta = (keys, vals, tempMeta) => new Promise(resolve => {
-            Promise.allSettled(vals).then(res => {
-              res.forEach((ele, idx) => {
-                if (ele.value !== 'N/A') {
-                  const temp = [];
-                  ele.value.data.forEach(evd => {
-                    if (typeof valNeed(keys[idx]) === 'string') {
-                      temp.push(evd.result[0][valNeed(keys[idx])])
-                    } else {
-                      temp.push(evd.result[0])
-                    }
-                    if (temp.length === ele.value.data.length) {
-                      tempMeta[keys[idx]] = temp;
-                      if (Object.keys(tempMeta).length === keys.length) {
-                        resolve(tempMeta);
-                      }
-                    }
-                  })
-                }
-              })
-            })
-        });
-        queryMeta()
-          .then(res => new Promise(resolve => {
-            if (res) {
-              const keys = Object.keys(tempMeta);
-              const vals = Object.values(tempMeta);
-              processMeta(keys, vals, tempMeta)
-                .then(res => resolve(res));
-            }
-          }))
-          .then(res => new Promise(resolve => {
-            const { release_dates: releaseDates } = res;
-            releaseDates.forEach((rd, idx) => {
-              const { platform } = rd;
-              setTimeout(() => {
-                multiQuerySearch('platforms', 'name', platform)
-                  .then(result => {
-                    rd.platform_name = result.data[0].result[0].name;
-                    if (idx === releaseDates.length - 1) {
-                      resolve(res);
-                    }
-                  })
-              }, idx * 251);
-            });
-          }))
-          .then(res => new Promise(resolve => {
-            const { involved_companies: involvedCompanies } = res;
-            involvedCompanies.forEach((ic, idx) => {
-              const { company } = ic;
-              setTimeout(() => {
-                multiQuerySearch('companies', 'name', company)
-                  .then(result => {
-                    ic.company_name = result.data[0].result[0].name;
-                    if (idx === involvedCompanies.length - 1) {
-                      resolve(res);
-                    }
-                  })
-              }, idx * 251);
-            });
-          }))
-          .then(result => {
-            const resultMeta = { ...result, name, summary, totalRating };
-            libDB.query(
-              `update ${reqUser} set meta=?, processed=? where title="${selTitle}"`,
-              [JSON.stringify(resultMeta), 'true'],
-              err => {
-                if (err) {
-                  throw err;
-                }
-                libDB.query(`select meta from ${reqUser} where title="${selTitle}"`,
-                (err, result) => {
-                  if (err) {
-                    throw err;
-                  }
-                  res.send(result[0].meta);
-                })
+        );
+      } else {
+        libDB.query(
+          `select meta from ${reqUser} where title="${selTitle}"`,
+          (err, result) => {
+            const originalMeta = JSON.parse(result[0].meta);
+            // console.log(originalMeta)
+            const {
+              artworks,
+              cover: covers,
+              collection: collections,
+              release_dates: releaseDates,
+              genres,
+              name,
+              platforms,
+              screenshots,
+              summary,
+              themes,
+              videos,
+              websites,
+              total_rating: totalRating,
+              involved_companies: involvedCompanies,
+              game_modes: gameModes,
+              player_perspectives: playerPerspectives,
+              franchises,
+              age_ratings: ageRatings
+            } = originalMeta;
+            const waitQuery = [
+              artworks,
+              covers,
+              collections,
+              releaseDates,
+              genres,
+              platforms,
+              screenshots,
+              themes,
+              videos,
+              websites,
+              involvedCompanies,
+              gameModes,
+              playerPerspectives,
+              franchises,
+              ageRatings
+            ];
+            const endPoints = [
+              'artworks',
+              'covers',
+              'collections',
+              'release_dates',
+              'genres',
+              'platforms',
+              'screenshots',
+              'themes',
+              'game_videos',
+              'websites',
+              'involved_companies',
+              'game_modes',
+              'player_perspectives',
+              'franchises',
+              'age_ratings'
+            ];
+            const valNeed = endPoint => {
+              const images = ['artworks', 'covers', 'screenshots'];
+              let result = '';
+              if (images.find(ele => ele === endPoint)) {
+                result = 'image_id';
+              } else if (endPoint === 'game_videos') {
+                result = 'video_id';
+              } else if (endPoint === 'release_dates') {
+                result = ['human', 'platform'];
+              } else if (endPoint === 'websites') {
+                result = 'url';
+              } else if (endPoint === 'involved_companies') {
+                result = ['company', 'developer', 'publisher'];
+              } else if (endPoint === 'age_ratings') {
+                result = ['category', 'rating'];
+              } else {
+                result = 'name';
               }
-            );
-          });
-      })
+              return result;
+            };
+            const tempMeta = {};
+            const queryMeta = () =>
+              new Promise(resolve => {
+                waitQuery.forEach((query, queryIdx) => {
+                  if (query) {
+                    setTimeout(() => {
+                      tempMeta[endPoints[queryIdx]] = multiQuerySearch(
+                        endPoints[queryIdx],
+                        valNeed(endPoints[queryIdx]),
+                        query
+                      );
+                      console.log(
+                        endPoints[queryIdx],
+                        Object.keys(tempMeta).length
+                      );
+                      if (Object.keys(tempMeta).length === waitQuery.length) {
+                        resolve(true);
+                      }
+                    }, queryIdx * 260 * query.length);
+                  } else {
+                    tempMeta[endPoints[queryIdx]] = 'N/A';
+                  }
+                });
+              });
+            const processMeta = (keys, vals, tempMeta) =>
+              new Promise(resolve => {
+                Promise.allSettled(vals).then(res => {
+                  res.forEach((ele, idx) => {
+                    if (ele.value !== 'N/A') {
+                      const temp = [];
+                      ele.value.data.forEach(evd => {
+                        if (typeof valNeed(keys[idx]) === 'string') {
+                          temp.push(evd.result[0][valNeed(keys[idx])]);
+                        } else {
+                          temp.push(evd.result[0]);
+                        }
+                        if (temp.length === ele.value.data.length) {
+                          tempMeta[keys[idx]] = temp;
+                          if (Object.keys(tempMeta).length === keys.length) {
+                            resolve(tempMeta);
+                          }
+                        }
+                      });
+                    }
+                  });
+                });
+              });
+            queryMeta()
+              .then(
+                res =>
+                  new Promise(resolve => {
+                    if (res) {
+                      const keys = Object.keys(tempMeta);
+                      const vals = Object.values(tempMeta);
+                      processMeta(keys, vals, tempMeta).then(res =>
+                        resolve(res)
+                      );
+                    }
+                  })
+              )
+              .then(
+                res =>
+                  new Promise(resolve => {
+                    const { release_dates: releaseDates } = res;
+                    releaseDates.forEach((rd, idx) => {
+                      const { platform } = rd;
+                      setTimeout(() => {
+                        multiQuerySearch('platforms', 'name', platform).then(
+                          result => {
+                            rd.platform_name = result.data[0].result[0].name;
+                            if (idx === releaseDates.length - 1) {
+                              resolve(res);
+                            }
+                          }
+                        );
+                      }, idx * 251);
+                    });
+                  })
+              )
+              .then(
+                res =>
+                  new Promise(resolve => {
+                    const { involved_companies: involvedCompanies } = res;
+                    involvedCompanies.forEach((ic, idx) => {
+                      const { company } = ic;
+                      setTimeout(() => {
+                        multiQuerySearch('companies', 'name', company).then(
+                          result => {
+                            ic.company_name = result.data[0].result[0].name;
+                            if (idx === involvedCompanies.length - 1) {
+                              resolve(res);
+                            }
+                          }
+                        );
+                      }, idx * 251);
+                    });
+                  })
+              )
+              .then(result => {
+                const resultMeta = { ...result, name, summary, totalRating };
+                libDB.query(
+                  `update ${reqUser} set meta=?, processed=? where title="${selTitle}"`,
+                  [JSON.stringify(resultMeta), 'true'],
+                  err => {
+                    if (err) {
+                      throw err;
+                    }
+                    libDB.query(
+                      `select meta from ${reqUser} where title="${selTitle}"`,
+                      (err, result) => {
+                        if (err) {
+                          throw err;
+                        }
+                        res.send(result[0].meta);
+                      }
+                    );
+                  }
+                );
+              });
+          }
+        );
+      }
     }
-  })
+  );
 });
 
 app.listen(port, () => console.log(`server is running at port${port}`));

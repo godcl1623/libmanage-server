@@ -41,8 +41,8 @@ const Header = () => {
       >스토어 추가</button> */}
       <button
         style={{
-          'width': '80%',
-          'height': '50%'
+          width: '80%',
+          height: '50%'
         }}
         onClick={() => {
           dispatch(modalOriginCreator(''));
@@ -53,16 +53,22 @@ const Header = () => {
             dispatch(modalStateCreator(false));
           }
         }}
-      >라이브러리 추가</button>
+      >
+        라이브러리 추가
+      </button>
     </>
   );
 
-  const memberStatus = (
-    loginStatus === true
-      ?
-        <button
+  const memberStatus =
+    loginStatus === true ? (
+      <button
         onClick={() => {
-          axios.post('http://localhost:3002/logout_process', {message: 'foo'}, { withCredentials: true })
+          axios
+            .post(
+              'http://localhost:3002/logout_process',
+              { message: 'foo' },
+              { withCredentials: true }
+            )
             .then(res => {
               dispatch(logoutClickedCreator(true));
               dispatch(userStateCreator(null));
@@ -72,66 +78,66 @@ const Header = () => {
               history.push('/');
             })
             .catch(err => alert(err));
-          }}
-        >
-          로그아웃
-        </button>
-      :
-        <button
-          onClick={() => {
-            history.push('/');
-          }}
-        >
-          로그인
-        </button>
-  );
-  
+        }}
+      >
+        로그아웃
+      </button>
+    ) : (
+      <button
+        onClick={() => {
+          history.push('/');
+        }}
+      >
+        로그인
+      </button>
+    );
+
   const wrapper = {
-    'display': balloonOrigin === 'Header' ? balloonState : 'none',
-    'position': 'absolute',
-    'top': '0',
-    'left': '0',
+    display: balloonOrigin === 'Header' ? balloonState : 'none',
+    position: 'absolute',
+    top: '0',
+    left: '0',
     // 'background': 'rgba(0, 0, 0, 0.3)',
-    'width': '100%',
-    'height': '100%',
-    'zIndex': '1'
-  }
+    width: '100%',
+    height: '100%',
+    zIndex: '1'
+  };
 
   const style = {
-    'padding': '20px',
-    'display': balloonOrigin === 'Header' ? balloonState : 'none',
-    'flexDirection': 'column',
-    'justifyContent': 'center',
-    'alignItems': 'center',
-    'width': '300px',
-    'height': '100px',
-    'position': 'absolute',
-    'top': '0',
-    'left': '200px',
-    'background': 'white',
-    'zIndex': 1
+    padding: '20px',
+    display: balloonOrigin === 'Header' ? balloonState : 'none',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '300px',
+    height: '100px',
+    position: 'absolute',
+    top: '0',
+    left: '200px',
+    background: 'white',
+    zIndex: 1
   };
 
   const hand = {
-    'width': '50px',
-    'height': '50px',
-    'position': 'absolute',
-    'top': '0',
-    'left': '176px',
-    'transform': 'translate(-50%)',
-    'background': 'white',
-    'display': balloonOrigin === 'Header' ? balloonState : 'none'
-  }
+    width: '50px',
+    height: '50px',
+    position: 'absolute',
+    top: '0',
+    left: '176px',
+    transform: 'translate(-50%)',
+    background: 'white',
+    display: balloonOrigin === 'Header' ? balloonState : 'none'
+  };
 
   return (
     <header
       id="header"
       style={{
-        'display': 'flex',
-        'justifyContent': 'space-between',
-        'alignContent': 'center',
-        'height': '30px',
-        'width': '100%'
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignContent: 'center',
+        height: '30px',
+        width: '100%'
       }}
     >
       <button
@@ -143,22 +149,24 @@ const Header = () => {
             dispatch(balloonStateCreator('none'));
           }
         }}
-      >옵션</button>
+      >
+        옵션
+      </button>
       <Balloon contents={<Options />} display={wrapper} style={style} hand={hand} />
       <form>
         <input
           type="text"
           placeholder="검색어를 입력하세요"
           onChange={e => {
-            dispatch(_TESTCREATOR(e.target.value))
+            dispatch(_TESTCREATOR(e.target.value));
           }}
         />
         <button>검색</button>
         <button>검색옵션</button>
       </form>
       {/* <button>로그인</button> */}
-      { userState.nickname }
-      { memberStatus }
+      {userState.nickname}
+      {memberStatus}
     </header>
   );
 };

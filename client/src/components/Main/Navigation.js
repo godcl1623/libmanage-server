@@ -8,68 +8,69 @@ const menu = (value, storeList, dispatch, filterStores) => {
   const music = <p>music</p>;
   const series = <p>series</p>;
   const movie = <p>movie</p>;
-  const displayMenu = (...params) => params.map((param, index) => {
-    const eachCategoriesStores = storeList[param.props.children];
-    if (eachCategoriesStores !== undefined) {
-      return (
-        <div key={`category ${index}`} className='category'>
-          <div
-            key={`category-header ${index}`}
-            className='category-header'
-            style={{
-              'display': 'flex',
-              'height': '100%'
-            }}
-          >
-            {param}
-            <label
-              htmlFor={param.props.children}
-              data-value={param.props.children}
-              onClick={e => {
-                dispatch(filterStores('all'))
-              }}
+  const displayMenu = (...params) =>
+    params.map((param, index) => {
+      const eachCategoriesStores = storeList[param.props.children];
+      if (eachCategoriesStores !== undefined) {
+        return (
+          <div key={`category ${index}`} className="category">
+            <div
+              key={`category-header ${index}`}
+              className="category-header"
               style={{
-                'border': '1px solid black',
-                'borderRadius': '50%',
-                'width': '20px',
-                'height': '20px',
-                'background': 'red'
+                display: 'flex',
+                height: '100%'
               }}
-            > </label>
-            <input
-              type='radio'
-              name={param.props.children}
-              checked={true}
-              onChange={() => {}}
-              style={{
-                'display': 'none'
-              }}
-            />
-          </div>
-          {
-            eachCategoriesStores.map(store => (
+            >
+              {param}
+              <label
+                htmlFor={param.props.children}
+                data-value={param.props.children}
+                onClick={e => {
+                  dispatch(filterStores('all'));
+                }}
+                style={{
+                  border: '1px solid black',
+                  borderRadius: '50%',
+                  width: '20px',
+                  height: '20px',
+                  background: 'red'
+                }}
+              >
+                {' '}
+              </label>
+              <input
+                type="radio"
+                name={param.props.children}
+                checked={true}
+                onChange={() => {}}
+                style={{
+                  display: 'none'
+                }}
+              />
+            </div>
+            {eachCategoriesStores.map(store => (
               <p
                 onClick={e => {
-                  dispatch(filterStores(store))
+                  dispatch(filterStores(store));
                 }}
               >
                 - {store}
               </p>
-            ))
-          }
-        </div>
-      )
-    // eslint-disable-next-line no-else-return
-    } else {
-      return (
-        <div key={`category ${index}`} className='category'>
-          <div key={`category-header ${index}`} className='category-header'>
-            {param}
+            ))}
           </div>
-        </div>
-      );
-    }
-  });
+        );
+        // eslint-disable-next-line no-else-return
+      } else {
+        return (
+          <div key={`category ${index}`} className="category">
+            <div key={`category-header ${index}`} className="category-header">
+              {param}
+            </div>
+          </div>
+        );
+      }
+    });
   switch (value) {
     case 'game':
       return displayMenu(game);
@@ -92,7 +93,7 @@ const Navigation = ({ storesList }) => {
     <nav
       id="navigation"
       style={{
-        'flex': '1'
+        flex: '1'
       }}
     >
       <select

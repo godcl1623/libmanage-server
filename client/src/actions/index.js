@@ -1,6 +1,6 @@
 export const loginStatusCreator = boolean => ({
   type: 'LOGIN_STATUS',
-  payload: boolean  
+  payload: boolean
 });
 
 export const logoutClickedCreator = boolean => ({
@@ -71,7 +71,7 @@ export const selectedItemDataCreator = obj => ({
 export const modalOriginCreator = string => ({
   type: 'MODAL_ORIGIN',
   payload: string
-})
+});
 
 export const _TESTCREATOR = anything => ({
   type: '__TEST__',

@@ -3,16 +3,26 @@ import React, { useEffect } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
-import { loginStatusCreator, userStateCreator, logoutClickedCreator, comparisonStateCreator } from '../../actions';
+import {
+  loginStatusCreator,
+  userStateCreator,
+  logoutClickedCreator,
+  comparisonStateCreator
+} from '../../actions';
 import { hasher, salter } from '../../custom_modules/hasher';
 import { encryptor } from '../../custom_modules/aeser';
 import { tracer } from '../../custom_modules/security/fes';
 
 const loginException = (dispatch, history) => {
   const formData = {
-    mode: 'guest',
-  }
-  axios.post('http://localhost:3002/login_process', { sofo: encryptor(formData, tracer) }, { withCredentials: true })
+    mode: 'guest'
+  };
+  axios
+    .post(
+      'http://localhost:3002/login_process',
+      { sofo: encryptor(formData, tracer) },
+      { withCredentials: true }
+    )
     .then(res => {
       // 임시로 작성
       dispatch(loginStatusCreator(true));
@@ -21,7 +31,7 @@ const loginException = (dispatch, history) => {
       history.push('/main');
     })
     .catch(err => alert(err));
-}
+};
 
 const Login = () => {
   const loginStatus = useSelector(state => state.loginStatus);
@@ -32,26 +42,31 @@ const Login = () => {
   const history = useHistory();
 
   useEffect(() => {
-    axios.post('http://localhost:3002/check_login', { message: comparisonState }, { withCredentials: true })
-    .then(res => {
-      if (res.data.isLoginSuccessful) {
-        dispatch(loginStatusCreator(res.data.isLoginSuccessful));
-        history.push('/main');
-        if (userState.nickname === undefined) {
-          dispatch(userStateCreator(res.data));
+    axios
+      .post(
+        'http://localhost:3002/check_login',
+        { message: comparisonState },
+        { withCredentials: true }
+      )
+      .then(res => {
+        if (res.data.isLoginSuccessful) {
+          dispatch(loginStatusCreator(res.data.isLoginSuccessful));
+          history.push('/main');
+          if (userState.nickname === undefined) {
+            dispatch(userStateCreator(res.data));
+          }
+        } else if (res.data.isGuest) {
+          // 임시로 작성
+          dispatch(loginStatusCreator(true));
+          history.push('/main');
+          if (userState.nickname === undefined) {
+            dispatch(userStateCreator(res.data));
+          }
+        } else {
+          // alert(res.data);
         }
-      } else if (res.data.isGuest) {
-        // 임시로 작성
-        dispatch(loginStatusCreator(true));
-        history.push('/main');
-        if (userState.nickname === undefined) {
-          dispatch(userStateCreator(res.data));
-        }
-      } else {
-        // alert(res.data);
-      }
-    })
-    .catch(err => alert(err));
+      })
+      .catch(err => alert(err));
   }, []);
 
   useEffect(() => {
@@ -63,7 +78,6 @@ const Login = () => {
     }
   }, []);
 
-
   if (loginStatus) {
     return <></>;
   }
@@ -72,51 +86,58 @@ const Login = () => {
     <article
       id="login"
       style={{
-        'display': 'flex',
-        'flexDirection': 'column',
-        'justifyContent': 'center',
-        'alignContent': 'center'
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignContent: 'center'
       }}
     >
       <h2>libmanage</h2>
       <form
         // action="/test"
         style={{
-          'display': 'flex',
-          'flexDirection': 'column',
-          'justifyContent': 'center',
-          'alignContent': 'center'
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignContent: 'center'
         }}
         onSubmit={e => {
           e.preventDefault();
           const formData = {
             ID: '',
             PWD: ''
-          }
+          };
           if (e.target.ID.value !== '' && e.target.PWD.value !== '') {
-            formData.ID =  e.target.ID.value;
+            formData.ID = e.target.ID.value;
             formData.PWD = salter(hasher(e.target.PWD.value));
           }
-          axios.post('http://localhost:3002/login_process', {sofo: encryptor(formData, tracer)}, { withCredentials: true })
-          .then(res => {
-            console.log(res.data)
-            if (res.data.isLoginSuccessful && !res.data.isGuest) {
-              dispatch(loginStatusCreator(res.data.isLoginSuccessful));
-              dispatch(userStateCreator(res.data));
-              alert(`${res.data.nickname}님, 로그인에 성공했습니다.`);
-              history.push('/main');
-            } else {
-              alert(res.data);
-            }
-          })
-          .catch(err => alert(err));
+          axios
+            .post(
+              'http://localhost:3002/login_process',
+              { sofo: encryptor(formData, tracer) },
+              { withCredentials: true }
+            )
+            .then(res => {
+              console.log(res.data);
+              if (res.data.isLoginSuccessful && !res.data.isGuest) {
+                dispatch(loginStatusCreator(res.data.isLoginSuccessful));
+                dispatch(userStateCreator(res.data));
+                alert(`${res.data.nickname}님, 로그인에 성공했습니다.`);
+                history.push('/main');
+              } else {
+                alert(res.data);
+              }
+            })
+            .catch(err => alert(err));
         }}
       >
         <label htmlFor="ID">ID: </label>
         <input type="text" name="ID" />
         <label htmlFor="PWD">PW: </label>
         <input type="password" name="PWD" />
-        <button type="submit" name="login">LOGIN</button>
+        <button type="submit" name="login">
+          LOGIN
+        </button>
       </form>
       <div className="member">
         <Link to="/member/register">회원가입</Link>
@@ -125,7 +146,7 @@ const Login = () => {
       <button onClick={() => loginException(dispatch, history)}>게스트 로그인</button>
       <button>오프라인으로 접속</button>
     </article>
-    );
+  );
 };
 
 export default Login;

@@ -8,7 +8,7 @@ const dbOptions = {
   database: 'libmanage',
   multipleStatements: true,
   dateStrings: true
-}
+};
 
 const libDBOptions = {
   host: 'localhost',
@@ -17,7 +17,7 @@ const libDBOptions = {
   database: 'libmanage_user_steam',
   multipleStatements: true,
   dateStrings: true
-}
+};
 
 const db = mysql.createConnection(dbOptions);
 const libDB = mysql.createConnection(libDBOptions);

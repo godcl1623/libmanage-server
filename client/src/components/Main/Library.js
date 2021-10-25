@@ -21,13 +21,17 @@ const Options = ({ dispatch, changeState, coverSize, setCoverSize }) => (
         e.preventDefault();
         dispatch(changeState('list'));
       }}
-    >리스트</button>
+    >
+      리스트
+    </button>
     <button
       onClick={e => {
         e.preventDefault();
         dispatch(changeState('cover'));
       }}
-    >썸네일</button>
+    >
+      썸네일
+    </button>
     <input
       type="range"
       id="cover_size"
@@ -46,23 +50,29 @@ const Options = ({ dispatch, changeState, coverSize, setCoverSize }) => (
 const testBtns = (state, setState) => (
   <>
     <button
-        onClick={e => {
-          axios.post('http://localhost:3003/api/connect', {execute: 'order66'}, {withCredentials: true})
-            .then(res => {
-              setState(res.data)
-            })
-        }}
-      >
-        api 인증
-      </button>
-      <button
-        onClick={e => {
-          axios.post('http://localhost:3003/meta_search', {apiCred: state}, {withCredentials: true})
-            .then(res => console.log(res))
-        }}
-      >
-        검색 테스트
-      </button>
+      onClick={e => {
+        axios
+          .post(
+            'http://localhost:3003/api/connect',
+            { execute: 'order66' },
+            { withCredentials: true }
+          )
+          .then(res => {
+            setState(res.data);
+          });
+      }}
+    >
+      api 인증
+    </button>
+    <button
+      onClick={e => {
+        axios
+          .post('http://localhost:3003/meta_search', { apiCred: state }, { withCredentials: true })
+          .then(res => console.log(res));
+      }}
+    >
+      검색 테스트
+    </button>
   </>
 );
 
@@ -93,7 +103,12 @@ const makeList = (...args) => {
                 dispatch(modalOriginCreator('Library'));
                 selectItem(e.target.innerText);
                 if (extCredState.cid === undefined) {
-                  axios.post('http://localhost:3003/api/connect', {execute: 'order66'}, {withCredentials: true})
+                  axios
+                    .post(
+                      'http://localhost:3003/api/connect',
+                      { execute: 'order66' },
+                      { withCredentials: true }
+                    )
                     .then(res => {
                       dispatch(setExtCred(res.data));
                       const reqData = {
@@ -101,10 +116,15 @@ const makeList = (...args) => {
                         selTitle: item.title,
                         credData: res.data
                       };
-                      axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
+                      axios
+                        .post(
+                          'http://localhost:3003/get/meta',
+                          { reqData },
+                          { withCredentials: true }
+                        )
                         .then(res => {
                           selItemData(res.data);
-                        })
+                        });
                     });
                 } else {
                   const reqData = {
@@ -112,10 +132,11 @@ const makeList = (...args) => {
                     selTitle: item.title,
                     credData: extCredState
                   };
-                  axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
+                  axios
+                    .post('http://localhost:3003/get/meta', { reqData }, { withCredentials: true })
                     .then(res => {
                       selItemData(res.data);
-                    })
+                    });
                 }
               }}
             >
@@ -133,12 +154,12 @@ const makeList = (...args) => {
             <li
               key={`img-${index}`}
               style={{
-                'margin': '10px',
-                'height': `${size}vw`,
-                'flex': '0 0 10%',
-                'display': 'flex',
-                'justifyContent': 'center',
-                'alignItems': 'center'
+                margin: '10px',
+                height: `${size}vw`,
+                flex: '0 0 10%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
               }}
             >
               <img
@@ -146,12 +167,17 @@ const makeList = (...args) => {
                 title={`${item.title}`}
                 alt={`${item.title}-cover`}
                 style={{
-                  'height': '100%'
+                  height: '100%'
                 }}
                 onClick={e => {
                   selectItem(e.target.title);
                   if (extCredState.cid === undefined) {
-                    axios.post('http://localhost:3003/api/connect', {execute: 'order66'}, {withCredentials: true})
+                    axios
+                      .post(
+                        'http://localhost:3003/api/connect',
+                        { execute: 'order66' },
+                        { withCredentials: true }
+                      )
                       .then(res => {
                         dispatch(setExtCred(res.data));
                         const reqData = {
@@ -159,10 +185,15 @@ const makeList = (...args) => {
                           selTitle: item.title,
                           credData: res.data
                         };
-                        axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
+                        axios
+                          .post(
+                            'http://localhost:3003/get/meta',
+                            { reqData },
+                            { withCredentials: true }
+                          )
                           .then(res => {
                             selItemData(res.data);
-                          })
+                          });
                       });
                   } else {
                     const reqData = {
@@ -170,10 +201,15 @@ const makeList = (...args) => {
                       selTitle: item.title,
                       credData: extCredState
                     };
-                    axios.post('http://localhost:3003/get/meta', {reqData}, {withCredentials: true})
+                    axios
+                      .post(
+                        'http://localhost:3003/get/meta',
+                        { reqData },
+                        { withCredentials: true }
+                      )
                       .then(res => {
                         selItemData(res.data);
-                      })
+                      });
                   }
                 }}
               />
@@ -182,14 +218,14 @@ const makeList = (...args) => {
           if (search === '') {
             return result;
           } else {
-            const word = new RegExp(search, 'gi')
-            return result.filter(ele => ele.props.children.props.title.match(word))
+            const word = new RegExp(search, 'gi');
+            return result.filter(ele => ele.props.children.props.title.match(word));
           }
         }
       }
     }
   }
-}
+};
 
 const Library = ({ userLib }) => {
   // const [balloonState, setBalloonState] = React.useState('none');
@@ -201,7 +237,7 @@ const Library = ({ userLib }) => {
   const userState = useSelector(state => state.userState);
   const extCredState = useSelector(state => state.extCredState);
   const testState = useSelector(state => state._TEST);
-  const [ btnCoords, setBtnCoords ] = React.useState({});
+  const [btnCoords, setBtnCoords] = React.useState({});
   const [coverSize, setCoverSize] = React.useState(10);
   const [localSelectedItem, setLocalSelectedItem] = React.useState('');
   const [localSelectedItemData, setLocalSelectedItemData] = React.useState({});
@@ -215,7 +251,7 @@ const Library = ({ userLib }) => {
       topCoord: top
     }));
   };
-  console.log(userLib)
+
   React.useEffect(() => {
     const { left, top } = ref.current.getBoundingClientRect();
     updateBtnCoords(left, top);
@@ -224,51 +260,51 @@ const Library = ({ userLib }) => {
   React.useEffect(() => {
     dispatch(selectedItemCreator(localSelectedItem));
     dispatch(selectedItemDataCreator(localSelectedItemData));
-  }, [localSelectedItem, localSelectedItemData])
+  }, [localSelectedItem, localSelectedItemData]);
 
   const wrapper = {
-    'display': balloonOrigin === 'Library' ? balloonState : 'none',
-    'position': 'absolute',
-    'top': '0',
-    'right': '0',
+    display: balloonOrigin === 'Library' ? balloonState : 'none',
+    position: 'absolute',
+    top: '0',
+    right: '0',
     // 'background': 'rgba(0, 0, 0, 0.3)',
-    'width': '100%',
-    'height': '100%',
-    'zIndex': '1'
-  }
+    width: '100%',
+    height: '100%',
+    zIndex: '1'
+  };
 
   const style = {
-    'padding': '20px',
-    'display': balloonOrigin === 'Library' ? balloonState : 'none',
-    'justifyContent': 'center',
-    'alignItems': 'center',
-    'width': '300px',
-    'height': '100px',
-    'position': 'absolute',
-    'top': `calc(${btnCoords.topCoord}px + 50px)`,
-    'left': `calc(${btnCoords.leftCoord}px + 50px)`,
-    'background': 'white',
-    'zIndex': '1'
+    padding: '20px',
+    display: balloonOrigin === 'Library' ? balloonState : 'none',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '300px',
+    height: '100px',
+    position: 'absolute',
+    top: `calc(${btnCoords.topCoord}px + 50px)`,
+    left: `calc(${btnCoords.leftCoord}px + 50px)`,
+    background: 'white',
+    zIndex: '1'
   };
 
   const hand = {
-    'width': '50px',
-    'height': '50px',
-    'position': 'absolute',
-    'top': `calc(${btnCoords.topCoord}px + 25px)`,
-    'left': `calc(${btnCoords.leftCoord}px + 50px)`,
+    width: '50px',
+    height: '50px',
+    position: 'absolute',
+    top: `calc(${btnCoords.topCoord}px + 25px)`,
+    left: `calc(${btnCoords.leftCoord}px + 50px)`,
     // 'transform': 'translate(-100%, -50%)',
-    'background': 'white',
-    'display': balloonOrigin === 'Library' ? balloonState : 'none'
-  }
+    background: 'white',
+    display: balloonOrigin === 'Library' ? balloonState : 'none'
+  };
 
   return (
     <article
       id="library"
       style={{
-        'flex': '2',
-        'overflowY': 'scroll',
-        'overflowX': 'hidden'
+        flex: '2',
+        overflowY: 'scroll',
+        overflowX: 'hidden'
         // 'position': 'relative'
       }}
     >
@@ -283,7 +319,9 @@ const Library = ({ userLib }) => {
           }
         }}
         ref={ref}
-      >옵션</button>
+      >
+        옵션
+      </button>
       <Balloon
         contents={
           <Options
@@ -300,27 +338,25 @@ const Library = ({ userLib }) => {
       <ul
         id="contents-lists"
         style={{
-          'display': `${libDisplay === 'cover' ? 'flex' : 'inline-block'}`,
-          'width': '100%',
-          'flexWrap': 'wrap'
+          display: `${libDisplay === 'cover' ? 'flex' : 'inline-block'}`,
+          width: '100%',
+          flexWrap: 'wrap'
         }}
       >
-        {
-          makeList(
-            userLib,
-            libDisplay,
-            coverSize,
-            selectedCategory,
-            selectedStores,
-            userState,
-            extCredState,
-            dispatch,
-            extCredStateCreator,
-            setLocalSelectedItem,
-            setLocalSelectedItemData,
-            testState
-          )
-        }
+        {makeList(
+          userLib,
+          libDisplay,
+          coverSize,
+          selectedCategory,
+          selectedStores,
+          userState,
+          extCredState,
+          dispatch,
+          extCredStateCreator,
+          setLocalSelectedItem,
+          setLocalSelectedItemData,
+          testState
+        )}
       </ul>
       {/* { testBtns(apiAuth, setApiAuth) } */}
     </article>

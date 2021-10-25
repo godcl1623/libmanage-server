@@ -17,15 +17,15 @@ import {
 } from '../../actions';
 
 const modalOption = {
-  'position': 'absolute',
-  'width': '50%',
-  'height': '50%',
-  'background': 'white',
-  'top': '50%',
-  'left': '50%',
-  'transform': 'translate(-50%, -50%)',
-  'zIndex': '2'
-}
+  position: 'absolute',
+  width: '50%',
+  height: '50%',
+  background: 'white',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  zIndex: '2'
+};
 
 const modalContents = (state, dispatch, setState1, setState2, origin) => {
   if (origin !== 'Library') {
@@ -41,11 +41,13 @@ const modalContents = (state, dispatch, setState1, setState2, origin) => {
               href="http://localhost:3003/auth/steam"
               // target="_blank"
               // rel="noreferrer"
-            >스팀으로 로그인</a>
+            >
+              스팀으로 로그인
+            </a>
           </section>
         </article>
       );
-    // eslint-disable-next-line no-else-return
+      // eslint-disable-next-line no-else-return
     } else {
       return (
         <article>
@@ -59,7 +61,12 @@ const modalContents = (state, dispatch, setState1, setState2, origin) => {
                 temp.stores.game.steam = false;
                 // 반영을 위해서는 comparisonState 변경이 필요
                 dispatch(setState1(temp));
-                axios.post('http://localhost:3003/disconnect', { reqUserInfo: JSON.stringify(state) }, {withCredentials: true})
+                axios
+                  .post(
+                    'http://localhost:3003/disconnect',
+                    { reqUserInfo: JSON.stringify(state) },
+                    { withCredentials: true }
+                  )
                   .then(res => {
                     if (res) {
                       dispatch(setState2(false));
@@ -67,7 +74,9 @@ const modalContents = (state, dispatch, setState1, setState2, origin) => {
                     }
                   });
               }}
-            >연동 해제</button>
+            >
+              연동 해제
+            </button>
           </section>
         </article>
       );
@@ -76,7 +85,7 @@ const modalContents = (state, dispatch, setState1, setState2, origin) => {
   return (
     <article
       style={{
-        'pointerEvents': 'none'
+        pointerEvents: 'none'
       }}
     >
       <h1>Loading...</h1>
@@ -101,7 +110,12 @@ const Main = () => {
 
   useEffect(() => {
     const checkLogin = () => {
-      axios.post('http://localhost:3002/check_login', { message: comparisonState }, { withCredentials: true })
+      axios
+        .post(
+          'http://localhost:3002/check_login',
+          { message: comparisonState },
+          { withCredentials: true }
+        )
         .then(res => {
           if (res.data.isLoginSuccessful) {
             dispatch(loginStatusCreator(res.data.isLoginSuccessful));
@@ -122,84 +136,83 @@ const Main = () => {
           }
         })
         .catch(err => console.log(err));
-    }
+    };
     if (comparisonState !== '') {
       checkLogin();
     }
     checkLogin();
-    }, [comparisonState]);
+  }, [comparisonState]);
 
-    useEffect(() => {
-      const { stores } = userState;
-      if (stores !== undefined) {
-        const categories = Object.keys(stores);
-        const eachStoresOfCategories = categories.map(ele => Object.keys(stores[ele]));
-        const eachStatusOfStoresOfCategories = categories.map(ele => Object.values(stores[ele]));
-        const activatedStores = eachStatusOfStoresOfCategories
-          .map(storeStat => storeStat
-            .map((ele, index) => ele === true ? index : '')
-            .filter(ele => ele !== '')
-          );
-        const storesToDisplay = activatedStores
-          .map(
-            (status, index) => status.map(iTrue => eachStoresOfCategories[index][iTrue])
-          );
-        // setStoresList(storesToDisplay);
-        const testObj = {};
-        categories.forEach((category, index) => {
-          if (storesToDisplay[index] !== undefined) {
-            testObj[category] = storesToDisplay[index];
-          } else {
-            testObj[category] = 'foo';
-          }
-        })
-        setStoresList(testObj);
-      }
-    }, [userState.stores]);
-
-    useEffect(() => {
-      const dataToSend = {
-        reqUser: userState.nickname,
-        // 임시로 작업 - 모든 카테고리 및 모든 스토어에 대응할 수 있도록 수정 필요
-        reqLibs: storesList.game
-      };
-      if (dataToSend.reqLibs !== '') {
-        axios.post('http://localhost:3003/get/db', { reqData: dataToSend }, { withCredentials: true })
-          .then(res => {
-            // 임시로 작업 - 모든 카테고리 및 모든 스토어에 대응할 수 있도록 수정 필요
-            setUserLibrary({ steam: res.data });
-          });
-      }
-    }, [storesList]);
-
-    useEffect(() => {
-      if (selectedItemData.name) {
-        if (selectedItem !== selectedItemData.name) {
-          dispatch(modalStateCreator(true))
+  useEffect(() => {
+    const { stores } = userState;
+    if (stores !== undefined) {
+      const categories = Object.keys(stores);
+      const eachStoresOfCategories = categories.map(ele => Object.keys(stores[ele]));
+      const eachStatusOfStoresOfCategories = categories.map(ele => Object.values(stores[ele]));
+      const activatedStores = eachStatusOfStoresOfCategories.map(storeStat =>
+        storeStat.map((ele, index) => (ele === true ? index : '')).filter(ele => ele !== '')
+      );
+      const storesToDisplay = activatedStores.map((status, index) =>
+        status.map(iTrue => eachStoresOfCategories[index][iTrue])
+      );
+      // setStoresList(storesToDisplay);
+      const testObj = {};
+      categories.forEach((category, index) => {
+        if (storesToDisplay[index] !== undefined) {
+          testObj[category] = storesToDisplay[index];
         } else {
-          dispatch(modalStateCreator(false))
+          testObj[category] = 'foo';
         }
-      } else if (selectedItem) {
-        dispatch(modalStateCreator(true))
+      });
+      setStoresList(testObj);
+    }
+  }, [userState.stores]);
+
+  useEffect(() => {
+    const dataToSend = {
+      reqUser: userState.nickname,
+      // 임시로 작업 - 모든 카테고리 및 모든 스토어에 대응할 수 있도록 수정 필요
+      reqLibs: storesList.game
+    };
+    if (dataToSend.reqLibs !== '') {
+      axios
+        .post('http://localhost:3003/get/db', { reqData: dataToSend }, { withCredentials: true })
+        .then(res => {
+          // 임시로 작업 - 모든 카테고리 및 모든 스토어에 대응할 수 있도록 수정 필요
+          setUserLibrary({ steam: res.data });
+        });
+    }
+  }, [storesList]);
+
+  useEffect(() => {
+    if (selectedItemData.name) {
+      if (selectedItem !== selectedItemData.name) {
+        dispatch(modalStateCreator(true));
+      } else {
+        dispatch(modalStateCreator(false));
       }
-    }, [selectedItem, selectedItemData]);
+    } else if (selectedItem) {
+      dispatch(modalStateCreator(true));
+    }
+  }, [selectedItem, selectedItemData]);
 
   if (loginStatus === false && logoutClicked === false) {
-    return(<></>);
-  } 
+    return <></>;
+  }
 
   return (
     <>
       <main
         id="main"
         style={{
-          'width': '100%',
-          'height': '100vh',
-          'display': 'flex',
-          'flexDirection': 'column',
-          'justifyContent': 'center',
-          'alignContent': 'center',
-          'pointerEvents': modalState && modalOrigin === 'Library' ? 'none' : 'auto'
+          width: '100%',
+          height: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignContent: 'center',
+          pointerEvents: modalState && modalOrigin === 'Library' ? 'none' : 'auto',
+          zIndex: '1'
         }}
         onClick={e => {
           // e.preventDefault();
@@ -213,11 +226,11 @@ const Main = () => {
         <div
           id="main-contents"
           style={{
-            'width': '100%',
-            'height': 'calc(100% - 30px)',
-            'display': 'flex',
-            'justifyContent': 'center',
-            'alignContent': 'center'
+            width: '100%',
+            height: 'calc(100% - 30px)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignContent: 'center'
           }}
         >
           <Navigation storesList={storesList} />
@@ -227,8 +240,8 @@ const Main = () => {
       </main>
       <Modal
         style={modalOption}
-        contents={
-          () => modalContents(userState, dispatch, comparisonStateCreator, modalStateCreator, modalOrigin)
+        contents={() =>
+          modalContents(userState, dispatch, comparisonStateCreator, modalStateCreator, modalOrigin)
         }
         origin={modalOrigin}
       />
