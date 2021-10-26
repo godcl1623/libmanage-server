@@ -110,7 +110,7 @@ app.post('/login_process', (req, res) => {
           console.log(dbInfo);
           const comparison = bcrypt.hashSync(dbInfo.user_pwd, loginInfo.salt);
           if (loginInfo.ID === dbInfo.user_id && loginInfo.PWD === comparison) {
-            if (dbInfo.stores === '') {
+            if (dbInfo.stores === undefined) {
               req.session.loginInfo = {
                 isLoginSuccessful: true,
                 nickname: dbInfo.user_nick,

@@ -170,6 +170,7 @@ const makeList = (...args) => {
                   height: '100%'
                 }}
                 onClick={e => {
+                  dispatch(modalOriginCreator('Library'));
                   selectItem(e.target.title);
                   if (extCredState.cid === undefined) {
                     axios
