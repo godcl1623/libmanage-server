@@ -1,26 +1,25 @@
 const mysql = require('mysql');
-const pwd = require('./security/pwd');
+require('dotenv').config()
 
 const dbOptions = {
   host: 'localhost',
-  user: 'root',
-  password: pwd,
-  database: 'libmanage',
+  user: process.env.DBUSER,
+  password: process.env.SPTWRD,
+  database: process.env.DB_USERINFO,
   multipleStatements: true,
   dateStrings: true
 };
 
 const libDBOptions = {
   host: 'localhost',
-  user: 'root',
-  password: pwd,
-  database: 'libmanage_user_steam',
+  user: process.env.DBUSER,
+  password: process.env.SPTWRD,
+  database: process.env.DB_USERLIB,
   multipleStatements: true,
   dateStrings: true
 };
 
 const db = mysql.createConnection(dbOptions);
 const libDB = mysql.createConnection(libDBOptions);
-// db.connect();
 
 module.exports = { db, dbOptions, libDB };

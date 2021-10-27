@@ -9,10 +9,9 @@ const MySQLStore = require('express-mysql-session')(session);
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-const { db, dbOptions, libDB } = require('../custom_modules/db');
+require('dotenv').config();
+const { db, dbOptions } = require('../custom_modules/db');
 const { encryptor, decryptor } = require('../custom_modules/aeser');
-const { tracer } = require('../custom_modules/security/fes');
-const swallow = require('../custom_modules/security/swallow');
 const { getRandom } = require('../custom_modules/utils');
 
 let loginInfo = {};
@@ -21,9 +20,12 @@ const app = express();
 const port = 3002;
 const transporter = nodemailer.createTransport({
   service: 'gmail',
-  port: 465,
+  port: process.env.PORT_TRANSPORTER,
   secure: true,
-  auth: swallow
+  auth: {
+    user: process.env.SWALLOWAC,
+    pass: process.env.SWALLOWP
+  }
 });
 const genEmailOptions = (from, to, subject, html) => ({
   from,
@@ -62,7 +64,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/test_get', (req, res) => {
-  const transmitted = decryptor(req.body.foo, tracer);
+  const transmitted = decryptor(req.body.foo, process.env.TRACER);
   const temp = {};
   const genQueryString = string =>
     `select mid from user_info where ${string}=?`;
@@ -80,22 +82,22 @@ app.post('/test_get', (req, res) => {
       if (!checkResult.includes(1)) {
         // 등록 쿼리문 작성
         console.log('doh!');
-        res.send(encryptor(transmitted, tracer));
+        res.send(encryptor(transmitted, process.env.TRACER));
       } else {
         [temp.id, temp.nick, temp.email] = checkResult;
         console.log(temp);
-        res.send(encryptor(JSON.stringify(temp), tracer));
+        res.send(encryptor(JSON.stringify(temp), process.env.TRACER));
       }
     }
   );
 });
 
-app.post('/test_post', (req, res) => {
-  console.log(req);
-});
+// app.post('/test_post', (req, res) => {
+//   console.log(req);
+// });
 
 app.post('/login_process', (req, res) => {
-  loginInfo = decryptor(req.body.sofo, tracer);
+  loginInfo = decryptor(req.body.sofo, process.env.TRACER);
   if (loginInfo.ID !== undefined && loginInfo.PWD !== undefined) {
     loginInfo.salt = bcrypt.getSalt(loginInfo.PWD);
     db.query(
@@ -182,7 +184,7 @@ app.post('/check_login', (req, res) => {
 });
 
 app.post('/member/register', (req, res) => {
-  const transmitted = decryptor(req.body.foo, tracer);
+  const transmitted = decryptor(req.body.foo, process.env.TRACER);
   const temp = {};
   const genQueryString = string =>
     `select mid from user_info where ${string}=?`;
@@ -199,7 +201,7 @@ app.post('/member/register', (req, res) => {
       if (error) throw error;
       if (!checkResult.includes(1)) {
         // 등록 쿼리문 작성
-        // res.send(encryptor(transmitted, tracer));
+        // res.send(encryptor(transmitted, process.env.TRACER));
         const column = 'user_id, user_pwd, user_nick, user_email, created';
         const queryString = `insert into user_info (${column}) values(?, ?, ?, ?, now())`;
         const values = [
@@ -215,7 +217,7 @@ app.post('/member/register', (req, res) => {
         });
       } else {
         [temp.id, temp.nick, temp.email] = checkResult;
-        res.send(encryptor(temp, tracer));
+        res.send(encryptor(temp, process.env.TRACER));
       }
     }
   );
@@ -224,7 +226,7 @@ app.post('/member/register', (req, res) => {
 app.post('/member/find/id', (req, res) => {
   const { nick: queryNick, email: queryEmail } = decryptor(
     req.body.infoObj,
-    tracer
+    process.env.TRACER
   );
   db.query(
     'select user_nick, user_id from user_info where user_email=?',
@@ -245,7 +247,7 @@ app.post('/member/find/id', (req, res) => {
           const successMsg =
             '메일이 발송되었습니다.\n메세지 함을 확인해주세요.';
           const emailOptions = genEmailOptions(
-            `관리자 <${swallow.user}>`,
+            `관리자 <${process.env.SWALLOWAC}>`,
             queryEmail,
             subject,
             html
@@ -271,7 +273,7 @@ app.post('/member/find/id', (req, res) => {
 app.post('/member/find/pwd', (req, res) => {
   const { id: queryId, email: queryEmail } = decryptor(
     req.body.infoObj,
-    tracer
+    process.env.TRACER
   );
   const genQueryString = string =>
     `select user_nick from user_info where ${string}=?`;
@@ -305,7 +307,7 @@ app.post('/member/find/pwd', (req, res) => {
             <p><a href="http://localhost:3000/member/reset/${token}">링크</a></p>
           `;
           const emailOptions = genEmailOptions(
-            `관리자 <${swallow.user}>`,
+            `관리자 <${process.env.SWALLOWAC}>`,
             queryEmail,
             subject,
             html
@@ -329,7 +331,7 @@ app.post('/member/find/pwd', (req, res) => {
 });
 
 app.post('/member/reset', (req, res) => {
-  const { tokenTail, requestedTime } = decryptor(req.body.postData, tracer);
+  const { tokenTail, requestedTime } = decryptor(req.body.postData, process.env.TRACER);
   if (tokenTail && requestedTime) {
     db.query(
       'select * from user_token where token_body like ?',
@@ -375,7 +377,7 @@ app.post('/member/reset/pwd', (req, res) => {
     ttl,
     reqTime,
     originTime
-  } = decryptor(req.body.formData, tracer);
+  } = decryptor(req.body.formData, process.env.TRACER);
   const reqTimeVal = new Date(reqTime);
   const createdTimeVal = new Date(originTime);
   const timeDiff = (reqTimeVal - createdTimeVal) / 1000;

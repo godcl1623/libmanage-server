@@ -9,7 +9,6 @@ const SteamStrategy = require('passport-steam').Strategy;
 const axios = require('axios');
 const igdb = require('igdb-api-node').default;
 const { libDB, db } = require('../custom_modules/db');
-const { cyber, owl } = require('../custom_modules/security/fes');
 
 const app = express();
 const port = 3003;
@@ -39,7 +38,7 @@ passport.use(
     {
       returnURL: `http://localhost:${port}/auth/steam/return`,
       realm: `http://localhost:${port}/`,
-      apiKey: cyber
+      apiKey: process.env.CYBER
     },
     (identifier, profile, done) => {
       process.nextTick(() => {
@@ -90,7 +89,7 @@ app.get(
     uid = req.user.id;
     // 2. 반환받은 사용자 아이디로 게임 목록 호출, 제목만 추출한 후 알파벳 순 정렬
     // 제목에서 appid로 변경 - url 대조를 위해
-    const getOwnedGames = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?include_appinfo=1&include_played_free_games=1&key=${cyber}&steamid=${uid}&format=json`;
+    const getOwnedGames = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?include_appinfo=1&include_played_free_games=1&key=${process.env.CYBER}&steamid=${uid}&format=json`;
     axios
       .get(getOwnedGames)
       .then(result => {
@@ -206,12 +205,12 @@ app.get('/error/search', (req, res) => {
 // 프론트에서 처리하도록 수정
 app.post('/api/connect', (req, res) => {
   if (req.body.execute === 'order66') {
-    const cid = `client_id=${owl.me}`;
-    const secret = `client_secret=${owl.spell}`;
+    const cid = `client_id=${process.env.OWLME}`;
+    const secret = `client_secret=${process.env.OWLSPELL}`;
     const cred = 'grant_type=client_credentials';
     const address = `https://id.twitch.tv/oauth2/token?${cid}&${secret}&${cred}`;
     axios.post(address).then(response => {
-      response.data.cid = owl.me;
+      response.data.cid = process.env.OWLME;
       res.json(response.data);
     });
   }
