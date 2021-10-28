@@ -14,9 +14,9 @@ const SteamStrategy = require('passport-steam').Strategy;
 const axios = require('axios');
 const igdb = require('igdb-api-node').default;
 require('dotenv').config();
-const { db, dbOptions, libDB } = require('../custom_modules/db');
-const { encryptor, decryptor } = require('../custom_modules/aeser');
-const { getRandom } = require('../custom_modules/utils');
+const { db, dbOptions, libDB } = require('./custom_modules/db');
+const { encryptor, decryptor } = require('./custom_modules/aeser');
+const { getRandom } = require('./custom_modules/utils');
 
 
 const app = express();
