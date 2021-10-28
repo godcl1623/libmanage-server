@@ -80,34 +80,34 @@ app.get('/', (req, res) => {
   res.send('login server');
 });
 
-app.post('/test_get', (req, res) => {
-  const transmitted = decryptor(req.body.foo, process.env.TRACER);
-  const temp = {};
-  const genQueryString = string =>
-    `select mid from user_info where ${string}=?`;
-  const genExists = qString => `select exists (${qString} limit 1) as isExist`;
-  db.query(
-    `
-      ${genExists(genQueryString('user_id'))};
-      ${genExists(genQueryString('user_nick'))};
-      ${genExists(genQueryString('user_email'))};
-    `,
-    [transmitted.id, transmitted.nick, transmitted.email],
-    (error, result) => {
-      const checkResult = result.map(packet => packet[0].isExist);
-      if (error) throw error;
-      if (!checkResult.includes(1)) {
-        // 등록 쿼리문 작성
-        console.log('doh!');
-        res.send(encryptor(transmitted, process.env.TRACER));
-      } else {
-        [temp.id, temp.nick, temp.email] = checkResult;
-        console.log(temp);
-        res.send(encryptor(JSON.stringify(temp), process.env.TRACER));
-      }
-    }
-  );
-});
+// app.post('/test_get', (req, res) => {
+//   const transmitted = decryptor(req.body.foo, process.env.TRACER);
+//   const temp = {};
+//   const genQueryString = string =>
+//     `select mid from user_info where ${string}=?`;
+//   const genExists = qString => `select exists (${qString} limit 1) as isExist`;
+//   db.query(
+//     `
+//       ${genExists(genQueryString('user_id'))};
+//       ${genExists(genQueryString('user_nick'))};
+//       ${genExists(genQueryString('user_email'))};
+//     `,
+//     [transmitted.id, transmitted.nick, transmitted.email],
+//     (error, result) => {
+//       const checkResult = result.map(packet => packet[0].isExist);
+//       if (error) throw error;
+//       if (!checkResult.includes(1)) {
+//         // 등록 쿼리문 작성
+//         console.log('doh!');
+//         res.send(encryptor(transmitted, process.env.TRACER));
+//       } else {
+//         [temp.id, temp.nick, temp.email] = checkResult;
+//         console.log(temp);
+//         res.send(encryptor(JSON.stringify(temp), process.env.TRACER));
+//       }
+//     }
+//   );
+// });
 
 // app.post('/test_post', (req, res) => {
 //   console.log(req);
@@ -526,43 +526,43 @@ app.get('/login', (req, res) => {
   res.send('failed');
 });
 
-app.get('/', (req, res) => {
-  res.send('api server');
-});
+// app.get('/', (req, res) => {
+//   res.send('api server');
+// });
 
-app.post('/test', (req, res) => {
-  libDB.query(`select * from dee`, (err, result) => {
-    if (err) {
-      const columns = {
-        first: 'libid int not null auto_increment',
-        second: 'title text not null',
-        third: 'cover text null',
-        fourth: 'igdb_url text not null',
-        fifth: 'meta text not null',
-        sixth: 'primary key (libid)'
-      };
-      const queryString = `
-        create table dee (
-          ${columns.first},
-          ${columns.second},
-          ${columns.third},
-          ${columns.fourth},
-          ${columns.fifth},
-          ${columns.sixth}
-        );
-      `;
-      libDB.query(queryString, (err, result) => {
-        if (err) {
-          throw err;
-        } else {
-          console.log(result);
-        }
-      });
-    } else {
-      console.log('result is', result);
-    }
-  });
-});
+// app.post('/test', (req, res) => {
+//   libDB.query(`select * from dee`, (err, result) => {
+//     if (err) {
+//       const columns = {
+//         first: 'libid int not null auto_increment',
+//         second: 'title text not null',
+//         third: 'cover text null',
+//         fourth: 'igdb_url text not null',
+//         fifth: 'meta text not null',
+//         sixth: 'primary key (libid)'
+//       };
+//       const queryString = `
+//         create table dee (
+//           ${columns.first},
+//           ${columns.second},
+//           ${columns.third},
+//           ${columns.fourth},
+//           ${columns.fifth},
+//           ${columns.sixth}
+//         );
+//       `;
+//       libDB.query(queryString, (err, result) => {
+//         if (err) {
+//           throw err;
+//         } else {
+//           console.log(result);
+//         }
+//       });
+//     } else {
+//       console.log('result is', result);
+//     }
+//   });
+// });
 
 app.post('/api/search', (req, res) => {
   const { reqUserInfo } = req.body;
