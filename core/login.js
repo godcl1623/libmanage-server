@@ -137,7 +137,7 @@ app.post('/login_process', (req, res) => {
   } else if (loginInfo.mode === 'guest') {
     const newGuest = `guest#${getRandom()}`;
     req.session.loginInfo = {
-      isLoginSuccessful: false,
+      isLoginSuccessful: true,
       nickname: newGuest,
       isGuest: true
     };
