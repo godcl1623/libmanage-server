@@ -64,13 +64,14 @@ app.use(
     saveUninitialized: false,
     cookie: {
       samesite: 'none',
-      // secure: true,
+      // secure: false,
       maxAge: 60 * 60 * 60 * 1000
     },
     // store: new FileStore()
     store: new MySQLStore(dbOptions, db)
   })
 );
+// app.set('trusy proxy', 1);
 db.connect();
 libDB.connect();
 
@@ -178,8 +179,9 @@ app.post('/logout_process', (req, res) => {
 
 app.post('/check_login', (req, res) => {
   // 빌드 전에 삭제
-  console.log(req.body.message);
-  console.log(req.session.loginInfo);
+  console.log('foo :', req.body.message);
+  // console.log(req.session.loginInfo);
+  console.log(req.sessionID)
   if (req.body.message !== '') {
     const origin = JSON.stringify(req.session.loginInfo);
     const compare = JSON.stringify(req.body.message);
@@ -196,7 +198,7 @@ app.post('/check_login', (req, res) => {
   } else if (req.session.loginInfo) {
     res.send(req.session.loginInfo);
   } else {
-    res.send('로그인 정보가 만료됐습니다. 다시 로그인해 주세요.');
+    res.send('check_failed');
   }
 });
 
