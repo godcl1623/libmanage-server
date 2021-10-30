@@ -20,7 +20,7 @@ const { getRandom } = require('./custom_modules/utils');
 
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
 let loginInfo = {};
 let dbInfo = {};
 let uid = '';
