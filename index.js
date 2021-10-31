@@ -48,6 +48,7 @@ const genEmailOptions = (from, to, subject, html) => ({
   html
 });
 
+app.set('port', (process.env.PORT || 3001));
 app.use(
   cors({
     origin: true,
@@ -580,7 +581,7 @@ app.post('/api/search', (req, res) => {
             steam: true
           }
         };
-        db.query(
+        prodDB.query(
           `update user_info set stores=? where user_nick=?`,
           [JSON.stringify(stores), requestedUser],
           (err, result) => {
@@ -896,7 +897,7 @@ app.post('/disconnect', (req, res) => {
     })
     .filter(result => result !== '');
   deletedStoresFilter.forEach(store => {
-    const queryString = `select * from ${nickname}`;
+    const queryString = `select * from user_lib_${nickname}`;
     prodDB.query(queryString, (err, result) => {
       console.log('search', err, result);
       if (err) {
@@ -904,7 +905,7 @@ app.post('/disconnect', (req, res) => {
           res.send('오류가 발생했습니다.');
         }
       } else {
-        const delQueryString = `delete from ${nickname}`;
+        const delQueryString = `delete from user_lib_${nickname}`;
         prodDB.query(delQueryString, (err, result) => {
           console.log('del', err, result);
           if (err) {
@@ -917,7 +918,7 @@ app.post('/disconnect', (req, res) => {
               }
             };
             const updateQueryStr = `update user_info set stores=? where user_nick=?`;
-            db.query(
+            prodDB.query(
               updateQueryStr,
               [JSON.stringify(stores), nickname],
               (err, result) => {
@@ -943,7 +944,7 @@ app.post('/get/db', (req, res) => {
     const { reqUser: nickname } = req.body.reqData;
     if (gameStores !== '') {
       // 추후 스토어 갯수 늘어나면 db 선택식으로 변경하기
-      prodDB.query(`select title, cover from ${nickname}`, (err, result) => {
+      prodDB.query(`select title, cover from user_lib_${nickname}`, (err, result) => {
         if (err) {
           throw err;
         } else {
@@ -1216,4 +1217,4 @@ app.post('/get/meta', (req, res) => {
   );
 });
 
-app.listen(port, () => console.log(`server is running at port ${port}`));
+app.listen(app.get('port'), () => console.log(`server is running at port ${app.get('port')}`));
