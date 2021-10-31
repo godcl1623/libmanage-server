@@ -84,7 +84,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       samesite: 'none',
-      // secure: false,
+      secure: true,
       maxAge: 60 * 60 * 60 * 1000
     },
     // store: new FileStore()
@@ -96,12 +96,12 @@ app.use(
 // libDB.connect();
 // prodDB.connect();
 // handleDBConnection();
-prodDB.getConnection((err, conn) => {
-  if (!err) {
-    conn.query();
-  }
-  conn.release();
-})
+// prodDB.getConnection((err, conn) => {
+//   if (!err) {
+//     conn.query();
+//   }
+//   conn.release();
+// })
 
 /* #################### 로그인 서버 #################### */
 
