@@ -48,7 +48,8 @@ const genEmailOptions = (from, to, subject, html) => ({
   html
 });
 const handleDBConnection = () => {
-  prodDB.connect(err => {
+  // prodDB.connect(err => {
+    prodDB.getConnection(err => {
     if (err) {
       console.log(`error when connecting to db: ${err}`);
       setTimeout(handleDBConnection, 2000);
@@ -94,7 +95,13 @@ app.use(
 // db.connect();
 // libDB.connect();
 // prodDB.connect();
-handleDBConnection();
+// handleDBConnection();
+prodDB.getConnection((err, conn) => {
+  if (!err) {
+    conn.query();
+  }
+  conn.release();
+})
 
 /* #################### 로그인 서버 #################### */
 

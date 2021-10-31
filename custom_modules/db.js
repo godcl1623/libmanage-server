@@ -30,6 +30,6 @@ const dbProdOptions = {
 
 const db = mysql.createConnection(dbOptions);
 const libDB = mysql.createConnection(libDBOptions);
-const prodDB = mysql.createConnection(dbProdOptions);
+const prodDB = mysql.createPool(dbProdOptions);
 
 module.exports = { db, dbOptions, libDB, prodDB, dbProdOptions };
