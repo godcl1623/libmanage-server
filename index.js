@@ -47,6 +47,22 @@ const genEmailOptions = (from, to, subject, html) => ({
   subject,
   html
 });
+const handleDBConnection = () => {
+  prodDB.connect(err => {
+    if (err) {
+      console.log(`error when connecting to db: ${err}`);
+      setTimeout(handleDBConnection, 2000);
+    }
+  });
+
+  prodDB.on('error', err => {
+    console.log(`db error: ${err}`);
+    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+      return handleDBConnection();
+    }
+    throw err;
+  });
+}
 
 app.set('port', (process.env.PORT || 3001));
 app.use(
@@ -75,7 +91,8 @@ app.use(
 // app.set('trusy proxy', 1);
 // db.connect();
 // libDB.connect();
-prodDB.connect();
+// prodDB.connect();
+handleDBConnection();
 
 /* #################### 로그인 서버 #################### */
 
