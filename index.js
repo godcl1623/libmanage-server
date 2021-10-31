@@ -59,8 +59,10 @@ const handleDBConnection = () => {
     console.log(`db error: ${err}`);
     if (err.code === 'PROTOCOL_CONNECTION_LOST') {
       return handleDBConnection();
+    // eslint-disable-next-line no-else-return
+    } else {
+      throw err;
     }
-    throw err;
   });
 }
 
