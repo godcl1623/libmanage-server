@@ -19,7 +19,17 @@ const libDBOptions = {
   dateStrings: true
 };
 
+const dbProdOptions = {
+  host: process.env.DB_PROD_HOST,
+  user: process.env.DB_PROD_USER,
+  password: process.env.DB_PROD_PWD,
+  database: process.env.DB_PROD_SCHEME,
+  multipleStatements: true,
+  dateStrings: true
+}
+
 const db = mysql.createConnection(dbOptions);
 const libDB = mysql.createConnection(libDBOptions);
+const prodDB = mysql.createConnection(dbProdOptions);
 
-module.exports = { db, dbOptions, libDB };
+module.exports = { db, dbOptions, libDB, prodDB, dbProdOptions };

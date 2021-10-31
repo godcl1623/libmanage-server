@@ -14,7 +14,7 @@ const SteamStrategy = require('passport-steam').Strategy;
 const axios = require('axios');
 const igdb = require('igdb-api-node').default;
 require('dotenv').config();
-const { db, dbOptions, libDB } = require('./custom_modules/db');
+const { dbProdOptions, prodDB } = require('./custom_modules/db');
 const { encryptor, decryptor } = require('./custom_modules/aeser');
 const { getRandom } = require('./custom_modules/utils');
 
@@ -68,12 +68,13 @@ app.use(
       maxAge: 60 * 60 * 60 * 1000
     },
     // store: new FileStore()
-    store: new MySQLStore(dbOptions, db)
+    store: new MySQLStore(dbProdOptions, prodDB)
   })
 );
 // app.set('trusy proxy', 1);
-db.connect();
-libDB.connect();
+// db.connect();
+// libDB.connect();
+prodDB.connect();
 
 /* #################### 로그인 서버 #################### */
 
@@ -118,7 +119,7 @@ app.post('/login_process', (req, res) => {
   loginInfo = decryptor(req.body.sofo, process.env.TRACER);
   if (loginInfo.ID !== undefined && loginInfo.PWD !== undefined) {
     loginInfo.salt = bcrypt.getSalt(loginInfo.PWD);
-    db.query(
+    prodDB.query(
       'select * from user_info where user_id=?',
       [loginInfo.ID],
       (error, result) => {
@@ -208,7 +209,7 @@ app.post('/member/register', (req, res) => {
   const genQueryString = string =>
     `select mid from user_info where ${string}=?`;
   const genExists = qString => `select exists (${qString} limit 1) as isExist`;
-  db.query(
+  prodDB.query(
     `
       ${genExists(genQueryString('user_id'))};
       ${genExists(genQueryString('user_nick'))};
@@ -229,7 +230,7 @@ app.post('/member/register', (req, res) => {
           transmitted.nick,
           transmitted.email
         ];
-        db.query(queryString, values, (err, result) => {
+        prodDB.query(queryString, values, (err, result) => {
           if (err) throw err;
           console.log(result);
           res.send('success');
@@ -247,7 +248,7 @@ app.post('/member/find/id', (req, res) => {
     req.body.infoObj,
     process.env.TRACER
   );
-  db.query(
+  prodDB.query(
     'select user_nick, user_id from user_info where user_email=?',
     [queryEmail],
     (error, result) => {
@@ -296,7 +297,7 @@ app.post('/member/find/pwd', (req, res) => {
   );
   const genQueryString = string =>
     `select user_nick from user_info where ${string}=?`;
-  db.query(
+  prodDB.query(
     `
       ${genQueryString('user_id')};
       ${genQueryString('user_email')};
@@ -314,7 +315,7 @@ app.post('/member/find/pwd', (req, res) => {
             userId: queryId,
             ttl: 300
           };
-          db.query(
+          prodDB.query(
             'insert into user_token (token_body, created) values(?, now())',
             [JSON.stringify(authData)]
           );
@@ -352,7 +353,7 @@ app.post('/member/find/pwd', (req, res) => {
 app.post('/member/reset', (req, res) => {
   const { tokenTail, requestedTime } = decryptor(req.body.postData, process.env.TRACER);
   if (tokenTail && requestedTime) {
-    db.query(
+    prodDB.query(
       'select * from user_token where token_body like ?',
       [`%${tokenTail}%`],
       (err, result) => {
@@ -402,13 +403,13 @@ app.post('/member/reset/pwd', (req, res) => {
   const timeDiff = (reqTimeVal - createdTimeVal) / 1000;
   if (userId && newPwd) {
     if (timeDiff <= ttl) {
-      db.query(
+      prodDB.query(
         'update user_info set user_pwd=? where user_id=?',
         [newPwd, userId],
         (err, result) => {
           if (err) throw err;
           if (result.changedRows) {
-            db.query(
+            prodDB.query(
               'delete from user_token where req_id=?',
               [tokenId],
               (err, result) => {
@@ -424,7 +425,7 @@ app.post('/member/reset/pwd', (req, res) => {
         }
       );
     } else {
-      db.query(
+      prodDB.query(
         'delete from user_token where req_id=?',
         [tokenId],
         (err, result) => {
@@ -817,7 +818,7 @@ app.post('/meta_search', (req, res) => {
               false,
               JSON.stringify(data)
             ];
-            libDB.query(queryString, values, (err, result) => {
+            prodDB.query(queryString, values, (err, result) => {
               if (err) {
                 throw err;
               } else {
@@ -827,7 +828,7 @@ app.post('/meta_search', (req, res) => {
           });
         })();
       };
-      libDB.query(`select * from ${requestedUser}`, (err, result) => {
+      prodDB.query(`select * from ${requestedUser}`, (err, result) => {
         // libDB.query(`select * from foo`, (err, result) => {
         if (err) {
           console.log(err);
@@ -851,7 +852,7 @@ app.post('/meta_search', (req, res) => {
             ${columns.seventh}
           );
         `;
-          libDB.query(queryString, (err, result) => {
+          prodDB.query(queryString, (err, result) => {
             if (err) {
               throw err;
             } else {
@@ -896,7 +897,7 @@ app.post('/disconnect', (req, res) => {
     .filter(result => result !== '');
   deletedStoresFilter.forEach(store => {
     const queryString = `select * from ${nickname}`;
-    libDB.query(queryString, (err, result) => {
+    prodDB.query(queryString, (err, result) => {
       console.log('search', err, result);
       if (err) {
         if (err.code === 'ER_NO_SUCH_TABLE') {
@@ -904,7 +905,7 @@ app.post('/disconnect', (req, res) => {
         }
       } else {
         const delQueryString = `delete from ${nickname}`;
-        libDB.query(delQueryString, (err, result) => {
+        prodDB.query(delQueryString, (err, result) => {
           console.log('del', err, result);
           if (err) {
             throw err;
@@ -942,7 +943,7 @@ app.post('/get/db', (req, res) => {
     const { reqUser: nickname } = req.body.reqData;
     if (gameStores !== '') {
       // 추후 스토어 갯수 늘어나면 db 선택식으로 변경하기
-      libDB.query(`select title, cover from ${nickname}`, (err, result) => {
+      prodDB.query(`select title, cover from ${nickname}`, (err, result) => {
         if (err) {
           throw err;
         } else {
@@ -999,18 +1000,18 @@ app.post('/get/meta', (req, res) => {
   //     .request(`/${endpoints}`);
   //   return response;
   // };
-  libDB.query(
+  prodDB.query(
     `select processed from ${reqUser} where title="${selTitle}"`,
     (err, result) => {
       if (result[0].processed === 'true') {
-        libDB.query(
+        prodDB.query(
           `select meta from ${reqUser} where title="${selTitle}"`,
           (err, result) => {
             res.send(result[0].meta);
           }
         );
       } else {
-        libDB.query(
+        prodDB.query(
           `select meta from ${reqUser} where title="${selTitle}"`,
           (err, result) => {
             const originalMeta = JSON.parse(result[0].meta);
@@ -1189,14 +1190,14 @@ app.post('/get/meta', (req, res) => {
               )
               .then(result => {
                 const resultMeta = { ...result, name, summary, totalRating };
-                libDB.query(
+                prodDB.query(
                   `update ${reqUser} set meta=?, processed=? where title="${selTitle}"`,
                   [JSON.stringify(resultMeta), 'true'],
                   err => {
                     if (err) {
                       throw err;
                     }
-                    libDB.query(
+                    prodDB.query(
                       `select meta from ${reqUser} where title="${selTitle}"`,
                       (err, result) => {
                         if (err) {
