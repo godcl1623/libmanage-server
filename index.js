@@ -13,6 +13,7 @@ const passport = require('passport');
 const SteamStrategy = require('passport-steam').Strategy;
 const axios = require('axios');
 const igdb = require('igdb-api-node').default;
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 const { dbProdOptions, prodDB } = require('./custom_modules/db');
 const { encryptor, decryptor } = require('./custom_modules/aeser');
@@ -74,6 +75,7 @@ app.use(
     credentials: true
   })
 );
+app.use(cookieParser('piano'));
 app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded());
 app.use(helmet(), compression());
@@ -91,7 +93,7 @@ app.use(
     store: new MySQLStore(dbProdOptions, prodDB)
   })
 );
-// app.set('trusy proxy', 1);
+app.set('trusy proxy', 1);
 // db.connect();
 // libDB.connect();
 // prodDB.connect();
@@ -162,16 +164,20 @@ app.post('/login_process', (req, res) => {
               req.session.loginInfo = {
                 isLoginSuccessful: true,
                 nickname: dbInfo.user_nick,
-                isGuest: false
+                isGuest: false,
+                sid: req.sessionID
               };
+              console.log('w/o store', req.sessionID, req.session)
               req.session.save(() => res.send(req.session.loginInfo));
             } else {
               req.session.loginInfo = {
                 isLoginSuccessful: true,
                 nickname: dbInfo.user_nick,
                 isGuest: false,
+                sid: req.sessionID,
                 stores: { ...JSON.parse(dbInfo.stores) }
               };
+              console.log('w/ store', req.sessionID, req.session)
               req.session.save(() => res.send(req.session.loginInfo));
             }
           } else {
@@ -207,27 +213,44 @@ app.post('/logout_process', (req, res) => {
 
 app.post('/check_login', (req, res) => {
   // 빌드 전에 삭제
-  console.log('foo :', req.body.message);
+  // console.log('foo :', req);
+  const { comparisonState, info } = req.body.message;
+  const test = JSON.parse(info);
   // console.log(req.session.loginInfo);
-  console.log(req.sessionID)
-  if (req.body.message !== '') {
-    const origin = JSON.stringify(req.session.loginInfo);
-    const compare = JSON.stringify(req.body.message);
-    if (origin !== compare) {
-      req.session.loginInfo = req.body.message;
-      if (req.session.loginInfo) {
-        res.send(req.session.loginInfo);
-      } else {
-        res.send('로그인 정보가 만료됐습니다. 다시 로그인해 주세요.');
-      }
+  // console.log(req.sessionID)
+  // console.log(req.body.message)
+  // console.log(test)
+  // if (comparisonState !== '') {
+  //   const origin = JSON.stringify(req.session.loginInfo);
+  //   const compare = JSON.stringify(req.body.message);
+  //   if (origin !== compare) {
+  //     req.session.loginInfo = req.body.message;
+  //     if (req.session.loginInfo) {
+  //       res.send(req.session.loginInfo);
+  //     } else {
+  //       res.send('로그인 정보가 만료됐습니다. 다시 로그인해 주세요.');
+  //     }
+  //   } else {
+  //     res.send(req.session.loginInfo);
+  //   }
+  // } else if (req.session.loginInfo) {
+  //   res.send(req.session.loginInfo);
+  // } else {
+  //   res.send('check_failed');
+  // }
+  prodDB.query(`select * from sessions where session_id=?`, [test.sid], (req, result) => {
+    const { data } = result[0];
+    const date = new Date();
+    const foo = JSON.parse(data);
+    const bar = new Date(foo.cookie.expires);
+    // console.log(date - bar > foo.cookie.originalMaxAge)
+    // console.log(date, foo.cookie.expires)
+    if (date - bar > 0) {
+      console.log('foo');
     } else {
-      res.send(req.session.loginInfo);
+      res.send(foo.loginInfo);
     }
-  } else if (req.session.loginInfo) {
-    res.send(req.session.loginInfo);
-  } else {
-    res.send('check_failed');
-  }
+  })
 });
 
 app.post('/member/register', (req, res) => {
