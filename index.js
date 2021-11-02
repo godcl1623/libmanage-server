@@ -19,7 +19,6 @@ const { dbProdOptions, prodDB } = require('./custom_modules/db');
 const { encryptor, decryptor } = require('./custom_modules/aeser');
 const { getRandom } = require('./custom_modules/utils');
 
-
 const app = express();
 const port = process.env.PORT || 3001;
 let loginInfo = {};
@@ -68,7 +67,7 @@ const genEmailOptions = (from, to, subject, html) => ({
 //   });
 // }
 
-app.set('port', (process.env.PORT || 3001));
+app.set('port', process.env.PORT || 3001);
 app.use(
   cors({
     origin: true,
@@ -132,8 +131,8 @@ app.post('/login_process', (req, res) => {
                 isGuest: false,
                 sid: req.sessionID
               };
-              console.log('w/o store', req.sessionID, req.session)
-              req.session.save(() => res.send(req.session.loginInfo));
+              // req.session.save(() => res.send(req.session.loginInfo));
+              res.send(req.session.loginInfo);
             } else {
               req.session.loginInfo = {
                 isLoginSuccessful: true,
@@ -142,8 +141,8 @@ app.post('/login_process', (req, res) => {
                 sid: req.sessionID,
                 stores: { ...JSON.parse(dbInfo.stores) }
               };
-              console.log('w/ store', req.sessionID, req.session)
-              req.session.save(() => res.send(req.session.loginInfo));
+              // req.session.save(() => res.send(req.session.loginInfo));
+              res.send(req.session.loginInfo);
             }
           } else {
             res.send('ID 혹은 비밀번호가 잘못됐습니다.');
@@ -165,14 +164,26 @@ app.post('/login_process', (req, res) => {
 });
 
 app.post('/logout_process', (req, res) => {
-  if (req.body.message === 'foo') {
+  const { reqMsg, million } = req.body.message;
+  if (reqMsg === 'logout') {
+    const sentOne = JSON.parse(decryptor(million, process.env.TRACER));
+    const { sid } = sentOne;
+    console.log(sid);
     const logoutInfo = {
       isLoginSuccessful: false,
       nickname: ''
     };
     req.session.destroy(() => {
-      // prodDB.query('')
-      res.send(logoutInfo);
+      prodDB.query(
+        'delete from sessions where session_id=?',
+        [sentOne.sid],
+        (err, result) => {
+          if (err) throw err;
+          if (result) {
+            res.send(logoutInfo);
+          }
+        }
+      );
     });
   }
 });
@@ -186,69 +197,81 @@ app.post('/check_login', (req, res) => {
   // 만약 저장된 세션이 없을 경우: 로그인 유도
   if (million === null) {
     res.send('no_sessions');
-  // 사용자로부터 세션이 넘어왔을 경우
+    // 사용자로부터 세션이 넘어왔을 경우
   } else {
     // 세션을 parse하여 DB에 해당 세션이 존재하는지 확인(로그인 시점에 부여된 세션id 사용)
     const sentOne = JSON.parse(decryptor(million, process.env.TRACER));
-    prodDB.query(`select * from sessions where session_id=?`, [sentOne.sid], (err, result) => {
-      if (err) throw err;
-      // DB에 사용자 세션이 존재할 경우
-      // console.log(result)
-      if (result[0]) {
-        const { data } = result[0];
-        // DB에 저장된 사용자 세션 parse, 쿠키에 저장된 만료 시점을 Date 객체에 넣어 계산 가능하도록 설정
-        const gotOne = JSON.parse(data);
-        const thatTime = new Date(gotOne.cookie.expires);
-        // 로그인 체크를 수행하는 시점
-        const thisTime = new Date();
-        // 로그인 체크 수행 시점이 DB에 저장된 만료 시점보다 늦음 = 세션이 만료됨
-        // 세션 만료 메세지 + 기존에 저장된 세션 삭제(브라우저+DB) + 로그인 유도
-        if (thisTime - thatTime > 0) {
-          prodDB.query('delete from sessions where session_id=?', [sentOne.sid], (err, result) => {
-            if (err) throw err;
-            if (result) {
-              res.send('session_expired');
-            }
-          })
-        // 세션이 아직 만료되지 않음 - 처리해야 할 상황 목록
-        /*
+    prodDB.query(
+      `select * from sessions where session_id=?`,
+      [sentOne.sid],
+      (err, result) => {
+        if (err) throw err;
+        // DB에 사용자 세션이 존재할 경우
+        // console.log(result)
+        if (result[0]) {
+          const { data } = result[0];
+          // DB에 저장된 사용자 세션 parse, 쿠키에 저장된 만료 시점을 Date 객체에 넣어 계산 가능하도록 설정
+          const gotOne = JSON.parse(data);
+          const thatTime = new Date(gotOne.cookie.expires);
+          // 로그인 체크를 수행하는 시점
+          const thisTime = new Date();
+          // 로그인 체크 수행 시점이 DB에 저장된 만료 시점보다 늦음 = 세션이 만료됨
+          // 세션 만료 메세지 + 기존에 저장된 세션 삭제(브라우저+DB) + 로그인 유도
+          if (thisTime - thatTime > 0) {
+            prodDB.query(
+              'delete from sessions where session_id=?',
+              [sentOne.sid],
+              (err, result) => {
+                if (err) throw err;
+                if (result) {
+                  res.send('session_expired');
+                }
+              }
+            );
+            // 세션이 아직 만료되지 않음 - 처리해야 할 상황 목록
+            /*
           1. [comparisonState !== ''] = 스토어 연동이 발생해 사용자 정보 갱신이 필요함
             (1) comparisonState로 넘어온 사용자 정보가 기존에 저장된 정보와 일치 -> 기존 로그인 정보 전송
             (2) comparisonState로 넘어온 정보가 기존 정보와 불일치 -> 정보 갱신 후 DB에 갱신된 정보 저장 및 갱신된 정보 전송
           2. [comparisonState === ''] = 일반적인 로그인 체크
           3. 그 외: 로그인이 풀린 것으로 간주하여 로그인 체크 유도
         */
-        } else if (comparisonState !== '') {
-          if (data !== million) {
+          } else if (comparisonState !== '') {
+            if (data !== million) {
+              prodDB.query(
+                'update sessions set data=? where session_id=?',
+                [sentOne.loginInfo, sentOne.sid],
+                (err, result) => {
+                  if (err) throw err;
+                  if (result) {
+                    res.send(gotOne.loginInfo);
+                  }
+                  // res.send('check_failed');
+                }
+              );
+            } else {
+              res.send(gotOne.loginInfo);
+            }
+          } else if (gotOne.loginInfo) {
+            res.send(gotOne.loginInfo);
+          } else {
             prodDB.query(
-              'update sessions set data=? where session_id=?',
-              [sentOne.loginInfo, sentOne.sid],
+              'delete from sessions where session_id=?',
+              [sentOne.sid],
               (err, result) => {
                 if (err) throw err;
                 if (result) {
-                  res.send(gotOne.loginInfo);
+                  res.send('check_failed');
                 }
-                // res.send('check_failed');
               }
             );
-          } else {
-            res.send(gotOne.loginInfo);
           }
-        } else if (gotOne.loginInfo) {
-          res.send(gotOne.loginInfo);
+          // DB에 사용자 세션이 존재하지 않을 경우 - 기존에 저장된 세션을 삭제하고 로그인 유도
         } else {
-          prodDB.query('delete from sessions where session_id=?', [sentOne.sid], (err, result) => {
-            if (err) throw err;
-            if (result) {
-              res.send('check_failed');
-            }
-          })
+          res.send('session_expired');
         }
-      // DB에 사용자 세션이 존재하지 않을 경우 - 기존에 저장된 세션을 삭제하고 로그인 유도
-      } else {
-        res.send('session_expired');
       }
-    })
+    );
   }
 });
 
@@ -400,7 +423,10 @@ app.post('/member/find/pwd', (req, res) => {
 });
 
 app.post('/member/reset', (req, res) => {
-  const { tokenTail, requestedTime } = decryptor(req.body.postData, process.env.TRACER);
+  const { tokenTail, requestedTime } = decryptor(
+    req.body.postData,
+    process.env.TRACER
+  );
   if (tokenTail && requestedTime) {
     prodDB.query(
       'select * from user_token where token_body like ?',
@@ -722,7 +748,7 @@ app.post('/meta_search', (req, res) => {
       statObj.total = rawData.length;
       // rawData.slice(rawData.length - 30,rawData.length).forEach((steamAppId, index) => {
       rawData.slice(0 - 5).forEach((steamAppId, index) => {
-      // rawData.forEach((steamAppId, index) => {
+        // rawData.forEach((steamAppId, index) => {
         setTimeout(() => {
           filterFunc(steamAppId).then(result => {
             if (result.data[0] === undefined) {
@@ -739,7 +765,7 @@ app.post('/meta_search', (req, res) => {
             );
             // if (temp.length + fail.length === 30) {
             if (temp.length + fail.length === 5) {
-            // if (temp.length + fail.length === rawData.length) {
+              // if (temp.length + fail.length === rawData.length) {
               statObj.total = fail.length;
               statObj.count = 0;
               statObj.status = '2';
@@ -992,13 +1018,16 @@ app.post('/get/db', (req, res) => {
     const { reqUser: nickname } = req.body.reqData;
     if (gameStores !== '') {
       // 추후 스토어 갯수 늘어나면 db 선택식으로 변경하기
-      prodDB.query(`select title, cover from user_lib_${nickname}`, (err, result) => {
-        if (err) {
-          throw err;
-        } else {
-          res.send(result);
+      prodDB.query(
+        `select title, cover from user_lib_${nickname}`,
+        (err, result) => {
+          if (err) {
+            throw err;
+          } else {
+            res.send(result);
+          }
         }
-      });
+      );
     } else {
       res.send('pending');
     }
@@ -1265,4 +1294,6 @@ app.post('/get/meta', (req, res) => {
   );
 });
 
-app.listen(app.get('port'), () => console.log(`server is running at port ${app.get('port')}`));
+app.listen(app.get('port'), () =>
+  console.log(`server is running at port ${app.get('port')}`)
+);
