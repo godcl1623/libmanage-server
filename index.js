@@ -334,7 +334,7 @@ app.post('/member/find/id', (req, res) => {
             요청하신 아이디는 다음과 같습니다.</p>
             <p>아이디: ${result[0].user_id}</p>
             <p>비밀번호를 찾으시려면 아래 링크를 클릭해주세요.</p>
-            <p><a href="http://localhost:3000/member/find/pwd">링크</a></p>
+            <p><a href="https://godcl1623-libmanage.herokuapp.com/member/find/pwd">링크</a></p>
           `;
           const successMsg =
             '메일이 발송되었습니다.\n메세지 함을 확인해주세요.';
@@ -392,7 +392,6 @@ app.post('/member/find/pwd', (req, res) => {
             today.setHours(today.getHours()+9);
             return today.toISOString().replace('T', ' ').substring(0, 19);
           };
-          console.log(timeStamp());
           prodDB.query(
             'insert into user_token (token_body, created) values(?, ?)',
             [JSON.stringify(authData), timeStamp()]
@@ -402,7 +401,7 @@ app.post('/member/find/pwd', (req, res) => {
             <p>안녕하세요 ${nickFromId}님,<br>
             비밀번호 초기화 안내 메일을 보내드립니다.</p>
             <p>비밀번호를 초기화하시려면 아래 링크를 클릭해주세요.</p>
-            <p><a href="http://localhost:3000/member/reset/${token}">링크</a></p>
+            <p><a href="https://godcl1623-libmanage.herokuapp.com/member/reset/${token}">링크</a></p>
           `;
           const emailOptions = genEmailOptions(
             `관리자 <${process.env.SWALLOWAC}>`,
@@ -600,7 +599,7 @@ app.get(
           .post(`http://localhost:${port}/api/connect`, { execute: 'order66' })
           .then(result => {
             apiCredential = result.data;
-            res.redirect('http://localhost:3000/api/progress');
+            res.redirect('https://godcl1623-libmanage.herokuapp.com/api/progress');
           });
       });
   }
