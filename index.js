@@ -48,25 +48,25 @@ const genEmailOptions = (from, to, subject, html) => ({
   subject,
   html
 });
-const handleDBConnection = () => {
-  // prodDB.connect(err => {
-    prodDB.getConnection(err => {
-    if (err) {
-      console.log(`error when connecting to db: ${err}`);
-      setTimeout(handleDBConnection, 2000);
-    }
-  });
+// const handleDBConnection = () => {
+//   // prodDB.connect(err => {
+//     prodDB.getConnection(err => {
+//     if (err) {
+//       console.log(`error when connecting to db: ${err}`);
+//       setTimeout(handleDBConnection, 2000);
+//     }
+//   });
 
-  prodDB.on('error', err => {
-    console.log(`db error: ${err}`);
-    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-      return handleDBConnection();
-    // eslint-disable-next-line no-else-return
-    } else {
-      throw err;
-    }
-  });
-}
+//   prodDB.on('error', err => {
+//     console.log(`db error: ${err}`);
+//     if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+//       return handleDBConnection();
+//     // eslint-disable-next-line no-else-return
+//     } else {
+//       throw err;
+//     }
+//   });
+// }
 
 app.set('port', (process.env.PORT || 3001));
 app.use(
@@ -77,7 +77,6 @@ app.use(
 );
 app.use(cookieParser('piano'));
 app.use(bodyParser.json());
-// app.use(bodyParser.urlencoded());
 app.use(helmet(), compression());
 app.use(
   session({
@@ -89,7 +88,6 @@ app.use(
       secure: true,
       maxAge: 60 * 60 * 60 * 1000
     },
-    // store: new FileStore()
     store: new MySQLStore(dbProdOptions, prodDB)
   })
 );
@@ -110,39 +108,6 @@ app.set('trusy proxy', 1);
 app.get('/', (req, res) => {
   res.send('login server');
 });
-
-// app.post('/test_get', (req, res) => {
-//   const transmitted = decryptor(req.body.foo, process.env.TRACER);
-//   const temp = {};
-//   const genQueryString = string =>
-//     `select mid from user_info where ${string}=?`;
-//   const genExists = qString => `select exists (${qString} limit 1) as isExist`;
-//   db.query(
-//     `
-//       ${genExists(genQueryString('user_id'))};
-//       ${genExists(genQueryString('user_nick'))};
-//       ${genExists(genQueryString('user_email'))};
-//     `,
-//     [transmitted.id, transmitted.nick, transmitted.email],
-//     (error, result) => {
-//       const checkResult = result.map(packet => packet[0].isExist);
-//       if (error) throw error;
-//       if (!checkResult.includes(1)) {
-//         // 등록 쿼리문 작성
-//         console.log('doh!');
-//         res.send(encryptor(transmitted, process.env.TRACER));
-//       } else {
-//         [temp.id, temp.nick, temp.email] = checkResult;
-//         console.log(temp);
-//         res.send(encryptor(JSON.stringify(temp), process.env.TRACER));
-//       }
-//     }
-//   );
-// });
-
-// app.post('/test_post', (req, res) => {
-//   console.log(req);
-// });
 
 app.post('/login_process', (req, res) => {
   loginInfo = decryptor(req.body.sofo, process.env.TRACER);
@@ -206,51 +171,85 @@ app.post('/logout_process', (req, res) => {
       nickname: ''
     };
     req.session.destroy(() => {
+      // prodDB.query('')
       res.send(logoutInfo);
     });
   }
 });
 
 app.post('/check_login', (req, res) => {
-  // 빌드 전에 삭제
-  // console.log('foo :', req);
-  const { comparisonState, info } = req.body.message;
-  const test = JSON.parse(info);
-  // console.log(req.session.loginInfo);
-  // console.log(req.sessionID)
+  // 쿠키를 사용할 수 없는 상황이므로 DB에 저장된 세션 이용
+  // comparisonState: 스토어 연동 이후 사용자 정보 갱신을 위한 객체
+  // info: 사용자 브라우저의 로컬 저장소에 저장된 세션
+  const { comparisonState, million } = req.body.message;
   // console.log(req.body.message)
-  // console.log(test)
-  // if (comparisonState !== '') {
-  //   const origin = JSON.stringify(req.session.loginInfo);
-  //   const compare = JSON.stringify(req.body.message);
-  //   if (origin !== compare) {
-  //     req.session.loginInfo = req.body.message;
-  //     if (req.session.loginInfo) {
-  //       res.send(req.session.loginInfo);
-  //     } else {
-  //       res.send('로그인 정보가 만료됐습니다. 다시 로그인해 주세요.');
-  //     }
-  //   } else {
-  //     res.send(req.session.loginInfo);
-  //   }
-  // } else if (req.session.loginInfo) {
-  //   res.send(req.session.loginInfo);
-  // } else {
-  //   res.send('check_failed');
-  // }
-  prodDB.query(`select * from sessions where session_id=?`, [test.sid], (req, result) => {
-    const { data } = result[0];
-    const date = new Date();
-    const foo = JSON.parse(data);
-    const bar = new Date(foo.cookie.expires);
-    // console.log(date - bar > foo.cookie.originalMaxAge)
-    // console.log(date, foo.cookie.expires)
-    if (date - bar > 0) {
-      console.log('foo');
-    } else {
-      res.send(foo.loginInfo);
-    }
-  })
+  // 만약 저장된 세션이 없을 경우: 로그인 유도
+  if (million === null) {
+    res.send('no_sessions');
+  // 사용자로부터 세션이 넘어왔을 경우
+  } else {
+    // 세션을 parse하여 DB에 해당 세션이 존재하는지 확인(로그인 시점에 부여된 세션id 사용)
+    const sentOne = JSON.parse(decryptor(million, process.env.TRACER));
+    prodDB.query(`select * from sessions where session_id=?`, [sentOne.sid], (err, result) => {
+      if (err) throw err;
+      // DB에 사용자 세션이 존재할 경우
+      // console.log(result)
+      if (result[0]) {
+        const { data } = result[0];
+        // DB에 저장된 사용자 세션 parse, 쿠키에 저장된 만료 시점을 Date 객체에 넣어 계산 가능하도록 설정
+        const gotOne = JSON.parse(data);
+        const thatTime = new Date(gotOne.cookie.expires);
+        // 로그인 체크를 수행하는 시점
+        const thisTime = new Date();
+        // 로그인 체크 수행 시점이 DB에 저장된 만료 시점보다 늦음 = 세션이 만료됨
+        // 세션 만료 메세지 + 기존에 저장된 세션 삭제(브라우저+DB) + 로그인 유도
+        if (thisTime - thatTime > 0) {
+          prodDB.query('delete from sessions where session_id=?', [sentOne.sid], (err, result) => {
+            if (err) throw err;
+            if (result) {
+              res.send('session_expired');
+            }
+          })
+        // 세션이 아직 만료되지 않음 - 처리해야 할 상황 목록
+        /*
+          1. [comparisonState !== ''] = 스토어 연동이 발생해 사용자 정보 갱신이 필요함
+            (1) comparisonState로 넘어온 사용자 정보가 기존에 저장된 정보와 일치 -> 기존 로그인 정보 전송
+            (2) comparisonState로 넘어온 정보가 기존 정보와 불일치 -> 정보 갱신 후 DB에 갱신된 정보 저장 및 갱신된 정보 전송
+          2. [comparisonState === ''] = 일반적인 로그인 체크
+          3. 그 외: 로그인이 풀린 것으로 간주하여 로그인 체크 유도
+        */
+        } else if (comparisonState !== '') {
+          if (data !== million) {
+            prodDB.query(
+              'update sessions set data=? where session_id=?',
+              [sentOne.loginInfo, sentOne.sid],
+              (err, result) => {
+                if (err) throw err;
+                if (result) {
+                  res.send(gotOne.loginInfo);
+                }
+                // res.send('check_failed');
+              }
+            );
+          } else {
+            res.send(gotOne.loginInfo);
+          }
+        } else if (gotOne.loginInfo) {
+          res.send(gotOne.loginInfo);
+        } else {
+          prodDB.query('delete from sessions where session_id=?', [sentOne.sid], (err, result) => {
+            if (err) throw err;
+            if (result) {
+              res.send('check_failed');
+            }
+          })
+        }
+      // DB에 사용자 세션이 존재하지 않을 경우 - 기존에 저장된 세션을 삭제하고 로그인 유도
+      } else {
+        res.send('session_expired');
+      }
+    })
+  }
 });
 
 app.post('/member/register', (req, res) => {
