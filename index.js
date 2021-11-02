@@ -387,9 +387,15 @@ app.post('/member/find/pwd', (req, res) => {
             userId: queryId,
             ttl: 300
           };
+          const timeStamp = () => {
+            const today = new Date();
+            today.setHours(today.getHours()+9);
+            return today.toISOString().replace('T', ' ').substring(0, 19);
+          };
+          console.log(timeStamp());
           prodDB.query(
-            'insert into user_token (token_body, created) values(?, now())',
-            [JSON.stringify(authData)]
+            'insert into user_token (token_body, created) values(?, ?)',
+            [JSON.stringify(authData), timeStamp()]
           );
           const subject = '비밀번호 찾기 요청 결과입니다.';
           const html = `
