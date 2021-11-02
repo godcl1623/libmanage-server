@@ -884,7 +884,7 @@ app.post('/meta_search', (req, res) => {
             seventh: 'primary key (libid)'
           };
           const queryString = `
-          create table ${requestedUser} (
+          create table user_lib_${requestedUser} (
             ${columns.first},
             ${columns.second},
             ${columns.third},
@@ -980,6 +980,7 @@ app.post('/disconnect', (req, res) => {
 
 app.post('/get/db', (req, res) => {
   // console.log(req.body.reqData)
+  console.log(req.body)
   if (req.body.reqData.reqLibs !== undefined) {
     const [gameStores] = req.body.reqData.reqLibs;
     const { reqUser: nickname } = req.body.reqData;
