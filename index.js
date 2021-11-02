@@ -528,8 +528,8 @@ app.post('/member/reset/pwd', (req, res) => {
 passport.use(
   new SteamStrategy(
     {
-      returnURL: `http://localhost:${port}/auth/steam/return`,
-      realm: `http://localhost:${port}/`,
+      returnURL: `https://libmanage-server.herokuapp.com/auth/steam/return`,
+      realm: `https://libmanage-server.herokuapp.com/`,
       apiKey: process.env.CYBER
     },
     (identifier, profile, done) => {
@@ -596,7 +596,7 @@ app.get(
       })
       .then(() => {
         axios
-          .post(`http://localhost:${port}/api/connect`, { execute: 'order66' })
+          .post(`https://libmanage-server.herokuapp.com/api/connect`, { execute: 'order66' })
           .then(result => {
             apiCredential = result.data;
             res.redirect('https://godcl1623-libmanage.herokuapp.com/api/progress');
@@ -609,49 +609,11 @@ app.get('/login', (req, res) => {
   res.send('failed');
 });
 
-// app.get('/', (req, res) => {
-//   res.send('api server');
-// });
-
-// app.post('/test', (req, res) => {
-//   libDB.query(`select * from dee`, (err, result) => {
-//     if (err) {
-//       const columns = {
-//         first: 'libid int not null auto_increment',
-//         second: 'title text not null',
-//         third: 'cover text null',
-//         fourth: 'igdb_url text not null',
-//         fifth: 'meta text not null',
-//         sixth: 'primary key (libid)'
-//       };
-//       const queryString = `
-//         create table dee (
-//           ${columns.first},
-//           ${columns.second},
-//           ${columns.third},
-//           ${columns.fourth},
-//           ${columns.fifth},
-//           ${columns.sixth}
-//         );
-//       `;
-//       libDB.query(queryString, (err, result) => {
-//         if (err) {
-//           throw err;
-//         } else {
-//           console.log(result);
-//         }
-//       });
-//     } else {
-//       console.log('result is', result);
-//     }
-//   });
-// });
-
 app.post('/api/search', (req, res) => {
   const { reqUserInfo } = req.body;
   requestedUser = reqUserInfo.nickname;
   axios
-    .post(`http://localhost:${port}/meta_search`, { apiCred: apiCredential })
+    .post(`http://https://libmanage-server.herokuapp.com/meta_search`, { apiCred: apiCredential })
     .then(searchResult => {
       if (searchResult.data === true) {
         console.log('DB write completed. Return to app service.');
