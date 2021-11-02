@@ -613,7 +613,7 @@ app.post('/api/search', (req, res) => {
   const { reqUserInfo } = req.body;
   requestedUser = reqUserInfo.nickname;
   axios
-    .post(`http://https://libmanage-server.herokuapp.com/meta_search`, { apiCred: apiCredential })
+    .post(`https://libmanage-server.herokuapp.com/meta_search`, { apiCred: apiCredential })
     .then(searchResult => {
       if (searchResult.data === true) {
         console.log('DB write completed. Return to app service.');
