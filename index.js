@@ -982,23 +982,27 @@ app.post('/get/db', (req, res) => {
   // console.log(req.body.reqData)
   console.log(req.body)
   if (req.body.reqData.reqLibs !== undefined) {
-    const [gameStores] = req.body.reqData.reqLibs;
-    const { reqUser: nickname } = req.body.reqData;
-    if (gameStores !== '') {
-      // 추후 스토어 갯수 늘어나면 db 선택식으로 변경하기
-      prodDB.query(
-        `select title, cover from user_lib_${nickname}`,
-        (err, result) => {
-          if (err) {
-            throw err;
-          } else {
-            res.send(result);
+    if (req.body.reqData.reqLibs[0]) {
+      const [gameStores] = req.body.reqData.reqLibs;
+      const { reqUser: nickname } = req.body.reqData;
+      if (gameStores !== '') {
+        // 추후 스토어 갯수 늘어나면 db 선택식으로 변경하기
+        prodDB.query(
+          `select title, cover from user_lib_${nickname}`,
+          (err, result) => {
+            if (err) {
+              throw err;
+            } else {
+              res.send(result);
+            }
           }
-        }
-      );
-    } else {
-      res.send('pending');
+        );
+      } else {
+        res.send('no_result');
+      }
     }
+  } else {
+    res.send('no_result');
   }
 });
 
