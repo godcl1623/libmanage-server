@@ -238,9 +238,17 @@ app.post('/check_login', (req, res) => {
         */
           } else if (comparisonState !== '') {
             if (data !== million) {
+              const newSession = {
+                cookie: {
+                  ...gotOne.cookie
+                },
+                loginInfo: {
+                  ...sentOne
+                }
+              }
               prodDB.query(
                 'update sessions set data=? where session_id=?',
-                [JSON.stringify(sentOne), sentOne.sid],
+                [JSON.stringify(newSession), sentOne.sid],
                 (err, result) => {
                   if (err) throw err;
                   if (result) {
