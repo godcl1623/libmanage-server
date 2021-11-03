@@ -240,7 +240,7 @@ app.post('/check_login', (req, res) => {
             if (data !== million) {
               prodDB.query(
                 'update sessions set data=? where session_id=?',
-                [sentOne, sentOne.sid],
+                [JSON.stringify(sentOne), sentOne.sid],
                 (err, result) => {
                   if (err) throw err;
                   if (result) {
