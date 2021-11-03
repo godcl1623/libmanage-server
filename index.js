@@ -201,6 +201,7 @@ app.post('/check_login', (req, res) => {
   } else {
     // 세션을 parse하여 DB에 해당 세션이 존재하는지 확인(로그인 시점에 부여된 세션id 사용)
     const sentOne = JSON.parse(decryptor(million, process.env.TRACER));
+    console.log(sentOne);
     prodDB.query(
       `select * from sessions where session_id=?`,
       [sentOne.sid],
