@@ -90,7 +90,7 @@ app.use(
     store: new MySQLStore(dbProdOptions, prodDB)
   })
 );
-app.set('trusy proxy', 1);
+// app.set('trusy proxy', 1);
 // db.connect();
 // libDB.connect();
 // prodDB.connect();
