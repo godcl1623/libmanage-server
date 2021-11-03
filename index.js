@@ -851,7 +851,7 @@ app.post('/meta_search', (req, res) => {
         (() => {
           const columns = 'title, cover, igdb_url, processed, meta';
           // const queryString = `insert into foo (${columns}) values(?, ?, ?, ?)`;
-          const queryString = `insert into ${requestedUser} (${columns}) values(?, ?, ?, ?, ?)`;
+          const queryString = `insert into user_lib_${requestedUser} (${columns}) values(?, ?, ?, ?, ?)`;
           rawData.forEach((data, index) => {
             const values = [
               titles[index],
@@ -870,7 +870,7 @@ app.post('/meta_search', (req, res) => {
           });
         })();
       };
-      prodDB.query(`select * from ${requestedUser}`, (err, result) => {
+      prodDB.query(`select * from user_lib_${requestedUser}`, (err, result) => {
         // libDB.query(`select * from foo`, (err, result) => {
         if (err) {
           console.log(err);
