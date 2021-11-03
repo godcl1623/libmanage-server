@@ -1059,18 +1059,18 @@ app.post('/get/meta', (req, res) => {
   //   return response;
   // };
   prodDB.query(
-    `select processed from ${reqUser} where title="${selTitle}"`,
+    `select processed from user_lib_${reqUser} where title="${selTitle}"`,
     (err, result) => {
       if (result[0].processed === 'true') {
         prodDB.query(
-          `select meta from ${reqUser} where title="${selTitle}"`,
+          `select meta from user_lib_${reqUser} where title="${selTitle}"`,
           (err, result) => {
             res.send(result[0].meta);
           }
         );
       } else {
         prodDB.query(
-          `select meta from ${reqUser} where title="${selTitle}"`,
+          `select meta from user_lib_${reqUser} where title="${selTitle}"`,
           (err, result) => {
             const originalMeta = JSON.parse(result[0].meta);
             // console.log(originalMeta)
@@ -1249,14 +1249,14 @@ app.post('/get/meta', (req, res) => {
               .then(result => {
                 const resultMeta = { ...result, name, summary, totalRating };
                 prodDB.query(
-                  `update ${reqUser} set meta=?, processed=? where title="${selTitle}"`,
+                  `update user_lib_${reqUser} set meta=?, processed=? where title="${selTitle}"`,
                   [JSON.stringify(resultMeta), 'true'],
                   err => {
                     if (err) {
                       throw err;
                     }
                     prodDB.query(
-                      `select meta from ${reqUser} where title="${selTitle}"`,
+                      `select meta from user_lib_${reqUser} where title="${selTitle}"`,
                       (err, result) => {
                         if (err) {
                           throw err;
