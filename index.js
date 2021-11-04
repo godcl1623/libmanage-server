@@ -254,7 +254,7 @@ app.post('/check_login', (req, res) => {
                 (err, result) => {
                   if (err) throw err;
                   if (result) {
-                    res.send(gotOne.loginInfo);
+                    res.send(newSession.loginInfo);
                   }
                   // res.send('check_failed');
                 }
