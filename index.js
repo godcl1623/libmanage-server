@@ -646,6 +646,7 @@ app.post('/api/search', (req, res) => {
                 }
               }
             });
+            statObj.total = 0;
           }
         );
       } else {
@@ -723,8 +724,8 @@ app.post('/meta_search', (req, res) => {
       const temp = [];
       const fail = [];
       statObj.total = rawData.length;
-      rawData.slice(rawData.length - 30,rawData.length).forEach((steamAppId, index) => {
-      // rawData.slice(0 - 5).forEach((steamAppId, index) => {
+      // rawData.slice(rawData.length - 30,rawData.length).forEach((steamAppId, index) => {
+      rawData.slice(0 - 5).forEach((steamAppId, index) => {
       // rawData.forEach((steamAppId, index) => {
         setTimeout(() => {
           filterFunc(steamAppId).then(result => {
@@ -740,8 +741,8 @@ app.post('/meta_search', (req, res) => {
                 temp.length + fail.length
               }/${rawData.length}`
             );
-            if (temp.length + fail.length === 30) {
-            // if (temp.length + fail.length === 5) {
+            // if (temp.length + fail.length === 30) {
+            if (temp.length + fail.length === 5) {
             // if (temp.length + fail.length === rawData.length) {
               statObj.total = fail.length;
               statObj.count = 0;
