@@ -246,6 +246,7 @@ app.post('/check_login', (req, res) => {
                   ...sentOne
                 }
               }
+              console.log('newSession', JSON.stringify(newSession));
               prodDB.query(
                 'update sessions set data=? where session_id=?',
                 [JSON.stringify(newSession), sentOne.sid],
@@ -721,9 +722,9 @@ app.post('/meta_search', (req, res) => {
       const temp = [];
       const fail = [];
       statObj.total = rawData.length;
-      // rawData.slice(rawData.length - 30,rawData.length).forEach((steamAppId, index) => {
-      rawData.slice(0 - 5).forEach((steamAppId, index) => {
-        // rawData.forEach((steamAppId, index) => {
+      rawData.slice(rawData.length - 30,rawData.length).forEach((steamAppId, index) => {
+      // rawData.slice(0 - 5).forEach((steamAppId, index) => {
+      // rawData.forEach((steamAppId, index) => {
         setTimeout(() => {
           filterFunc(steamAppId).then(result => {
             if (result.data[0] === undefined) {
@@ -738,9 +739,9 @@ app.post('/meta_search', (req, res) => {
                 temp.length + fail.length
               }/${rawData.length}`
             );
-            // if (temp.length + fail.length === 30) {
-            if (temp.length + fail.length === 5) {
-              // if (temp.length + fail.length === rawData.length) {
+            if (temp.length + fail.length === 30) {
+            // if (temp.length + fail.length === 5) {
+            // if (temp.length + fail.length === rawData.length) {
               statObj.total = fail.length;
               statObj.count = 0;
               statObj.status = '2';
@@ -996,7 +997,7 @@ app.post('/get/db', (req, res) => {
       if (gameStores !== '') {
         // 추후 스토어 갯수 늘어나면 db 선택식으로 변경하기
         prodDB.query(
-          `select title, cover from user_lib_${nickname}`,
+          `select title, cover from user_lib_${nickname} order by title asc`,
           (err, result) => {
             if (err) {
               throw err;
