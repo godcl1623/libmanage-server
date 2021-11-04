@@ -237,19 +237,20 @@ app.post('/check_login', (req, res) => {
           3. 그 외: 로그인이 풀린 것으로 간주하여 로그인 체크 유도
         */
           } else if (comparisonState !== '') {
-            if (data !== million) {
-              const newSession = {
-                cookie: {
-                  ...gotOne.cookie
-                },
-                loginInfo: {
-                  ...sentOne
-                }
+            const newSession = {
+              cookie: {
+                ...gotOne.cookie
+              },
+              loginInfo: {
+                ...comparisonState
               }
-              console.log('newSession', JSON.stringify(newSession));
+            };
+            const compare = JSON.stringify(newSession);
+            if (data !== compare) {
+              // console.log('newSession', JSON.stringify(newSession));
               prodDB.query(
                 'update sessions set data=? where session_id=?',
-                [JSON.stringify(newSession), sentOne.sid],
+                [compare, sentOne.sid],
                 (err, result) => {
                   if (err) throw err;
                   if (result) {
