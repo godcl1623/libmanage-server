@@ -263,7 +263,12 @@ app.post('/check_login', (req, res) => {
               res.send(gotOne.loginInfo);
             }
           } else if (gotOne.loginInfo) {
-            res.send(gotOne.loginInfo);
+            const compare = decryptor(million, process.env.TRACER);
+            if (data !== compare) {
+              res.send(gotOne.loginInfo);
+            } else {
+              res.send(sentOne);
+            }
           } else {
             prodDB.query(
               'delete from sessions where session_id=?',
