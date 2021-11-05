@@ -538,8 +538,10 @@ app.post('/member/reset/pwd', (req, res) => {
 passport.use(
   new SteamStrategy(
     {
-      returnURL: `https://libmanage-server.herokuapp.com/auth/steam/return`,
-      realm: `https://libmanage-server.herokuapp.com/`,
+      // returnURL: `https://libmanage-server.herokuapp.com/auth/steam/return`,
+      returnURL: `http://localhost:3001/auth/steam/return`,
+      // realm: `https://libmanage-server.herokuapp.com/`,
+      realm: `http://localhost:3001/`,
       apiKey: process.env.CYBER
     },
     (identifier, profile, done) => {
@@ -606,10 +608,12 @@ app.get(
       })
       .then(() => {
         axios
-          .post(`https://libmanage-server.herokuapp.com/api/connect`, { execute: 'order66' })
+          // .post(`https://libmanage-server.herokuapp.com/api/connect`, { execute: 'order66' })
+          .post(`http://localhost:3001/api/connect`, { execute: 'order66' })
           .then(result => {
             apiCredential = result.data;
-            res.redirect('https://godcl1623-libmanage.herokuapp.com/api/progress');
+            // res.redirect('https://godcl1623-libmanage.herokuapp.com/api/progress');
+            res.redirect('https://godcl1623.loca.lt/api/progress');
           });
       });
   }
@@ -623,7 +627,8 @@ app.post('/api/search', (req, res) => {
   const { reqUserInfo } = req.body;
   requestedUser = reqUserInfo.nickname;
   axios
-    .post(`https://libmanage-server.herokuapp.com/meta_search`, { apiCred: apiCredential })
+    // .post(`https://libmanage-server.herokuapp.com/meta_search`, { apiCred: apiCredential })
+    .post(`http://localhost:3001/meta_search`, { apiCred: apiCredential })
     .then(searchResult => {
       if (searchResult.data === true) {
         console.log('DB write completed. Return to app service.');
@@ -688,20 +693,12 @@ app.post('/meta_search', (req, res) => {
   // 1. 스팀 게임별 고유 id와 IGDB 사이트에 등록된 스팀 url 대조 함수 - IGDB 고유 게임 아이디 이용 예정
   const steamURLSearchQuery = async steamAppId => {
     const response = await client
-      .fields(['*'])
-      .where(`category = 13 & url = *"/${steamAppId}"`)
-      .request('/websites');
+      .fields(['game'])
+      .where(`category = 1 & uid = "${steamAppId}"`)
+      .request('/external_games');
     return response;
   };
-  // 2. 스팀 url 중 1과 다른 형식의 게임들 검색 함수 - IGDB 고유 게임 아이디 이용 예정
-  const steamURLException = async steamAppId => {
-    const response = await client
-      .fields(['*'])
-      .where(`category = 13 & url = *"/${steamAppId}/"*`)
-      .request('/websites');
-    return response;
-  };
-  // 3. IGDB 아이디를 이용한 게임 메타데이터 검색 함수
+  // 2. IGDB 아이디를 이용한 게임 메타데이터 검색 함수
   const igdbIDSearch = async igdbID => {
     const response = await client
       .fields(['*'])
@@ -710,7 +707,7 @@ app.post('/meta_search', (req, res) => {
       .request('/games');
     return response;
   };
-  // 4. 게임 표지 검색 함수
+  // 3. 게임 표지 검색 함수
   const coverSearch = async igdbCoverID => {
     const response = await client
       .fields(['*'])
@@ -718,17 +715,18 @@ app.post('/meta_search', (req, res) => {
       .request('/covers');
     return response;
   };
-  // 5. IGDB상 저장된 스팀 게임의 url을 기반으로 IGDB 고유 게임 아이디 반환
+  // 4. IGDB상 저장된 스팀 게임의 url을 기반으로 IGDB 고유 게임 아이디 반환
   const firstFilter = (rawData, filterFunc) =>
     new Promise((resolve, reject) => {
       const temp = [];
       const fail = [];
       statObj.total = rawData.length;
-      // rawData.slice(rawData.length - 30,rawData.length).forEach((steamAppId, index) => {
-      rawData.slice(0 - 5).forEach((steamAppId, index) => {
+      rawData.slice(rawData.length - 30,rawData.length).forEach((steamAppId, index) => {
+      // rawData.slice(0 - 5).forEach((steamAppId, index) => {
       // rawData.forEach((steamAppId, index) => {
         setTimeout(() => {
           filterFunc(steamAppId).then(result => {
+            // console.log(result.data[0])
             if (result.data[0] === undefined) {
               fail.push(steamAppId);
             } else {
@@ -741,68 +739,22 @@ app.post('/meta_search', (req, res) => {
                 temp.length + fail.length
               }/${rawData.length}`
             );
-            // if (temp.length + fail.length === 30) {
-            if (temp.length + fail.length === 5) {
+            if (temp.length + fail.length === 30) {
+            // if (temp.length + fail.length === 5) {
             // if (temp.length + fail.length === rawData.length) {
               statObj.total = fail.length;
               statObj.count = 0;
-              statObj.status = '2';
+              statObj.status = '3';
               console.log(
-                `First attempt: Succeed(${temp.length}), Fail(${fail.length})`
+                `Search Result: Succeed(${temp.length}), Fail(${fail.length})`
               );
-              resolve({ temp, fail });
+              resolve(temp.sort((prev, next) => prev < next ? -1 : 1));
             }
           });
         }, index * 300);
       });
     });
-  // 6. 5에서 검색에 실패한 게임들 대상 IGDB 고유 게임 아이디 검색 함수
-  const secondFilter = (rawData, filterFunc) =>
-    new Promise((resolve, reject) => {
-      const { temp, fail } = rawData;
-      const secTemp = [];
-      const secFail = [];
-      if (fail[0] !== undefined) {
-        fail.forEach((steamAppId, index, thisArr) => {
-          setTimeout(() => {
-            filterFunc(steamAppId).then(result => {
-              if (
-                result.data[0] === undefined &&
-                thisArr.includes(steamAppId)
-              ) {
-                secFail.push(steamAppId);
-                // eslint-disable-next-line no-else-return
-              } else {
-                secTemp.push(result.data[0].game);
-                // 기능 구현 이후에 삭제할 것
-              }
-              statObj.count++;
-              console.log(
-                `Searching for steam URL from steam app id failed on first attempt: ${
-                  secTemp.length + secFail.length
-                }/${fail.length}`
-              );
-              if (secTemp.length + secFail.length === thisArr.length) {
-                console.log(
-                  `Second attempt: Succeed(${secTemp.length}), Fail(${secFail.length})`
-                );
-                const totalSuccess = temp
-                  .concat(secTemp)
-                  .sort((prev, next) => (prev < next ? -1 : 1));
-                statObj.total = totalSuccess.length;
-                statObj.count = 0;
-                statObj.status = '3';
-                resolve(totalSuccess);
-              }
-            });
-          }, index * 300);
-        });
-      } else {
-        console.log(`Second attempt: No fails detected. Proceed to next step.`);
-        resolve(temp);
-      }
-    });
-  // 7. 5, 6에서 검색된 IGDB 고유 아이디를 통한 게임 메타데이터 검색 함수
+  // 5. 4에서 검색된 IGDB 고유 아이디를 통한 게임 메타데이터 검색 함수
   const returnMeta = (rawData, filterFunc) =>
     new Promise((resolve, reject) => {
       const temp = [];
@@ -828,7 +780,7 @@ app.post('/meta_search', (req, res) => {
         }, index * 300);
       });
     });
-  // 8. 메타 데이터 가공 함수 - 제목, 표지, url 추출
+  // 6. 메타 데이터 가공 함수 - 제목, 표지, url 추출
   const processMeta = (rawData, filterFunc) =>
     new Promise((resolve, reject) => {
       const titles = rawData.map(gameMeta => gameMeta.name);
@@ -854,7 +806,7 @@ app.post('/meta_search', (req, res) => {
         }, index * 300);
       });
     });
-  // 9. DB 기록 함수
+  // 7. DB 기록 함수
   const writeToDB = resultObj =>
     new Promise((resolve, reject) => {
       const { titles, urls, covers, rawData } = resultObj;
@@ -919,10 +871,6 @@ app.post('/meta_search', (req, res) => {
     });
   // 실제 검색 실행 코드
   firstFilter(gameList, steamURLSearchQuery)
-    // firstFilter(tempList, steamURLSearchQuery)
-    .then(rawURLSearchResult =>
-      secondFilter(rawURLSearchResult, steamURLException)
-    )
     .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
     .then(igdbResult => processMeta(igdbResult, coverSearch))
     // 최종 메타데이터 목록 - igdbResult는 배열, 이 중 name, cover 정보 필요. name은 추출하기만 하면 되는데, cover는 image_id를 별도로 검색해서 받아와야 함
