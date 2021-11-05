@@ -538,10 +538,10 @@ app.post('/member/reset/pwd', (req, res) => {
 passport.use(
   new SteamStrategy(
     {
-      // returnURL: `https://libmanage-server.herokuapp.com/auth/steam/return`,
-      returnURL: `http://localhost:3001/auth/steam/return`,
-      // realm: `https://libmanage-server.herokuapp.com/`,
-      realm: `http://localhost:3001/`,
+      returnURL: `https://libmanage-server.herokuapp.com/auth/steam/return`,
+      // returnURL: `http://localhost:3001/auth/steam/return`,
+      realm: `https://libmanage-server.herokuapp.com/`,
+      // realm: `http://localhost:3001/`,
       apiKey: process.env.CYBER
     },
     (identifier, profile, done) => {
@@ -608,12 +608,12 @@ app.get(
       })
       .then(() => {
         axios
-          // .post(`https://libmanage-server.herokuapp.com/api/connect`, { execute: 'order66' })
-          .post(`http://localhost:3001/api/connect`, { execute: 'order66' })
+          .post(`https://libmanage-server.herokuapp.com/api/connect`, { execute: 'order66' })
+          // .post(`http://localhost:3001/api/connect`, { execute: 'order66' })
           .then(result => {
             apiCredential = result.data;
-            // res.redirect('https://godcl1623-libmanage.herokuapp.com/api/progress');
-            res.redirect('https://godcl1623.loca.lt/api/progress');
+            res.redirect('https://godcl1623-libmanage.herokuapp.com/api/progress');
+            // res.redirect('https://godcl1623.loca.lt/api/progress');
           });
       });
   }
@@ -627,8 +627,8 @@ app.post('/api/search', (req, res) => {
   const { reqUserInfo } = req.body;
   requestedUser = reqUserInfo.nickname;
   axios
-    // .post(`https://libmanage-server.herokuapp.com/meta_search`, { apiCred: apiCredential })
-    .post(`http://localhost:3001/meta_search`, { apiCred: apiCredential })
+    .post(`https://libmanage-server.herokuapp.com/meta_search`, { apiCred: apiCredential })
+    // .post(`http://localhost:3001/meta_search`, { apiCred: apiCredential })
     .then(searchResult => {
       if (searchResult.data === true) {
         console.log('DB write completed. Return to app service.');
