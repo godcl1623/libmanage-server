@@ -623,7 +623,6 @@ app.get('/login', (req, res) => {
   res.send('failed');
 });
 
-// #################### 임시 작성 시작 ####################
 app.get('/storeLib', (req, res) => {
   const pack = {
     maxGames: gameList.length,
@@ -631,43 +630,37 @@ app.get('/storeLib', (req, res) => {
   }
   res.send(pack);
 });
-// #################### 임시 작성 끝 ####################
 
 app.post('/api/search', (req, res) => {
   const { reqUserInfo } = req.body;
   requestedUser = reqUserInfo.nickname;
-  // axios
-  //   // .post(`https://libmanage-server.herokuapp.com/meta_search`, { apiCred: apiCredential })
-  //   .post(`http://localhost:3001/meta_search`, { apiCred: apiCredential })
-  //   .then(searchResult => {
-      if (requestedUser) {
-        console.log('DB write completed. Return to app service.');
-        const stores = {
-          game: {
-            steam: true
-          }
-        };
-        prodDB.query(
-          `update user_info set stores=? where user_nick=?`,
-          [JSON.stringify(stores), requestedUser],
-          (err, result) => {
-            if (err) throw err;
-            res.send({
-              result: true,
-              newInfo: {
-                ...reqUserInfo,
-                stores: {
-                  ...stores
-                }
-              }
-            });
-            statObj.total = 0;
-          }
-        );
-      } else {
-        res.redirect('/error/search');
+  if (requestedUser) {
+    console.log('DB write completed. Return to app service.');
+    const stores = {
+      game: {
+        steam: true
       }
-  // });
+    };
+    prodDB.query(
+      `update user_info set stores=? where user_nick=?`,
+      [JSON.stringify(stores), requestedUser],
+      (err, result) => {
+        if (err) throw err;
+        res.send({
+          result: true,
+          newInfo: {
+            ...reqUserInfo,
+            stores: {
+              ...stores
+            }
+          }
+        });
+        statObj.total = 0;
+      }
+    );
+  } else {
+    res.redirect('/error/search');
+  }
 });
 
 app.post('/stat/track', (req, res) => {
@@ -696,9 +689,7 @@ app.post('/api/connect', (req, res) => {
   }
 });
 
-// app.post('/meta_search', (req, res) => {
 app.post('/meta/search', (req, res) => {
-  // const tempList = [1210030, 1222140, 1254120, 1286830, 1289310];
   const { cid, access_token: token } = req.body.pack.apiCred;
   const { maxApiCall, currApiCall } = req.body.pack;
   if (requestedUser === '') {
@@ -741,16 +732,12 @@ app.post('/meta/search', (req, res) => {
       const endsAt = currApiCall + 1 === maxApiCall ? rawData.length : 25 * (currApiCall + 1);
       statObj.total = rawData.length;
       rawData.slice(startsFrom, endsAt).forEach((steamAppId, index) => {
-      // rawData.slice(0 - 5).forEach((steamAppId, index) => {
-      // rawData.forEach((steamAppId, index) => {
         setTimeout(() => {
           filterFunc(steamAppId).then(result => {
-            // console.log(result.data[0])
             if (result.data[0] === undefined) {
               fail.push(steamAppId);
             } else {
               temp.push(result.data[0].game);
-              // 기능 완성 이후 삭제할 것
             }
             statObj.count++;
             console.log(
@@ -759,8 +746,6 @@ app.post('/meta/search', (req, res) => {
               }/${rawData.length}`
             );
             if (temp.length + fail.length === endsAt - startsFrom) {
-            // if (temp.length + fail.length === 5) {
-            // if (temp.length + fail.length === rawData.length) {
               statObj.total = fail.length;
               statObj.count = 0;
               statObj.status = '3';
@@ -850,7 +835,6 @@ app.post('/meta/search', (req, res) => {
               }
             });
           });
-          console.log(titles)
           if (currApiCall + 1 === maxApiCall) {
             resolve('done');
           } else {
@@ -859,7 +843,6 @@ app.post('/meta/search', (req, res) => {
         })();
       };
       prodDB.query(`select * from user_lib_${requestedUser}`, (err, result) => {
-        // libDB.query(`select * from foo`, (err, result) => {
         if (err) {
           console.log(err);
           const columns = {
@@ -893,7 +876,6 @@ app.post('/meta/search', (req, res) => {
           writeDB();
         }
       });
-      writeDB();
     });
   // 실제 검색 실행 코드
   firstFilter(gameList, steamURLSearchQuery)
