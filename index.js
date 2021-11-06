@@ -702,7 +702,7 @@ app.post('/meta/search', (req, res) => {
   const { cid, access_token: token } = req.body.pack.apiCred;
   const { maxApiCall, currApiCall } = req.body.pack;
   if (requestedUser === '') {
-    requestedUser = req.body.pack.userInfo;
+    requestedUser = req.body.pack.userInfo.nickname;
   }
   const client = igdb(cid, token);
   // 1. 스팀 게임별 고유 id와 IGDB 사이트에 등록된 스팀 url 대조 함수 - IGDB 고유 게임 아이디 이용 예정
