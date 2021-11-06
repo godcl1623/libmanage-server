@@ -746,7 +746,7 @@ app.post('/meta/search', (req, res) => {
               }/${rawData.length}`
             );
             if (temp.length + fail.length === endsAt - startsFrom) {
-              statObj.total = fail.length;
+              statObj.total = temp.length;
               statObj.count = 0;
               statObj.status = '3';
               console.log(
@@ -839,6 +839,8 @@ app.post('/meta/search', (req, res) => {
             resolve('done');
           } else {
             resolve('1');
+            statObj.status = '1';
+            statObj.count = 25 * (currApiCall + 1);
           }
         })();
       };
