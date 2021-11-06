@@ -701,6 +701,9 @@ app.post('/meta/search', (req, res) => {
   // const tempList = [1210030, 1222140, 1254120, 1286830, 1289310];
   const { cid, access_token: token } = req.body.pack.apiCred;
   const { maxApiCall, currApiCall } = req.body.pack;
+  if (requestedUser === '') {
+    requestedUser = req.body.pack.userInfo;
+  }
   const client = igdb(cid, token);
   // 1. 스팀 게임별 고유 id와 IGDB 사이트에 등록된 스팀 url 대조 함수 - IGDB 고유 게임 아이디 이용 예정
   const steamURLSearchQuery = async steamAppId => {
