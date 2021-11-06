@@ -538,10 +538,10 @@ app.post('/member/reset/pwd', (req, res) => {
 passport.use(
   new SteamStrategy(
     {
-      returnURL: `https://libmanage-server.herokuapp.com/auth/steam/return`,
-      // returnURL: `http://localhost:3001/auth/steam/return`,
-      realm: `https://libmanage-server.herokuapp.com/`,
-      // realm: `http://localhost:3001/`,
+      // returnURL: `https://libmanage-server.herokuapp.com/auth/steam/return`,
+      returnURL: `http://localhost:3001/auth/steam/return`,
+      // realm: `https://libmanage-server.herokuapp.com/`,
+      realm: `http://localhost:3001/`,
       apiKey: process.env.CYBER
     },
     (identifier, profile, done) => {
@@ -608,12 +608,12 @@ app.get(
       })
       .then(() => {
         axios
-          .post(`https://libmanage-server.herokuapp.com/api/connect`, { execute: 'order66' })
-          // .post(`http://localhost:3001/api/connect`, { execute: 'order66' })
+          // .post(`https://libmanage-server.herokuapp.com/api/connect`, { execute: 'order66' })
+          .post(`http://localhost:3001/api/connect`, { execute: 'order66' })
           .then(result => {
             apiCredential = result.data;
-            res.redirect('https://godcl1623-libmanage.herokuapp.com/api/progress');
-            // res.redirect('https://godcl1623.loca.lt/api/progress');
+            // res.redirect('https://godcl1623-libmanage.herokuapp.com/api/progress');
+            res.redirect('https://godcl1623.loca.lt/api/progress');
           });
       });
   }
@@ -623,41 +623,53 @@ app.get('/login', (req, res) => {
   res.send('failed');
 });
 
+// #################### 임시 작성 시작 ####################
+app.get('/storeLib', (req, res) => {
+  const pack = {
+    maxGames: gameList.length,
+    apiKey: apiCredential
+  }
+  res.send(pack);
+});
+// #################### 임시 작성 끝 ####################
+
 app.post('/api/search', (req, res) => {
   const { reqUserInfo } = req.body;
   requestedUser = reqUserInfo.nickname;
-  axios
-    .post(`https://libmanage-server.herokuapp.com/meta_search`, { apiCred: apiCredential })
-    // .post(`http://localhost:3001/meta_search`, { apiCred: apiCredential })
-    .then(searchResult => {
-      if (searchResult.data === true) {
-        console.log('DB write completed. Return to app service.');
-        const stores = {
-          game: {
-            steam: true
-          }
-        };
-        prodDB.query(
-          `update user_info set stores=? where user_nick=?`,
-          [JSON.stringify(stores), requestedUser],
-          (err, result) => {
-            if (err) throw err;
-            res.send({
-              result: true,
-              newInfo: {
-                ...reqUserInfo,
-                stores: {
-                  ...stores
-                }
-              }
-            });
-            statObj.total = 0;
-          }
-        );
-      } else {
-        res.redirect('/error/search');
-      }
-    });
+  // axios
+  //   // .post(`https://libmanage-server.herokuapp.com/meta_search`, { apiCred: apiCredential })
+  //   .post(`http://localhost:3001/meta_search`, { apiCred: apiCredential })
+  //   .then(searchResult => {
+  //     if (searchResult.data === true) {
+  //       console.log('DB write completed. Return to app service.');
+  //       const stores = {
+  //         game: {
+  //           steam: true
+  //         }
+  //       };
+  //       prodDB.query(
+  //         `update user_info set stores=? where user_nick=?`,
+  //         [JSON.stringify(stores), requestedUser],
+  //         (err, result) => {
+  //           if (err) throw err;
+  //           res.send({
+  //             result: true,
+  //             newInfo: {
+  //               ...reqUserInfo,
+  //               stores: {
+  //                 ...stores
+  //               }
+  //             }
+  //           });
+  //           statObj.total = 0;
+  //         }
+  //       );
+  //     } else {
+  //       res.redirect('/error/search');
+  //     }
+  // });
+  console.log('job done', reqUserInfo)
+  res.send({result: true});
 });
 
 app.post('/stat/track', (req, res) => {
@@ -686,9 +698,11 @@ app.post('/api/connect', (req, res) => {
   }
 });
 
-app.post('/meta_search', (req, res) => {
+// app.post('/meta_search', (req, res) => {
+app.post('/meta/search', (req, res) => {
   // const tempList = [1210030, 1222140, 1254120, 1286830, 1289310];
-  const { cid, access_token: token } = req.body.apiCred;
+  const { cid, access_token: token } = req.body.pack.apiCred;
+  const { maxApiCall, currApiCall } = req.body.pack;
   const client = igdb(cid, token);
   // 1. 스팀 게임별 고유 id와 IGDB 사이트에 등록된 스팀 url 대조 함수 - IGDB 고유 게임 아이디 이용 예정
   const steamURLSearchQuery = async steamAppId => {
@@ -710,7 +724,7 @@ app.post('/meta_search', (req, res) => {
   // 3. 게임 표지 검색 함수
   const coverSearch = async igdbCoverID => {
     const response = await client
-      .fields(['*'])
+      .fields(['image_id'])
       .where(`id = ${igdbCoverID}`)
       .request('/covers');
     return response;
@@ -720,8 +734,12 @@ app.post('/meta_search', (req, res) => {
     new Promise((resolve, reject) => {
       const temp = [];
       const fail = [];
+      console.log('maxApiCall', maxApiCall)
+      console.log('currApiCall', currApiCall)
+      const startsFrom = 25 * currApiCall;
+      const endsAt = currApiCall + 1 === maxApiCall ? rawData.length : 25 * (currApiCall + 1);
       statObj.total = rawData.length;
-      rawData.slice(rawData.length - 30,rawData.length).forEach((steamAppId, index) => {
+      rawData.slice(startsFrom, endsAt).forEach((steamAppId, index) => {
       // rawData.slice(0 - 5).forEach((steamAppId, index) => {
       // rawData.forEach((steamAppId, index) => {
         setTimeout(() => {
@@ -739,7 +757,7 @@ app.post('/meta_search', (req, res) => {
                 temp.length + fail.length
               }/${rawData.length}`
             );
-            if (temp.length + fail.length === 30) {
+            if (temp.length + fail.length === endsAt - startsFrom) {
             // if (temp.length + fail.length === 5) {
             // if (temp.length + fail.length === rawData.length) {
               statObj.total = fail.length;
@@ -812,62 +830,69 @@ app.post('/meta_search', (req, res) => {
       const { titles, urls, covers, rawData } = resultObj;
       const writeDB = () => {
         (() => {
-          const columns = 'title, cover, igdb_url, processed, meta';
-          // const queryString = `insert into foo (${columns}) values(?, ?, ?, ?)`;
-          const queryString = `insert into user_lib_${requestedUser} (${columns}) values(?, ?, ?, ?, ?)`;
-          rawData.forEach((data, index) => {
-            const values = [
-              titles[index],
-              covers[index],
-              urls[index],
-              false,
-              JSON.stringify(data)
-            ];
-            prodDB.query(queryString, values, (err, result) => {
-              if (err) {
-                throw err;
-              } else {
-                resolve(true);
-              }
-            });
-          });
+          // const columns = 'title, cover, igdb_url, processed, meta';
+          // // const queryString = `insert into foo (${columns}) values(?, ?, ?, ?)`;
+          // const queryString = `insert into user_lib_${requestedUser} (${columns}) values(?, ?, ?, ?, ?)`;
+          // rawData.forEach((data, index) => {
+          //   const values = [
+          //     titles[index],
+          //     covers[index],
+          //     urls[index],
+          //     false,
+          //     JSON.stringify(data)
+          //   ];
+          //   prodDB.query(queryString, values, (err, result) => {
+          //     if (err) {
+          //       throw err;
+          //     } else {
+          //       resolve(true);
+          //     }
+          //   });
+          // });
+          console.log(titles)
+          if (currApiCall + 1 === maxApiCall) {
+            resolve('done');
+          } else {
+            resolve('1');
+          }
         })();
       };
-      prodDB.query(`select * from user_lib_${requestedUser}`, (err, result) => {
-        // libDB.query(`select * from foo`, (err, result) => {
-        if (err) {
-          console.log(err);
-          const columns = {
-            first: 'libid int not null auto_increment',
-            second: 'title text not null',
-            third: 'cover text null',
-            fourth: 'igdb_url text not null',
-            fifth: 'processed char(5) not null',
-            sixth: 'meta text not null',
-            seventh: 'primary key (libid)'
-          };
-          const queryString = `
-          create table user_lib_${requestedUser} (
-            ${columns.first},
-            ${columns.second},
-            ${columns.third},
-            ${columns.fourth},
-            ${columns.fifth},
-            ${columns.sixth},
-            ${columns.seventh}
-          );
-        `;
-          prodDB.query(queryString, (err, result) => {
-            if (err) {
-              throw err;
-            } else {
-              writeDB();
-            }
-          });
-        } else {
-          writeDB();
-        }
-      });
+      // prodDB.query(`select * from user_lib_${requestedUser}`, (err, result) => {
+      //   // libDB.query(`select * from foo`, (err, result) => {
+      //   if (err) {
+      //     console.log(err);
+      //     const columns = {
+      //       first: 'libid int not null auto_increment',
+      //       second: 'title text not null',
+      //       third: 'cover text null',
+      //       fourth: 'igdb_url text not null',
+      //       fifth: 'processed char(5) not null',
+      //       sixth: 'meta text not null',
+      //       seventh: 'primary key (libid)'
+      //     };
+      //     const queryString = `
+      //     create table user_lib_${requestedUser} (
+      //       ${columns.first},
+      //       ${columns.second},
+      //       ${columns.third},
+      //       ${columns.fourth},
+      //       ${columns.fifth},
+      //       ${columns.sixth},
+      //       ${columns.seventh}
+      //     );
+      //   `;
+      //     prodDB.query(queryString, (err, result) => {
+      //       if (err) {
+      //         throw err;
+      //       } else {
+      //         writeDB();
+      //       }
+      //     });
+      //   } else {
+      //     writeDB();
+      //   }
+      // });
+      writeDB();
     });
   // 실제 검색 실행 코드
   firstFilter(gameList, steamURLSearchQuery)
