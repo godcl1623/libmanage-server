@@ -538,10 +538,10 @@ app.post('/member/reset/pwd', (req, res) => {
 passport.use(
   new SteamStrategy(
     {
-      // returnURL: `https://libmanage-server.herokuapp.com/auth/steam/return`,
-      returnURL: `http://localhost:3001/auth/steam/return`,
-      // realm: `https://libmanage-server.herokuapp.com/`,
-      realm: `http://localhost:3001/`,
+      returnURL: `https://libmanage-server.herokuapp.com/auth/steam/return`,
+      // returnURL: `http://localhost:3001/auth/steam/return`,
+      realm: `https://libmanage-server.herokuapp.com/`,
+      // realm: `http://localhost:3001/`,
       apiKey: process.env.CYBER
     },
     (identifier, profile, done) => {
@@ -608,12 +608,12 @@ app.get(
       })
       .then(() => {
         axios
-          // .post(`https://libmanage-server.herokuapp.com/api/connect`, { execute: 'order66' })
-          .post(`http://localhost:3001/api/connect`, { execute: 'order66' })
+          .post(`https://libmanage-server.herokuapp.com/api/connect`, { execute: 'order66' })
+          // .post(`http://localhost:3001/api/connect`, { execute: 'order66' })
           .then(result => {
             apiCredential = result.data;
-            // res.redirect('https://godcl1623-libmanage.herokuapp.com/api/progress');
-            res.redirect('https://godcl1623.loca.lt/api/progress');
+            res.redirect('https://godcl1623-libmanage.herokuapp.com/api/progress');
+            // res.redirect('https://godcl1623.loca.lt/api/progress');
           });
       });
   }
@@ -640,36 +640,34 @@ app.post('/api/search', (req, res) => {
   //   // .post(`https://libmanage-server.herokuapp.com/meta_search`, { apiCred: apiCredential })
   //   .post(`http://localhost:3001/meta_search`, { apiCred: apiCredential })
   //   .then(searchResult => {
-  //     if (searchResult.data === true) {
-  //       console.log('DB write completed. Return to app service.');
-  //       const stores = {
-  //         game: {
-  //           steam: true
-  //         }
-  //       };
-  //       prodDB.query(
-  //         `update user_info set stores=? where user_nick=?`,
-  //         [JSON.stringify(stores), requestedUser],
-  //         (err, result) => {
-  //           if (err) throw err;
-  //           res.send({
-  //             result: true,
-  //             newInfo: {
-  //               ...reqUserInfo,
-  //               stores: {
-  //                 ...stores
-  //               }
-  //             }
-  //           });
-  //           statObj.total = 0;
-  //         }
-  //       );
-  //     } else {
-  //       res.redirect('/error/search');
-  //     }
+      if (requestedUser) {
+        console.log('DB write completed. Return to app service.');
+        const stores = {
+          game: {
+            steam: true
+          }
+        };
+        prodDB.query(
+          `update user_info set stores=? where user_nick=?`,
+          [JSON.stringify(stores), requestedUser],
+          (err, result) => {
+            if (err) throw err;
+            res.send({
+              result: true,
+              newInfo: {
+                ...reqUserInfo,
+                stores: {
+                  ...stores
+                }
+              }
+            });
+            statObj.total = 0;
+          }
+        );
+      } else {
+        res.redirect('/error/search');
+      }
   // });
-  console.log('job done', reqUserInfo)
-  res.send({result: true});
 });
 
 app.post('/stat/track', (req, res) => {
@@ -830,25 +828,25 @@ app.post('/meta/search', (req, res) => {
       const { titles, urls, covers, rawData } = resultObj;
       const writeDB = () => {
         (() => {
-          // const columns = 'title, cover, igdb_url, processed, meta';
-          // // const queryString = `insert into foo (${columns}) values(?, ?, ?, ?)`;
-          // const queryString = `insert into user_lib_${requestedUser} (${columns}) values(?, ?, ?, ?, ?)`;
-          // rawData.forEach((data, index) => {
-          //   const values = [
-          //     titles[index],
-          //     covers[index],
-          //     urls[index],
-          //     false,
-          //     JSON.stringify(data)
-          //   ];
-          //   prodDB.query(queryString, values, (err, result) => {
-          //     if (err) {
-          //       throw err;
-          //     } else {
-          //       resolve(true);
-          //     }
-          //   });
-          // });
+          const columns = 'title, cover, igdb_url, processed, meta';
+          // const queryString = `insert into foo (${columns}) values(?, ?, ?, ?)`;
+          const queryString = `insert into user_lib_${requestedUser} (${columns}) values(?, ?, ?, ?, ?)`;
+          rawData.forEach((data, index) => {
+            const values = [
+              titles[index],
+              covers[index],
+              urls[index],
+              false,
+              JSON.stringify(data)
+            ];
+            prodDB.query(queryString, values, (err, result) => {
+              if (err) {
+                throw err;
+              } else {
+                resolve(true);
+              }
+            });
+          });
           console.log(titles)
           if (currApiCall + 1 === maxApiCall) {
             resolve('done');
@@ -857,41 +855,41 @@ app.post('/meta/search', (req, res) => {
           }
         })();
       };
-      // prodDB.query(`select * from user_lib_${requestedUser}`, (err, result) => {
-      //   // libDB.query(`select * from foo`, (err, result) => {
-      //   if (err) {
-      //     console.log(err);
-      //     const columns = {
-      //       first: 'libid int not null auto_increment',
-      //       second: 'title text not null',
-      //       third: 'cover text null',
-      //       fourth: 'igdb_url text not null',
-      //       fifth: 'processed char(5) not null',
-      //       sixth: 'meta text not null',
-      //       seventh: 'primary key (libid)'
-      //     };
-      //     const queryString = `
-      //     create table user_lib_${requestedUser} (
-      //       ${columns.first},
-      //       ${columns.second},
-      //       ${columns.third},
-      //       ${columns.fourth},
-      //       ${columns.fifth},
-      //       ${columns.sixth},
-      //       ${columns.seventh}
-      //     );
-      //   `;
-      //     prodDB.query(queryString, (err, result) => {
-      //       if (err) {
-      //         throw err;
-      //       } else {
-      //         writeDB();
-      //       }
-      //     });
-      //   } else {
-      //     writeDB();
-      //   }
-      // });
+      prodDB.query(`select * from user_lib_${requestedUser}`, (err, result) => {
+        // libDB.query(`select * from foo`, (err, result) => {
+        if (err) {
+          console.log(err);
+          const columns = {
+            first: 'libid int not null auto_increment',
+            second: 'title text not null',
+            third: 'cover text null',
+            fourth: 'igdb_url text not null',
+            fifth: 'processed char(5) not null',
+            sixth: 'meta text not null',
+            seventh: 'primary key (libid)'
+          };
+          const queryString = `
+          create table user_lib_${requestedUser} (
+            ${columns.first},
+            ${columns.second},
+            ${columns.third},
+            ${columns.fourth},
+            ${columns.fifth},
+            ${columns.sixth},
+            ${columns.seventh}
+          );
+        `;
+          prodDB.query(queryString, (err, result) => {
+            if (err) {
+              throw err;
+            } else {
+              writeDB();
+            }
+          });
+        } else {
+          writeDB();
+        }
+      });
       writeDB();
     });
   // 실제 검색 실행 코드
