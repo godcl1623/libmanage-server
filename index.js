@@ -533,6 +533,22 @@ app.post('/member/reset/pwd', (req, res) => {
   }
 });
 
+app.post('/verify', (req, res) => {
+  const { sofo } = req.body;
+  const { NICK, PWD } = decryptor(sofo, process.env.TRACER);
+  prodDB.query('select user_pwd from user_info where user_nick=?', [NICK], (err, result) => {
+    if (err) throw err;
+    const dbPwd = result[0].user_pwd;
+    const verifySalt = bcrypt.getSalt(PWD);
+    const comparison = bcrypt.hashSync(dbPwd, verifySalt);
+    if (PWD === comparison) {
+      res.send(true);
+    } else {
+      res.send(false);
+    }
+  })
+})
+
 /* #################### api 서버 #################### */
 
 passport.use(
