@@ -549,6 +549,44 @@ app.post('/verify', (req, res) => {
   })
 })
 
+app.put('/member/update', (req, res) => {
+  const { sofo, reqUser } = decryptor(req.body.foo, process.env.TRACER);
+  const genQueryString = (key, val) =>
+    `select mid from user_info where user_${key}='${val}'`;
+  const genExists = qString => `select exists (${qString} limit 1) as isExist`;
+  const checkQueries = Object.keys(sofo).map(key => `${genExists(genQueryString(key, sofo[key]))};`);
+  let requestedUserid = '';
+  // 별명만, 비밀번호만, 이메일만, 셋 중 둘만, 셋 다 바꾸는 경우 테스트 진행 필요
+  // 현재 별명+이메일, 별명+비번+이메일 두 가지 경우는 정상적으로 작동함
+  // 비밀번호만 바꾸는 경우는 오류 발생
+  prodDB.query(checkQueries.join(''), (err, results) => {
+    if (err) throw err;
+    console.log(results)
+    const repeatedDataIdx = results
+    .filter(result => result[0].isExist === 1)
+    .map(result => results.indexOf(result));
+    if (repeatedDataIdx.length !== 0) {
+      const pack = {
+        result: false,
+        repeatedData: repeatedDataIdx.map(idx => Object.keys(sofo)[idx])
+      };
+      res.send(pack);
+    } else {
+      prodDB.query(`select user_id from user_info where user_nick='${reqUser}'`, (err, result) => {
+        if (err) throw err;
+        requestedUserid = result[0].user_id;
+        const updateQueryStr = (key, val, origin) => `update user_info set user_${key}='${val}' where user_id='${origin}';`;
+        const updateQuery = Object.keys(sofo).map(key => updateQueryStr(key, sofo[key], requestedUserid));
+        updateQuery.push(`rename table user_lib_${reqUser} to user_lib_${sofo.nick};`);
+        prodDB.query(updateQuery.join(''), (err, result2) => {
+          if (err) throw err;
+          res.send('success');
+        });
+      })
+    }
+  });
+});
+
 /* #################### api 서버 #################### */
 
 passport.use(
