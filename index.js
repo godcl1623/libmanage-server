@@ -591,6 +591,33 @@ app.put('/member/update', (req, res) => {
   });
 });
 
+app.delete('/member', (req, res) => {
+  const reqUser = decryptor(req.body.reqUser, process.env.TRACER);
+  const whereCond = `table_schema='${process.env.DB_PROD_SCHEME}'`;
+  const tableNameCond = `table_name='user_lib_${reqUser}'`;
+  const tableCheckQuery = `select 1 from Information_schema.tables where ${whereCond} and ${tableNameCond}`;
+  const delUserInfo = (reqUser, res) => {
+    prodDB.query(`delete from user_info where user_nick='${reqUser}'`, (err, result) => {
+      if (err) throw err;
+      res.send('success');
+    });
+  }
+  prodDB.query(`select exists (${tableCheckQuery}) as flag`, (err, result) => {
+    if (err) throw err;
+    if (result[0].flag === 1) {
+      prodDB.query(`drop table user_lib_${reqUser}`, (err, result2) => {
+        if (err) {
+          throw err
+        } else {
+          delUserInfo(reqUser, res);
+        }
+      })
+    } else {
+      delUserInfo(reqUser, res);
+    }
+  })
+})
+
 /* #################### api 서버 #################### */
 
 passport.use(
