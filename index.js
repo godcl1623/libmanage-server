@@ -1184,7 +1184,7 @@ app.post('/get/meta', (req, res) => {
               } else if (endPoint === 'release_dates') {
                 result = ['human', 'platform'];
               } else if (endPoint === 'websites') {
-                result = 'url';
+                result = ['category', 'url'];
               } else if (endPoint === 'involved_companies') {
                 result = ['company', 'developer', 'publisher'];
               } else if (endPoint === 'age_ratings') {
