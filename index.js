@@ -1214,7 +1214,7 @@ app.post('/get/meta', (req, res) => {
                       }
                     }, queryIdx * 260 * query.length);
                   } else {
-                    tempMeta[endPoints[queryIdx]] = 'N/A';
+                    tempMeta[endPoints[queryIdx]] = ['N/A'];
                   }
                 });
               });
@@ -1222,7 +1222,7 @@ app.post('/get/meta', (req, res) => {
               new Promise(resolve => {
                 Promise.allSettled(vals).then(res => {
                   res.forEach((ele, idx) => {
-                    if (ele.value !== 'N/A') {
+                    if (ele.value[0] !== 'N/A') {
                       const temp = [];
                       ele.value.data.forEach(evd => {
                         if (typeof valNeed(keys[idx]) === 'string') {
