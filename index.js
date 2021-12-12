@@ -155,9 +155,11 @@ app.post('/login_process', (req, res) => {
     req.session.loginInfo = {
       isLoginSuccessful: true,
       nickname: newGuest,
-      isGuest: true
+      isGuest: true,
+      sid: req.sessionID
     };
-    req.session.save(() => res.send(req.session.loginInfo));
+    // req.session.save(() => res.send(req.session.loginInfo));
+    res.send(req.session.loginInfo);
   } else {
     res.send('ID와 비밀번호를 입력해주세요.');
   }
