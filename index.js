@@ -47,25 +47,6 @@ const genEmailOptions = (from, to, subject, html) => ({
   subject,
   html
 });
-// const handleDBConnection = () => {
-//   // prodDB.connect(err => {
-//     prodDB.getConnection(err => {
-//     if (err) {
-//       console.log(`error when connecting to db: ${err}`);
-//       setTimeout(handleDBConnection, 2000);
-//     }
-//   });
-
-//   prodDB.on('error', err => {
-//     console.log(`db error: ${err}`);
-//     if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-//       return handleDBConnection();
-//     // eslint-disable-next-line no-else-return
-//     } else {
-//       throw err;
-//     }
-//   });
-// }
 
 app.set('port', process.env.PORT || 3001);
 app.use(
@@ -90,17 +71,6 @@ app.use(
     store: new MySQLStore(dbProdOptions, prodDB)
   })
 );
-// app.set('trusy proxy', 1);
-// db.connect();
-// libDB.connect();
-// prodDB.connect();
-// handleDBConnection();
-// prodDB.getConnection((err, conn) => {
-//   if (!err) {
-//     conn.query();
-//   }
-//   conn.release();
-// })
 
 /* #################### 로그인 서버 #################### */
 
@@ -121,7 +91,6 @@ app.post('/login_process', (req, res) => {
           res.send('등록되지 않은 ID입니다.');
         } else {
           [dbInfo] = result;
-          console.log(dbInfo);
           const comparison = bcrypt.hashSync(dbInfo.user_pwd, loginInfo.salt);
           if (loginInfo.ID === dbInfo.user_id && loginInfo.PWD === comparison) {
             if (dbInfo.stores === undefined) {
@@ -170,7 +139,6 @@ app.post('/logout_process', (req, res) => {
   if (reqMsg === 'logout') {
     const sentOne = JSON.parse(decryptor(million, process.env.TRACER));
     const { sid } = sentOne;
-    console.log(sid);
     const logoutInfo = {
       isLoginSuccessful: false,
       nickname: ''
@@ -178,7 +146,7 @@ app.post('/logout_process', (req, res) => {
     req.session.destroy(() => {
       prodDB.query(
         'delete from sessions where session_id=?',
-        [sentOne.sid],
+        [sid],
         (err, result) => {
           if (err) throw err;
           if (result) {
@@ -195,7 +163,6 @@ app.post('/check_login', (req, res) => {
   // comparisonState: 스토어 연동 이후 사용자 정보 갱신을 위한 객체
   // info: 사용자 브라우저의 로컬 저장소에 저장된 세션
   const { comparisonState, million } = req.body.message;
-  // console.log(req.body.message)
   // 만약 저장된 세션이 없을 경우: 로그인 유도
   if (million === null) {
     res.send('no_sessions');
@@ -209,7 +176,6 @@ app.post('/check_login', (req, res) => {
       (err, result) => {
         if (err) throw err;
         // DB에 사용자 세션이 존재할 경우
-        // console.log(result)
         if (result[0]) {
           const { data } = result[0];
           // DB에 저장된 사용자 세션 parse, 쿠키에 저장된 만료 시점을 Date 객체에 넣어 계산 가능하도록 설정
@@ -249,7 +215,6 @@ app.post('/check_login', (req, res) => {
             };
             const compare = JSON.stringify(newSession);
             if (data !== compare) {
-              // console.log('newSession', JSON.stringify(newSession));
               prodDB.query(
                 'update sessions set data=? where session_id=?',
                 [compare, sentOne.sid],
@@ -316,7 +281,6 @@ app.post('/member/register', (req, res) => {
         ];
         prodDB.query(queryString, values, (err, result) => {
           if (err) throw err;
-          console.log(result);
           res.send('success');
         });
       } else {
@@ -358,10 +322,8 @@ app.post('/member/find/id', (req, res) => {
           );
           transporter.sendMail(emailOptions, (err, info) => {
             if (err) {
-              console.log(err);
               res.send('오류가 발생했습니다');
             }
-            console.log(info);
             res.send(successMsg);
           });
         } else {
@@ -423,10 +385,8 @@ app.post('/member/find/pwd', (req, res) => {
           );
           transporter.sendMail(emailOptions, (err, info) => {
             if (err) {
-              console.log(err);
               res.send('오류가 발생했습니다');
             }
-            console.log(info);
             res.send('메일이 발송되었습니다.\n메세지 함을 확인해주세요.');
           });
         } else {
@@ -813,8 +773,6 @@ app.post('/meta/search', (req, res) => {
     new Promise((resolve, reject) => {
       const temp = [];
       const fail = [];
-      console.log('maxApiCall', maxApiCall)
-      console.log('currApiCall', currApiCall)
       const startsFrom = 25 * currApiCall;
       const endsAt = currApiCall + 1 === maxApiCall ? rawData.length : 25 * (currApiCall + 1);
       statObj.total = rawData.length;
@@ -933,7 +891,6 @@ app.post('/meta/search', (req, res) => {
       };
       prodDB.query(`select * from user_lib_${requestedUser}`, (err, result) => {
         if (err) {
-          console.log(err);
           const columns = {
             first: 'libid int not null auto_increment',
             second: 'title text not null',
@@ -996,7 +953,6 @@ app.post('/disconnect', (req, res) => {
   deletedStoresFilter.forEach(store => {
     const queryString = `select * from user_lib_${nickname}`;
     prodDB.query(queryString, (err, result) => {
-      console.log('search', err, result);
       if (err) {
         if (err.code === 'ER_NO_SUCH_TABLE') {
           res.send('오류가 발생했습니다.');
@@ -1004,7 +960,6 @@ app.post('/disconnect', (req, res) => {
       } else {
         const delQueryString = `delete from user_lib_${nickname}`;
         prodDB.query(delQueryString, (err, result) => {
-          console.log('del', err, result);
           if (err) {
             throw err;
           } else {
@@ -1031,12 +986,9 @@ app.post('/disconnect', (req, res) => {
       }
     });
   });
-  // console.log(deletedStoresFilter);
 });
 
 app.post('/get/db', (req, res) => {
-  // console.log(req.body.reqData)
-  console.log(req.body)
   if (req.body.reqData.reqLibs !== undefined) {
     if (req.body.reqData.reqLibs[0]) {
       const [gameStores] = req.body.reqData.reqLibs;
@@ -1121,7 +1073,6 @@ app.post('/get/meta', (req, res) => {
           `select meta from user_lib_${reqUser} where title="${selTitle}"`,
           (err, result) => {
             const originalMeta = JSON.parse(result[0].meta);
-            // console.log(originalMeta)
             const {
               artworks,
               cover: covers,
@@ -1206,10 +1157,6 @@ app.post('/get/meta', (req, res) => {
                         endPoints[queryIdx],
                         valNeed(endPoints[queryIdx]),
                         query
-                      );
-                      console.log(
-                        endPoints[queryIdx],
-                        Object.keys(tempMeta).length
                       );
                       if (Object.keys(tempMeta).length === waitQuery.length) {
                         resolve(true);
