@@ -128,5 +128,5 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-hasher.js
-aeser.js
+# hasher.js
+# aeser.js
