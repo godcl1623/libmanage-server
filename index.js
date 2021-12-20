@@ -544,9 +544,17 @@ app.put('/member/update', (req, res) => {
         if (sofo.nick) {
           updateQuery.push(`rename table user_lib_${reqUser} to user_lib_${sofo.nick};`);
         }
+        console.log(updateQuery)
         prodDB.query(updateQuery.join(''), (err, result2) => {
-          if (err) throw err;
-          res.send('success');
+          if (err) {
+            if (err.code === 'ER_FILE_NOT_FOUND') {
+              res.send('success');
+            } else {
+              throw err;
+            }
+          } else {
+            res.send('success');
+          }
         });
       })
     }
@@ -742,7 +750,6 @@ app.post('/meta/search', (req, res) => {
   if (requestedUser === '') {
     requestedUser = req.body.pack.userInfo.nickname;
   }
-  console.log(requestedUser)
   const client = igdb(cid, token);
   // 1. 스팀 게임별 고유 id와 IGDB 사이트에 등록된 스팀 url 대조 함수 - IGDB 고유 게임 아이디 이용 예정
   const steamURLSearchQuery = async steamAppId => {
