@@ -544,6 +544,7 @@ app.put('/member/update', (req, res) => {
         if (sofo.nick) {
           updateQuery.push(`rename table user_lib_${reqUser} to user_lib_${sofo.nick};`);
         }
+        console.log(updateQuery)
         prodDB.query(updateQuery.join(''), (err, result2) => {
           if (err) {
             if (err.code === 'ER_FILE_NOT_FOUND') {
@@ -551,8 +552,9 @@ app.put('/member/update', (req, res) => {
             } else {
               throw err;
             }
-          };
-          res.send('success');
+          } else {
+            res.send('success');
+          }
         });
       })
     }
