@@ -742,6 +742,7 @@ app.post('/meta/search', (req, res) => {
   if (requestedUser === '') {
     requestedUser = req.body.pack.userInfo.nickname;
   }
+  console.log(requestedUser)
   const client = igdb(cid, token);
   // 1. 스팀 게임별 고유 id와 IGDB 사이트에 등록된 스팀 url 대조 함수 - IGDB 고유 게임 아이디 이용 예정
   const steamURLSearchQuery = async steamAppId => {
@@ -958,7 +959,7 @@ app.post('/disconnect', (req, res) => {
           res.send('오류가 발생했습니다.');
         }
       } else {
-        const delQueryString = `delete from user_lib_${nickname}`;
+        const delQueryString = `drop table user_lib_${nickname}`;
         prodDB.query(delQueryString, (err, result) => {
           if (err) {
             throw err;
