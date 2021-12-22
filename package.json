@@ -42,6 +42,6 @@
     "start": "node index.js"
   },
   "engines": {
-    "node": "14.15.5"
+    "node": "16.13.1"
   }
 }
