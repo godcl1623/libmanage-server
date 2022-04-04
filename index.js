@@ -14,6 +14,7 @@ const SteamStrategy = require('passport-steam').Strategy;
 const axios = require('axios');
 const igdb = require('igdb-api-node').default;
 const cookieParser = require('cookie-parser');
+const WebSocketServer = require('ws').Server;
 require('dotenv').config();
 const { dbProdOptions, prodDB } = require('./custom_modules/db');
 const { encryptor, decryptor } = require('./custom_modules/aeser');
@@ -599,9 +600,9 @@ passport.use(
   new SteamStrategy(
     {
       returnURL: `https://libmanage-server.herokuapp.com/auth/steam/return`,
-      // returnURL: `http://localhost:3001/auth/steam/return`,
+      // returnURL: `http://localhost:3003/auth/steam/return`,
       realm: `https://libmanage-server.herokuapp.com/`,
-      // realm: `http://localhost:3001/`,
+      // realm: `http://localhost:3003/`,
       apiKey: process.env.CYBER
     },
     (identifier, profile, done) => {
@@ -669,11 +670,11 @@ app.get(
       .then(() => {
         axios
           .post(`https://libmanage-server.herokuapp.com/api/connect`, { execute: 'order66' })
-          // .post(`http://localhost:3001/api/connect`, { execute: 'order66' })
+          // .post(`http://localhost:3003/api/connect`, { execute: 'order66' })
           .then(result => {
             apiCredential = result.data;
             res.redirect('https://godcl1623-libmanage.herokuapp.com/api/progress');
-            // res.redirect('https://godcl1623.loca.lt/api/progress');
+            // res.redirect('http://localhost:3000/api/progress');
           });
       });
   }
@@ -723,19 +724,10 @@ app.post('/api/search', (req, res) => {
   }
 });
 
-app.post('/stat/track', (req, res) => {
-  res.send({
-    count: String(statObj.count),
-    total: String(statObj.total),
-    status: String(statObj.status)
-  });
-});
-
 app.get('/error/search', (req, res) => {
   res.send('<h1>Error has occured. Please try again later.</h1>');
 });
 
-// 프론트에서 처리하도록 수정
 app.post('/api/connect', (req, res) => {
   if (req.body.execute === 'order66') {
     const cid = `client_id=${process.env.OWLME}`;
@@ -896,9 +888,9 @@ app.post('/meta/search', (req, res) => {
           if (currApiCall + 1 === maxApiCall) {
             resolve('done');
           } else {
-            resolve('1');
             statObj.status = '1';
             statObj.count = 25 * (currApiCall + 1);
+            resolve('1');
           }
         })();
       };
@@ -1282,6 +1274,27 @@ app.post('/get/meta', (req, res) => {
   );
 });
 
-app.listen(app.get('port'), () =>
+const server = app.listen(app.get('port'), () =>
   console.log(`server is running at port ${app.get('port')}`)
 );
+
+/* #################### 진행도 표시용 웹소켓 서버 #################### */
+const wss = new WebSocketServer({ server });
+wss.on('connection', ws => {
+  console.log('connected');
+  let timer = '';
+  ws.on('message', msg => {
+    if (msg.toString() === 'client_connected') {
+      timer = setInterval(() => ws.send(JSON.stringify({
+        count: String(statObj.count),
+        total: String(statObj.total),
+        status: String(statObj.status)
+      })), 100);
+    }
+  });
+  ws.on('close', () => {
+    console.log('closed');
+    ws.close();
+    clearInterval(timer);
+  });
+});
