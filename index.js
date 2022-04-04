@@ -93,26 +93,19 @@ app.post('/login_process', (req, res) => {
           [dbInfo] = result;
           const comparison = bcrypt.hashSync(dbInfo.user_pwd, loginInfo.salt);
           if (loginInfo.ID === dbInfo.user_id && loginInfo.PWD === comparison) {
-            if (dbInfo.stores === undefined) {
-              req.session.loginInfo = {
-                isLoginSuccessful: true,
-                nickname: dbInfo.user_nick,
-                isGuest: false,
-                sid: req.sessionID
-              };
-              // req.session.save(() => res.send(req.session.loginInfo));
-              res.send(req.session.loginInfo);
-            } else {
-              req.session.loginInfo = {
-                isLoginSuccessful: true,
-                nickname: dbInfo.user_nick,
-                isGuest: false,
-                sid: req.sessionID,
-                stores: { ...JSON.parse(dbInfo.stores) }
-              };
-              // req.session.save(() => res.send(req.session.loginInfo));
-              res.send(req.session.loginInfo);
+            req.session.loginInfo = {
+              isLoginSuccessful: true,
+              nickname: dbInfo.user_nick,
+              isGuest: false,
+              sid: req.sessionID
+            };
+            if (dbInfo.stores) {
+              req.session.loginInfo.stores = { ...JSON.parse(dbInfo.stores) };
             }
+            if (dbInfo.option) {
+              req.session.loginInfo.customCatOrder = dbInfo.option;
+            }
+            res.send(req.session.loginInfo);
           } else {
             res.send('ID 혹은 비밀번호가 잘못됐습니다.');
           }
@@ -127,7 +120,6 @@ app.post('/login_process', (req, res) => {
       isGuest: true,
       sid: req.sessionID
     };
-    // req.session.save(() => res.send(req.session.loginInfo));
     res.send(req.session.loginInfo);
   } else {
     res.send('ID와 비밀번호를 입력해주세요.');
@@ -511,6 +503,19 @@ app.post('/verify', (req, res) => {
   })
 })
 
+app.put('/member/modify_option', (req, res) => {
+  const originalPackage = decryptor(req.body.pack, process.env.TRACER);
+  const modedUserInfo = JSON.parse(originalPackage);
+  prodDB.query('update user_info set `option`=? where user_nick=?', [modedUserInfo.customCatOrder, modedUserInfo.nickname], err => {
+    if (err) {
+      res.send(false);
+      throw err
+    } else {
+      res.send(true);
+    }
+  })
+});
+
 app.put('/member/update', (req, res) => {
   const { sofo, reqUser } = decryptor(req.body.foo, process.env.TRACER);
   const genQueryString = (key, val) =>
@@ -544,9 +549,17 @@ app.put('/member/update', (req, res) => {
         if (sofo.nick) {
           updateQuery.push(`rename table user_lib_${reqUser} to user_lib_${sofo.nick};`);
         }
+        console.log(updateQuery)
         prodDB.query(updateQuery.join(''), (err, result2) => {
-          if (err) throw err;
-          res.send('success');
+          if (err) {
+            if (err.code === 'ER_FILE_NOT_FOUND') {
+              res.send('success');
+            } else {
+              throw err;
+            }
+          } else {
+            res.send('success');
+          }
         });
       })
     }
@@ -958,7 +971,7 @@ app.post('/disconnect', (req, res) => {
           res.send('오류가 발생했습니다.');
         }
       } else {
-        const delQueryString = `delete from user_lib_${nickname}`;
+        const delQueryString = `drop table user_lib_${nickname}`;
         prodDB.query(delQueryString, (err, result) => {
           if (err) {
             throw err;
