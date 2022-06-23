@@ -1,10 +1,13 @@
 # libmanage-server
 
+<br/><br/>
+
 ## 서비스 소개
 **libmanage**는 사용자의 스팀 라이브러리에 있는 게임의 메타 정보를 PC, 모바일 등 다양한 디바이스에서 설치할 수 있는 앱 형태로 제공하는 애플리케이션입니다.
 
 **libmanage-server**는 **libmanage** 애플리케이션의 백엔드 프로젝트입니다.
 
+<br/><br/>
 
 ## 목차
 * 기획 배경 및 상세 소개
@@ -12,12 +15,14 @@
 * 기능 명세 및 상세 화면
 * 기술 스택
 
+<br/><br/>
 
 ## 기획 배경 및 상세 소개
 * 프론트엔드 역량 향상을 위해 연습할 때보다 대규모의 프로젝트를 진행하는 한편, 관심 있던 기술을 구현해보며 지난 프로젝트들과 차별점을 두는 것을 목표로 삼았습니다.
 
 * 웹 앱의 기본적인 작동 방식에 대한 이해를 쌓기 위해 백엔드 서버를 직접 구현해보는 한편, MySQL을 활용해 DB 구축 및 CRUD 실습을 진행했습니다.
 
+<br/><br/>
 
 ## 프로젝트 구조
 ```
@@ -49,20 +54,27 @@
 │   │
 ```
 
+<br/><br/>
 
 ## 기능 명세 및 상세 화면
 <details>
 <summary>기능 명세 및 상세 화면</summary>
+
+<br/>
+
 <details>
-<summary>기본 화면</summary>
+<summary>1. 기본 화면</summary>
 <div markdown="1">
 
 ![main](https://user-images.githubusercontent.com/20578093/163828641-81572288-f474-43b1-8184-66774b385769.png)
 
 </div>
 </details>
+
+<br/>
+
 <details>
-<summary>로그인</summary>
+<summary>2. 로그인</summary>
 <div markdown="1">
 
 * DB 데이터와의 대조를 통한 **로그인** 기능
@@ -72,47 +84,62 @@
 
 </div>
 </details>
+
+<br/>
+
 <details>
-<summary>사용자 정보 관리</summary>
+<summary>3. 사용자 정보 관리</summary>
+
+<br/>
+
 <details>
-<summary>회원가입</summary>
+<summary>3-1. 회원가입</summary>
 <div markdown="1">
 
 ![libmng-reg](https://user-images.githubusercontent.com/20578093/163829174-f951975e-9c38-415f-bbf6-3ba2ee7c3f2d.png)
 
 </div>
 </details>
+
+<br/>
+
 <details>
-<summary>아이디/비밀번호 찾기</summary>
+<summary>3-2. 아이디/비밀번호 찾기</summary>
 <div markdown="1">
 
-* 아이디 찾기
+* 3-2-1. 아이디 찾기
 	![libmng_find_id](https://user-images.githubusercontent.com/20578093/163829466-3f33f88e-5f97-4b43-bf53-c4e77766d6cd.png)
-* 비밀번호 찾기
+* 3-2-2. 비밀번호 찾기
 	![libmng_find_pwd](https://user-images.githubusercontent.com/20578093/163829516-16e6ca66-2ab2-474a-90c7-247ed92c307f.png)
-* 경우별 예시
+* 3-2-3. 경우별 예시
 	![libmng_find_ex](https://user-images.githubusercontent.com/20578093/163829567-8fd3c940-013e-4bfe-b4e5-a226d1bbe8dd.png)
-<details>
-<summary>비밀번호 재설정</summary>
-<div markdown="1">
 
-* 사용자 요청별 토큰 기반으로 비밀번호 재설정 링크 제공
-* 토큰이 유효할 경우
-	![libmng_token_valid](https://user-images.githubusercontent.com/20578093/163829755-41dc4186-f260-472c-b191-0e2d4d0d942a.png)
-* 토큰이 만료된 경우
-	![libmng_token_expired](https://user-images.githubusercontent.com/20578093/163829848-653acec0-26a4-43e5-afc8-983877fcbc7a.png)
-* 올바르지 않은 토큰을 사용할 경우
-	![libmng_token_invalid](https://user-images.githubusercontent.com/20578093/163829790-21496226-0e26-40a8-969f-016c6dbc1729.png)
-* 오류가 발생한 경우
-	![libmng_token_err](https://user-images.githubusercontent.com/20578093/163829843-149dc5fe-b619-47ef-845d-ac59bb0dd2c5.png)
+	<details>
+	<summary>3-2-4. 비밀번호 재설정</summary>
+	<div markdown="1">
+
+	* 사용자 요청별 토큰 기반으로 비밀번호 재설정 링크 제공
+	* 토큰이 유효할 경우
+		![libmng_token_valid](https://user-images.githubusercontent.com/20578093/163829755-41dc4186-f260-472c-b191-0e2d4d0d942a.png)
+	* 토큰이 만료된 경우
+		![libmng_token_expired](https://user-images.githubusercontent.com/20578093/163829848-653acec0-26a4-43e5-afc8-983877fcbc7a.png)
+	* 올바르지 않은 토큰을 사용할 경우
+		![libmng_token_invalid](https://user-images.githubusercontent.com/20578093/163829790-21496226-0e26-40a8-969f-016c6dbc1729.png)
+	* 오류가 발생한 경우
+		![libmng_token_err](https://user-images.githubusercontent.com/20578093/163829843-149dc5fe-b619-47ef-845d-ac59bb0dd2c5.png)
+
+	</div>
+	</details>
+
+<br/>
 
 </div>
 </details>
 
-</div>
-</details>
+<br/>
+
 <details>
-<summary>회원정보 수정</summary>
+<summary>3-3. 회원정보 수정</summary>
 <div markdown="1">
 
 * 기능 이용 방법
@@ -122,8 +149,11 @@
 
 </div>
 </details>
+
+<br/>
+
 <details>
-<summary>회원 탈퇴</summary>
+<summary>3-4. 회원 탈퇴</summary>
 <div markdown="1">
 
 * 기능 이용 방법
@@ -133,11 +163,18 @@
 
 </div>
 </details>
+
 </details>
+
+<br/>
+
 <details>
-<summary>사용자 라이브러리 관리</summary>
+<summary>4. 사용자 라이브러리 관리</summary>
+
+<br/>
+
 <details>
-<summary>사용자의 스팀 로그인을 통한 라이브러리 정보 등록</summary>
+<summary>4-1. 사용자의 스팀 로그인을 통한 라이브러리 정보 등록</summary>
 <div markdown="1">
 
 1. 라이브러리를 등록할 스토어(스팀)에 로그인
@@ -275,8 +312,11 @@
 
 </div>
 </details>
+
+<br/>
+
 <details>
-<summary>카테고리 관리</summary>
+<summary>4-2. 카테고리 관리</summary>
 <div markdown="1">
 
 * 원하는 목록만 표시
@@ -300,29 +340,39 @@
 
 </div>
 </details>
+
+<br/>
+
 <details>
-<summary>라이브러리 텍스트/섬네일 표시</summary>
+<summary>4-3. 라이브러리 텍스트/섬네일 표시</summary>
 <div markdown="1">
 
 * 텍스트 리스트
 	![libmng_txt_list](https://user-images.githubusercontent.com/20578093/163831234-c6c5c7cd-1110-4320-91d8-fc902c7f15eb.png)
 * 섬네일 리스트
 	![libmng_thumbs_list](https://user-images.githubusercontent.com/20578093/163831228-8ac92217-054c-477d-87ce-584e7c5d18b6.png)
-<details>
-<summary>섬네일 크기 조정 시연</summary>
-<div markdown="1">
 
-![libmng_thumbs_resize_demo](https://user-images.githubusercontent.com/20578093/163831207-345f157e-55e6-4083-98ca-630a9743dd63.gif)
+	<details>
+	<summary>섬네일 크기 조정 시연</summary>
+	<div markdown="1">
+
+	![libmng_thumbs_resize_demo](https://user-images.githubusercontent.com/20578093/163831207-345f157e-55e6-4083-98ca-630a9743dd63.gif)
+
+	</div>
+	</details>
 
 </div>
 </details>
 
-</div>
-</details>
+<br/>
+
 <details>
-<summary>라이브러리 필터링 기능</summary>
+<summary>4-4. 라이브러리 필터링 기능</summary>
+
+<br/>
+
 <details>
-<summary>카테고리/스토어 단위 필터 시연</summary>
+<summary>4-4-1. 카테고리/스토어 단위 필터 시연</summary>
 <div markdown="1">
 
 * 기본 State: `all`
@@ -334,8 +384,11 @@
 
 </div>
 </details>
+
+<br/>
+
 <details>
-<summary>라이브러리 내 필터 시연</summary>
+<summary>4-4-2. 라이브러리 내 필터 시연</summary>
 <div markdown="1">
 
 * `Array.prototype.filter()`를 사용해 표시 아이템 필터링
@@ -344,8 +397,11 @@
 </div>
 </details>
 </details>
+
+<br/>
+
 <details>
-<summary>라이브러리 열람</summary>
+<summary>4-5. 라이브러리 열람</summary>
 <div markdown="1">
 
 * 사용자 라이브러리 중 [igdb.com](https://www.igdb.com/) 등록 데이터 열람 기능
@@ -369,12 +425,20 @@
 	![libmng_meta_meta](https://user-images.githubusercontent.com/20578093/163831598-0c721549-37e2-48be-958d-ee8f82bee3bc.png)
 </div>
 </details>
+
 </details>
 </details>
 
+<br/><br/>
 
 ## 기술 스택
 * Back-End
 	* Express.js
+      - 웹 앱의 작동 방식을 익히기 위해 백엔드 영역에 대한 이해도를 높이는 것을 목표로 삼았습니다.
+        - 프론트엔드에서 요청이 어떤 형태로 전해지는지, 백엔드에서 어떤 형태로 응답이 돌아오는지를 알아야 더 효율적인 프로그래밍이 가능하겠다고 생각했기 때문입니다.
+      - Express.js는 Node.js를 그대로 이용하는 것보다 라우터 구성이 직관적으로 느껴졌기 때문에, 백엔드 영역을 직접 구현하면서도 필요 이상으로 시간과 노력을 들이지 않을 수 있겠다는 판단이 들어 선택했습니다.
 * DBMS
 	* MySQL
+      - 서비스 구현에 필요한 테이블을 설계하여 사용자 정보 등을 저장하였습니다.
+        - 다양한 DB 중 MySQL을 선택한 이유는, SQL문 중 가장 기본이 되는 DB에 대한 경험을 쌓기 위해서입니다.
+        - 이 경험을 기반으로 ****추후 MariaDB 등 다른 SQL문 기반 DB나 MongoDB 등 NoSQL DB에 대한 이해를 더 잘 할 수 있을 것으로 판단했습니다.
