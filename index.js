@@ -278,7 +278,7 @@ app.post('/member/find/id', (req, res) => {
             요청하신 아이디는 다음과 같습니다.</p>
             <p>아이디: ${result[0].user_id}</p>
             <p>비밀번호를 찾으시려면 아래 링크를 클릭해주세요.</p>
-            <p><a href="https://godcl1623-libmanage.herokuapp.com/member/find/pwd">링크</a></p>
+            <p><a href="${process.env.CLIENT_ADDRESS}/member/find/pwd">링크</a></p>
           `;
           const successMsg =
             '메일이 발송되었습니다.\n메세지 함을 확인해주세요.';
@@ -343,7 +343,7 @@ app.post('/member/find/pwd', (req, res) => {
             <p>안녕하세요 ${nickFromId}님,<br>
             비밀번호 초기화 안내 메일을 보내드립니다.</p>
             <p>비밀번호를 초기화하시려면 아래 링크를 클릭해주세요.</p>
-            <p><a href="https://godcl1623-libmanage.herokuapp.com/member/reset/${token}">링크</a></p>
+            <p><a href="${process.env.CLIENT_ADDRESS}/member/reset/${token}">링크</a></p>
           `;
           const emailOptions = genEmailOptions(
             `관리자 <${process.env.SWALLOWAC}>`,
@@ -574,8 +574,8 @@ app.delete('/member', (req, res) => {
 passport.use(
   new SteamStrategy(
     {
-      returnURL: `https://libmanage-server.herokuapp.com/auth/steam/return`,
-      realm: `https://libmanage-server.herokuapp.com/`,
+      returnURL: `${process.env.SERVER_ADDRESS}/auth/steam/return`,
+      realm: `${process.env.SERVER_ADDRESS}/`,
       apiKey: process.env.CYBER
     },
     (identifier, profile, done) => {
@@ -638,10 +638,10 @@ app.get(
       })
       .then(() => {
         axios
-          .post(`https://libmanage-server.herokuapp.com/api/connect`, { execute: 'order66' })
+          .post(`${process.env.SERVER_ADDRESS}/api/connect`, { execute: 'order66' })
           .then(result => {
             apiCredential = result.data;
-            res.redirect('https://godcl1623-libmanage.herokuapp.com/api/progress');
+            res.redirect(`${process.env.CLIENT_ADDRESS}/api/progress`);
           });
       });
   }
