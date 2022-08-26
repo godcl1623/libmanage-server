@@ -100,8 +100,8 @@ app.post('/login_process', (req, res) => {
             if (dbInfo.stores) {
               req.session.loginInfo.stores = { ...JSON.parse(dbInfo.stores) };
             }
-            if (dbInfo.option) {
-              req.session.loginInfo.customCatOrder = dbInfo.option;
+            if (dbInfo.options) {
+              req.session.loginInfo.customCatOrder = dbInfo.options;
             }
             res.send(req.session.loginInfo);
           } else {
@@ -482,7 +482,7 @@ app.post('/verify', (req, res) => {
 app.put('/member/modify_option', (req, res) => {
   const originalPackage = decryptor(req.body.pack, process.env.TRACER);
   const modedUserInfo = JSON.parse(originalPackage);
-  prodDB.query('update user_info set `option`=? where user_nick=?', [modedUserInfo.customCatOrder, modedUserInfo.nickname], err => {
+  prodDB.query('update user_info set `options`=? where user_nick=?', [modedUserInfo.customCatOrder, modedUserInfo.nickname], err => {
     if (err) {
       res.send(false);
       throw err
@@ -544,7 +544,7 @@ app.put('/member/update', (req, res) => {
 
 app.delete('/member', (req, res) => {
   const reqUser = decryptor(req.body.reqUser, process.env.TRACER);
-  const whereCond = `table_schema='${process.env.DB_PROD_SCHEME}'`;
+  const whereCond = `table_schema='${process.env.MYSQLDATABASE}'`;
   const tableNameCond = `table_name='user_lib_${reqUser}'`;
   const tableCheckQuery = `select 1 from Information_schema.tables where ${whereCond} and ${tableNameCond}`;
   const delUserInfo = (reqUser, res) => {
