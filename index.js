@@ -21,7 +21,6 @@ const { encryptor, decryptor } = require('./custom_modules/aeser');
 const { getRandom } = require('./custom_modules/utils');
 
 const app = express();
-const port = process.env.PORT || 3001;
 let loginInfo = {};
 let dbInfo = {};
 let uid = '';
@@ -72,8 +71,6 @@ app.use(
     store: new MySQLStore(dbProdOptions, prodDB)
   })
 );
-
-/* #################### 로그인 서버 #################### */
 
 app.get('/', (req, res) => {
   res.send('login server');
@@ -152,32 +149,22 @@ app.post('/logout_process', (req, res) => {
 });
 
 app.post('/check_login', (req, res) => {
-  // 쿠키를 사용할 수 없는 상황이므로 DB에 저장된 세션 이용
-  // comparisonState: 스토어 연동 이후 사용자 정보 갱신을 위한 객체
-  // info: 사용자 브라우저의 로컬 저장소에 저장된 세션
   const { comparisonState, million } = req.body.message;
-  // 만약 저장된 세션이 없을 경우: 로그인 유도
+
   if (million === null) {
     res.send('no_sessions');
-    // 사용자로부터 세션이 넘어왔을 경우
   } else {
-    // 세션을 parse하여 DB에 해당 세션이 존재하는지 확인(로그인 시점에 부여된 세션id 사용)
     const sentOne = JSON.parse(decryptor(million, process.env.TRACER));
     prodDB.query(
       `select * from sessions where session_id=?`,
       [sentOne.sid],
       (err, result) => {
         if (err) throw err;
-        // DB에 사용자 세션이 존재할 경우
         if (result[0]) {
           const { data } = result[0];
-          // DB에 저장된 사용자 세션 parse, 쿠키에 저장된 만료 시점을 Date 객체에 넣어 계산 가능하도록 설정
           const gotOne = JSON.parse(data);
           const thatTime = new Date(gotOne.cookie.expires);
-          // 로그인 체크를 수행하는 시점
           const thisTime = new Date();
-          // 로그인 체크 수행 시점이 DB에 저장된 만료 시점보다 늦음 = 세션이 만료됨
-          // 세션 만료 메세지 + 기존에 저장된 세션 삭제(브라우저+DB) + 로그인 유도
           if (thisTime - thatTime > 0) {
             prodDB.query(
               'delete from sessions where session_id=?',
@@ -189,14 +176,6 @@ app.post('/check_login', (req, res) => {
                 }
               }
             );
-            // 세션이 아직 만료되지 않음 - 처리해야 할 상황 목록
-            /*
-          1. [comparisonState !== ''] = 스토어 연동이 발생해 사용자 정보 갱신이 필요함
-            (1) comparisonState로 넘어온 사용자 정보가 기존에 저장된 정보와 일치 -> 기존 로그인 정보 전송
-            (2) comparisonState로 넘어온 정보가 기존 정보와 불일치 -> 정보 갱신 후 DB에 갱신된 정보 저장 및 갱신된 정보 전송
-          2. [comparisonState === ''] = 일반적인 로그인 체크
-          3. 그 외: 로그인이 풀린 것으로 간주하여 로그인 체크 유도
-        */
           } else if (comparisonState !== '') {
             const newSession = {
               cookie: {
@@ -216,7 +195,6 @@ app.post('/check_login', (req, res) => {
                   if (result) {
                     res.send(newSession.loginInfo);
                   }
-                  // res.send('check_failed');
                 }
               );
             } else {
@@ -236,7 +214,6 @@ app.post('/check_login', (req, res) => {
               }
             );
           }
-          // DB에 사용자 세션이 존재하지 않을 경우 - 기존에 저장된 세션을 삭제하고 로그인 유도
         } else {
           res.send('session_expired');
         }
@@ -262,8 +239,6 @@ app.post('/member/register', (req, res) => {
       const checkResult = result.map(packet => packet[0].isExist);
       if (error) throw error;
       if (!checkResult.includes(1)) {
-        // 등록 쿼리문 작성
-        // res.send(encryptor(transmitted, process.env.TRACER));
         const column = 'user_id, user_pwd, user_nick, user_email, created';
         const queryString = `insert into user_info (${column}) values(?, ?, ?, ?, now())`;
         const values = [
@@ -303,7 +278,7 @@ app.post('/member/find/id', (req, res) => {
             요청하신 아이디는 다음과 같습니다.</p>
             <p>아이디: ${result[0].user_id}</p>
             <p>비밀번호를 찾으시려면 아래 링크를 클릭해주세요.</p>
-            <p><a href="https://godcl1623-libmanage.herokuapp.com/member/find/pwd">링크</a></p>
+            <p><a href="${process.env.CLIENT_ADDRESS}/member/find/pwd">링크</a></p>
           `;
           const successMsg =
             '메일이 발송되었습니다.\n메세지 함을 확인해주세요.';
@@ -368,7 +343,7 @@ app.post('/member/find/pwd', (req, res) => {
             <p>안녕하세요 ${nickFromId}님,<br>
             비밀번호 초기화 안내 메일을 보내드립니다.</p>
             <p>비밀번호를 초기화하시려면 아래 링크를 클릭해주세요.</p>
-            <p><a href="https://godcl1623-libmanage.herokuapp.com/member/reset/${token}">링크</a></p>
+            <p><a href="${process.env.CLIENT_ADDRESS}/member/reset/${token}">링크</a></p>
           `;
           const emailOptions = genEmailOptions(
             `관리자 <${process.env.SWALLOWAC}>`,
@@ -599,10 +574,8 @@ app.delete('/member', (req, res) => {
 passport.use(
   new SteamStrategy(
     {
-      returnURL: `https://libmanage-server.herokuapp.com/auth/steam/return`,
-      // returnURL: `http://localhost:3003/auth/steam/return`,
-      realm: `https://libmanage-server.herokuapp.com/`,
-      // realm: `http://localhost:3003/`,
+      returnURL: `${process.env.SERVER_ADDRESS}/auth/steam/return`,
+      realm: `${process.env.SERVER_ADDRESS}/`,
       apiKey: process.env.CYBER
     },
     (identifier, profile, done) => {
@@ -650,10 +623,7 @@ app.get(
     session: false
   }),
   (req, res) => {
-    // 1. 스팀 로그인 성공 후 사용자 아이디를 반환
     uid = req.user.id;
-    // 2. 반환받은 사용자 아이디로 게임 목록 호출, 제목만 추출한 후 알파벳 순 정렬
-    // 제목에서 appid로 변경 - url 대조를 위해
     const getOwnedGames = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?include_appinfo=1&include_played_free_games=1&key=${process.env.CYBER}&steamid=${uid}&format=json`;
     axios
       .get(getOwnedGames)
@@ -663,18 +633,15 @@ app.get(
         const sortedTempArr = steamResult.sort((prev, next) =>
           prev < next ? -1 : 1
         );
-        // 정렬된 게임 목록을 변수 gameList로 업데이트
         gameList = sortedTempArr;
         statObj.total = gameList.length;
       })
       .then(() => {
         axios
-          .post(`https://libmanage-server.herokuapp.com/api/connect`, { execute: 'order66' })
-          // .post(`http://localhost:3003/api/connect`, { execute: 'order66' })
+          .post(`${process.env.SERVER_ADDRESS}/api/connect`, { execute: 'order66' })
           .then(result => {
             apiCredential = result.data;
-            res.redirect('https://godcl1623-libmanage.herokuapp.com/api/progress');
-            // res.redirect('http://localhost:3000/api/progress');
+            res.redirect(`${process.env.CLIENT_ADDRESS}/api/progress`);
           });
       });
   }
@@ -748,7 +715,6 @@ app.post('/meta/search', (req, res) => {
     requestedUser = req.body.pack.userInfo.nickname;
   }
   const client = igdb(cid, token);
-  // 1. 스팀 게임별 고유 id와 IGDB 사이트에 등록된 스팀 url 대조 함수 - IGDB 고유 게임 아이디 이용 예정
   const steamURLSearchQuery = async steamAppId => {
     const response = await client
       .fields(['game'])
@@ -756,16 +722,13 @@ app.post('/meta/search', (req, res) => {
       .request('/external_games');
     return response;
   };
-  // 2. IGDB 아이디를 이용한 게임 메타데이터 검색 함수
   const igdbIDSearch = async igdbID => {
     const response = await client
       .fields(['*'])
-      // .search('cyberpunk 2077')
       .where(`id = ${igdbID}`)
       .request('/games');
     return response;
   };
-  // 3. 게임 표지 검색 함수
   const coverSearch = async igdbCoverID => {
     const response = await client
       .fields(['image_id'])
@@ -773,7 +736,6 @@ app.post('/meta/search', (req, res) => {
       .request('/covers');
     return response;
   };
-  // 4. IGDB상 저장된 스팀 게임의 url을 기반으로 IGDB 고유 게임 아이디 반환
   const firstFilter = (rawData, filterFunc) =>
     new Promise((resolve, reject) => {
       const temp = [];
@@ -808,7 +770,6 @@ app.post('/meta/search', (req, res) => {
         }, index * 300);
       });
     });
-  // 5. 4에서 검색된 IGDB 고유 아이디를 통한 게임 메타데이터 검색 함수
   const returnMeta = (rawData, filterFunc) =>
     new Promise((resolve, reject) => {
       const temp = [];
@@ -834,7 +795,6 @@ app.post('/meta/search', (req, res) => {
         }, index * 300);
       });
     });
-  // 6. 메타 데이터 가공 함수 - 제목, 표지, url 추출
   const processMeta = (rawData, filterFunc) =>
     new Promise((resolve, reject) => {
       const titles = rawData.map(gameMeta => gameMeta.name);
@@ -860,14 +820,12 @@ app.post('/meta/search', (req, res) => {
         }, index * 300);
       });
     });
-  // 7. DB 기록 함수
   const writeToDB = resultObj =>
     new Promise((resolve, reject) => {
       const { titles, urls, covers, rawData } = resultObj;
       const writeDB = () => {
         (() => {
           const columns = 'title, cover, igdb_url, processed, meta';
-          // const queryString = `insert into foo (${columns}) values(?, ?, ?, ?)`;
           const queryString = `insert into user_lib_${requestedUser} (${columns}) values(?, ?, ?, ?, ?)`;
           rawData.forEach((data, index) => {
             const values = [
@@ -928,11 +886,9 @@ app.post('/meta/search', (req, res) => {
         }
       });
     });
-  // 실제 검색 실행 코드
   firstFilter(gameList, steamURLSearchQuery)
     .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
     .then(igdbResult => processMeta(igdbResult, coverSearch))
-    // 최종 메타데이터 목록 - igdbResult는 배열, 이 중 name, cover 정보 필요. name은 추출하기만 하면 되는데, cover는 image_id를 별도로 검색해서 받아와야 함
     .then(resultObj => writeToDB(resultObj))
     .then(writeResult => res.send(writeResult))
     .catch(err => console.log(err));
@@ -944,8 +900,6 @@ app.post('/disconnect', (req, res) => {
   const { game: gameStoreList } = stores;
   const storeNames = Object.keys(gameStoreList);
   const isStoreAdded = Object.values(gameStoreList);
-  // const storeNames = ['steam', 'epic', 'origin', 'ubisoft'];
-  // const isStoreAdded = [true, false, false, true]
   const deletedStoresFilter = storeNames
     .map((store, index) => {
       let temp = '';
@@ -968,7 +922,6 @@ app.post('/disconnect', (req, res) => {
           if (err) {
             throw err;
           } else {
-            // 추후 여러 스토어에 대응 가능하도록 수정
             const stores = {
               game: {
                 steam: false
@@ -999,7 +952,6 @@ app.post('/get/db', (req, res) => {
       const [gameStores] = req.body.reqData.reqLibs;
       const { reqUser: nickname } = req.body.reqData;
       if (gameStores !== '') {
-        // 추후 스토어 갯수 늘어나면 db 선택식으로 변경하기
         prodDB.query(
           `select title, cover from user_lib_${nickname} order by title asc`,
           (err, result) => {
@@ -1022,7 +974,6 @@ app.post('/get/db', (req, res) => {
 app.post('/get/meta', (req, res) => {
   const { reqUser, selTitle, credData } = req.body.reqData;
   const { cid, access_token: token } = credData;
-  const client = igdb(cid, token);
   const multiQuerySearch = async (endpoints, valNeed, query) => {
     let queryStr = '';
     let queryData = '';
@@ -1056,13 +1007,6 @@ app.post('/get/meta', (req, res) => {
     });
     return response;
   };
-  // const eachQuerySearch = async (endpoints, id, field) => {
-  //   const response = await client
-  //     .fields(`${field}`)
-  //     .where(`id=${id}`)
-  //     .request(`/${endpoints}`);
-  //   return response;
-  // };
   prodDB.query(
     `select processed from user_lib_${reqUser} where title="${selTitle}"`,
     (err, result) => {
@@ -1278,7 +1222,6 @@ const server = app.listen(app.get('port'), () =>
   console.log(`server is running at port ${app.get('port')}`)
 );
 
-/* #################### 진행도 표시용 웹소켓 서버 #################### */
 const wss = new WebSocketServer({ server });
 wss.on('connection', ws => {
   console.log('connected');
