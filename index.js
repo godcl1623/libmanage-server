@@ -73,7 +73,7 @@ app.use(
 );
 
 app.get('/', (req, res) => {
-  res.send('login server');
+  res.send('backend server connected');
 });
 
 app.post('/login_process', (req, res) => {
