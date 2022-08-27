@@ -76,40 +76,41 @@ app.get('/', (req, res) => {
   res.send('backend server connected');
 });
 
-app.post('/login_process', (req, res) => {
+app.post('/login_process', async (req, res) => {
   loginInfo = decryptor(req.body.sofo, process.env.TRACER);
-  if (loginInfo.ID !== undefined && loginInfo.PWD !== undefined) {
-    loginInfo.salt = bcrypt.getSalt(loginInfo.PWD);
-    prodDB.query(
-      'select * from user_info where user_id=?',
-      [loginInfo.ID],
-      (error, result) => {
-        if (error) throw error;
-        if (result[0] === undefined) {
-          res.send('등록되지 않은 ID입니다.');
-        } else {
-          [dbInfo] = result;
-          const comparison = bcrypt.hashSync(dbInfo.user_pwd, loginInfo.salt);
-          if (loginInfo.ID === dbInfo.user_id && loginInfo.PWD === comparison) {
-            req.session.loginInfo = {
-              isLoginSuccessful: true,
-              nickname: dbInfo.user_nick,
-              isGuest: false,
-              sid: req.sessionID
-            };
-            if (dbInfo.stores) {
-              req.session.loginInfo.stores = { ...JSON.parse(dbInfo.stores) };
-            }
-            if (dbInfo.options) {
-              req.session.loginInfo.customCatOrder = dbInfo.options;
-            }
-            res.send(req.session.loginInfo);
-          } else {
-            res.send('ID 혹은 비밀번호가 잘못됐습니다.');
+  if (loginInfo.ID.length > 0 && loginInfo.PWD.length > 0) {
+    try {
+      loginInfo.salt = bcrypt.getSalt(loginInfo.PWD);
+      const [rows, fields] = await prodDB.query(
+        'select * from user_info where user_id=?',
+        [loginInfo.ID]
+      );
+      if (rows[0] === undefined) {
+        res.send('등록되지 않은 ID입니다.');
+      } else {
+        [dbInfo] = rows;
+        const comparison = bcrypt.hashSync(dbInfo.user_pwd, loginInfo.salt);
+        if (loginInfo.ID === dbInfo.user_id && loginInfo.PWD === comparison) {
+          req.session.loginInfo = {
+            isLoginSuccessful: true,
+            nickname: dbInfo.user_nick,
+            isGuest: false,
+            sid: req.sessionID
+          };
+          if (dbInfo.stores) {
+            req.session.loginInfo.stores = { ...JSON.parse(dbInfo.stores) };
           }
+          if (dbInfo.options) {
+            req.session.loginInfo.customCatOrder = dbInfo.options;
+          }
+          res.send(req.session.loginInfo);
+        } else {
+          res.send('ID 혹은 비밀번호가 잘못됐습니다.');
         }
       }
-    );
+    } catch (error) {
+      throw new Error(error);
+    }
   } else if (loginInfo.mode === 'guest') {
     const newGuest = `guest#${getRandom()}`;
     req.session.loginInfo = {
@@ -133,49 +134,48 @@ app.post('/logout_process', (req, res) => {
       isLoginSuccessful: false,
       nickname: ''
     };
-    req.session.destroy(() => {
-      prodDB.query(
-        'delete from sessions where session_id=?',
-        [sid],
-        (err, result) => {
-          if (err) throw err;
-          if (result) {
-            res.send(logoutInfo);
-          }
+    req.session.destroy(async () => {
+      try {
+        const [rows] = await prodDB.query(
+          'delete from sessions where session_id=?',
+          [sid]
+        );
+        if (rows) {
+          res.send(logoutInfo);
         }
-      );
+      } catch (error) {
+        throw new Error(error);
+      }
     });
   }
 });
 
-app.post('/check_login', (req, res) => {
+app.post('/check_login', async (req, res) => {
   const { comparisonState, million } = req.body.message;
 
-  if (million === null) {
+  if (million == null) {
     res.send('no_sessions');
   } else {
-    const sentOne = JSON.parse(decryptor(million, process.env.TRACER));
-    prodDB.query(
-      `select * from sessions where session_id=?`,
-      [sentOne.sid],
-      (err, result) => {
-        if (err) throw err;
-        if (result[0]) {
-          const { data } = result[0];
+    try {
+      const sentOne = JSON.parse(decryptor(million, process.env.TRACER));
+      const [sessionQueryResult] = await prodDB.query(
+        `select * from sessions where session_id=?`,
+        [sentOne.sid]
+      );
+      if (sessionQueryResult[0]) {
+        try {
+          const { data } = sessionQueryResult[0];
           const gotOne = JSON.parse(data);
           const thatTime = new Date(gotOne.cookie.expires);
           const thisTime = new Date();
           if (thisTime - thatTime > 0) {
-            prodDB.query(
+            const [deleteSessionResult] = await prodDB.query(
               'delete from sessions where session_id=?',
-              [sentOne.sid],
-              (err, result) => {
-                if (err) throw err;
-                if (result) {
-                  res.send('session_expired');
-                }
-              }
+              [sentOne.sid]
             );
+            if (deleteSessionResult) {
+              res.send('session_expired');
+            }
           } else if (comparisonState !== '') {
             const newSession = {
               cookie: {
@@ -187,288 +187,294 @@ app.post('/check_login', (req, res) => {
             };
             const compare = JSON.stringify(newSession);
             if (data !== compare) {
-              prodDB.query(
+              const [updateSessionResult] = await prodDB.query(
                 'update sessions set data=? where session_id=?',
-                [compare, sentOne.sid],
-                (err, result) => {
-                  if (err) throw err;
-                  if (result) {
-                    res.send(newSession.loginInfo);
-                  }
-                }
+                [compare, sentOne.sid]
               );
+              if (updateSessionResult) {
+                res.send(newSession.loginInfo);
+              }
             } else {
               res.send(gotOne.loginInfo);
             }
           } else if (gotOne.loginInfo) {
             res.send(gotOne.loginInfo);
           } else {
-            prodDB.query(
+            const [deleteSessionResult] = await prodDB.query(
               'delete from sessions where session_id=?',
-              [sentOne.sid],
-              (err, result) => {
-                if (err) throw err;
-                if (result) {
-                  res.send('check_failed');
-                }
-              }
+              [sentOne.sid]
             );
+            if (deleteSessionResult) {
+              res.send('check_failed');
+            }
           }
-        } else {
-          res.send('session_expired');
+        } catch (error) {
+          throw new Error(error);
         }
+      } else {
+        res.send('session_expired');
       }
-    );
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 });
 
-app.post('/member/register', (req, res) => {
-  const transmitted = decryptor(req.body.foo, process.env.TRACER);
-  const temp = {};
-  const genQueryString = string =>
-    `select mid from user_info where ${string}=?`;
-  const genExists = qString => `select exists (${qString} limit 1) as isExist`;
-  prodDB.query(
-    `
-      ${genExists(genQueryString('user_id'))};
-      ${genExists(genQueryString('user_nick'))};
-      ${genExists(genQueryString('user_email'))};
-    `,
-    [transmitted.id, transmitted.nick, transmitted.email],
-    (error, result) => {
-      const checkResult = result.map(packet => packet[0].isExist);
-      if (error) throw error;
-      if (!checkResult.includes(1)) {
-        const column = 'user_id, user_pwd, user_nick, user_email, created';
-        const queryString = `insert into user_info (${column}) values(?, ?, ?, ?, now())`;
-        const values = [
-          transmitted.id,
-          transmitted.pwd,
-          transmitted.nick,
-          transmitted.email
-        ];
-        prodDB.query(queryString, values, (err, result) => {
-          if (err) throw err;
-          res.send('success');
+app.post('/member/register', async (req, res) => {
+  try {
+    const transmitted = decryptor(req.body.foo, process.env.TRACER);
+    const temp = {};
+    const genQueryString = string =>
+      `select mid from user_info where ${string}=?`;
+    const genExists = qString =>
+      `select exists (${qString} limit 1) as isExist`;
+    const [overlapsQueryResult] = await prodDB.query(
+      `
+        ${genExists(genQueryString('user_id'))};
+        ${genExists(genQueryString('user_nick'))};
+        ${genExists(genQueryString('user_email'))};
+      `,
+      [transmitted.id, transmitted.nick, transmitted.email]
+    );
+    const checkResult = overlapsQueryResult.map(packet => packet[0].isExist);
+    if (!checkResult.includes(1)) {
+      const column = 'user_id, user_pwd, user_nick, user_email, created';
+      const queryString = `insert into user_info (${column}) values(?, ?, ?, ?, now())`;
+      const values = [
+        transmitted.id,
+        transmitted.pwd,
+        transmitted.nick,
+        transmitted.email
+      ];
+      const [insertResult] = await prodDB.query(queryString, values);
+      console.log(insertResult);
+      if (insertResult) {
+        res.send('success');
+      }
+    } else {
+      [temp.id, temp.nick, temp.email] = checkResult;
+      res.send(encryptor(temp, process.env.TRACER));
+    }
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+app.post('/member/find/id', async (req, res) => {
+  try {
+    const { nick: queryNick, email: queryEmail } = decryptor(
+      req.body.infoObj,
+      process.env.TRACER
+    );
+    const [emailQueryResult] = await prodDB.query(
+      'select user_nick, user_id from user_info where user_email=?',
+      [queryEmail]
+    );
+    if (emailQueryResult[0] !== undefined) {
+      const nickMatchesWithEmail = emailQueryResult[0].user_nick;
+      if (queryNick === nickMatchesWithEmail) {
+        const subject = '아이디 찾기 요청 결과입니다.';
+        const html = `
+              <p>안녕하세요 ${nickMatchesWithEmail}님,<br>
+              요청하신 아이디는 다음과 같습니다.</p>
+              <p>아이디: ${emailQueryResult[0].user_id}</p>
+              <p>비밀번호를 찾으시려면 아래 링크를 클릭해주세요.</p>
+              <p><a href="${process.env.CLIENT_ADDRESS}/member/find/pwd">링크</a></p>
+            `;
+        const successMsg = '메일이 발송되었습니다.\n메세지 함을 확인해주세요.';
+        const emailOptions = genEmailOptions(
+          `관리자 <${process.env.SWALLOWAC}>`,
+          queryEmail,
+          subject,
+          html
+        );
+        transporter.sendMail(emailOptions, (err, info) => {
+          if (err) {
+            res.send('오류가 발생했습니다');
+          }
+          res.send(successMsg);
         });
       } else {
-        [temp.id, temp.nick, temp.email] = checkResult;
-        res.send(encryptor(temp, process.env.TRACER));
+        res.send('가입된 정보와 일치하지 않습니다.');
       }
+    } else {
+      res.send('가입되지 않은 이메일 주소입니다.');
     }
-  );
-});
-
-app.post('/member/find/id', (req, res) => {
-  const { nick: queryNick, email: queryEmail } = decryptor(
-    req.body.infoObj,
-    process.env.TRACER
-  );
-  prodDB.query(
-    'select user_nick, user_id from user_info where user_email=?',
-    [queryEmail],
-    (error, result) => {
-      if (error) throw error;
-      if (result[0] !== undefined) {
-        const nickMatchesWithEmail = result[0].user_nick;
-        if (queryNick === nickMatchesWithEmail) {
-          const subject = '아이디 찾기 요청 결과입니다.';
-          const html = `
-            <p>안녕하세요 ${nickMatchesWithEmail}님,<br>
-            요청하신 아이디는 다음과 같습니다.</p>
-            <p>아이디: ${result[0].user_id}</p>
-            <p>비밀번호를 찾으시려면 아래 링크를 클릭해주세요.</p>
-            <p><a href="${process.env.CLIENT_ADDRESS}/member/find/pwd">링크</a></p>
-          `;
-          const successMsg =
-            '메일이 발송되었습니다.\n메세지 함을 확인해주세요.';
-          const emailOptions = genEmailOptions(
-            `관리자 <${process.env.SWALLOWAC}>`,
-            queryEmail,
-            subject,
-            html
-          );
-          transporter.sendMail(emailOptions, (err, info) => {
-            if (err) {
-              res.send('오류가 발생했습니다');
-            }
-            res.send(successMsg);
-          });
-        } else {
-          res.send('가입된 정보와 일치하지 않습니다.');
-        }
-      } else {
-        res.send('가입되지 않은 이메일 주소입니다.');
-      }
-    }
-  );
-});
-
-app.post('/member/find/pwd', (req, res) => {
-  const { id: queryId, email: queryEmail } = decryptor(
-    req.body.infoObj,
-    process.env.TRACER
-  );
-  const genQueryString = string =>
-    `select user_nick from user_info where ${string}=?`;
-  prodDB.query(
-    `
-      ${genQueryString('user_id')};
-      ${genQueryString('user_email')};
-    `,
-    [queryId, queryEmail],
-    (error, result) => {
-      if (error) throw error;
-      if (result[0][0] !== undefined && result[1][0] !== undefined) {
-        const nickFromId = result[0][0].user_nick;
-        const nickFromEmail = result[1][0].user_nick;
-        if (nickFromId === nickFromEmail) {
-          const token = crypto.randomBytes(64).toString('hex');
-          const authData = {
-            token,
-            userId: queryId,
-            ttl: 300
-          };
-          const timeStamp = () => {
-            const today = new Date();
-            today.setHours(today.getHours()+9);
-            return today.toISOString().replace('T', ' ').substring(0, 19);
-          };
-          prodDB.query(
-            'insert into user_token (token_body, created) values(?, ?)',
-            [JSON.stringify(authData), timeStamp()]
-          );
-          const subject = '비밀번호 찾기 요청 결과입니다.';
-          const html = `
-            <p>안녕하세요 ${nickFromId}님,<br>
-            비밀번호 초기화 안내 메일을 보내드립니다.</p>
-            <p>비밀번호를 초기화하시려면 아래 링크를 클릭해주세요.</p>
-            <p><a href="${process.env.CLIENT_ADDRESS}/member/reset/${token}">링크</a></p>
-          `;
-          const emailOptions = genEmailOptions(
-            `관리자 <${process.env.SWALLOWAC}>`,
-            queryEmail,
-            subject,
-            html
-          );
-          transporter.sendMail(emailOptions, (err, info) => {
-            if (err) {
-              res.send('오류가 발생했습니다');
-            }
-            res.send('메일이 발송되었습니다.\n메세지 함을 확인해주세요.');
-          });
-        } else {
-          res.send('가입된 정보와 일치하지 않습니다.');
-        }
-      } else {
-        res.send('입력된 정보를 다시 확인해주세요.');
-      }
-    }
-  );
-});
-
-app.post('/member/reset', (req, res) => {
-  const { tokenTail, requestedTime } = decryptor(
-    req.body.postData,
-    process.env.TRACER
-  );
-  if (tokenTail && requestedTime) {
-    prodDB.query(
-      'select * from user_token where token_body like ?',
-      [`%${tokenTail}%`],
-      (err, result) => {
-        if (result[0] !== undefined) {
-          const requestedToken = JSON.parse(result[0].token_body);
-          requestedToken.tokenId = result[0].req_id;
-          const createdTime = result[0].created;
-          requestedToken.originTime = createdTime;
-          const reqTimeVal = new Date(requestedTime);
-          const createdTimeVal = new Date(createdTime);
-          const timeDiff = (reqTimeVal - createdTimeVal) / 1000;
-          if (timeDiff <= requestedToken.ttl) {
-            res.send({
-              tokenState: true,
-              token: requestedToken
-            });
-          } else {
-            res.send({
-              tokenState: false
-            });
-          }
-        } else {
-          res.send({
-            tokenState: 'no_token'
-          });
-        }
-      }
-    );
-  } else {
-    res.send({
-      tokenState: 'abnormal'
-    });
+  } catch (error) {
+    throw new Error(error);
   }
 });
 
-app.post('/member/reset/pwd', (req, res) => {
-  const {
-    id: userId,
-    pwd: newPwd,
-    tokenId,
-    ttl,
-    reqTime,
-    originTime
-  } = decryptor(req.body.formData, process.env.TRACER);
-  const reqTimeVal = new Date(reqTime);
-  const createdTimeVal = new Date(originTime);
-  const timeDiff = (reqTimeVal - createdTimeVal) / 1000;
-  if (userId && newPwd) {
-    if (timeDiff <= ttl) {
-      prodDB.query(
-        'update user_info set user_pwd=? where user_id=?',
-        [newPwd, userId],
-        (err, result) => {
-          if (err) throw err;
-          if (result.changedRows) {
-            prodDB.query(
-              'delete from user_token where req_id=?',
-              [tokenId],
-              (err, result) => {
-                if (err) throw err;
-                if (result.affectedRows) {
-                  res.send('complete');
-                } else {
-                  res.send('error');
-                }
-              }
-            );
+app.post('/member/find/pwd', async (req, res) => {
+  try {
+    const { id: queryId, email: queryEmail } = decryptor(
+      req.body.infoObj,
+      process.env.TRACER
+    );
+    const genQueryString = string =>
+      `select user_nick from user_info where ${string}=?`;
+    const [idEmailQueryResult] = await prodDB.query(
+      `
+        ${genQueryString('user_id')};
+        ${genQueryString('user_email')};
+      `,
+      [queryId, queryEmail]
+    );
+    if (
+      idEmailQueryResult[0][0] !== undefined &&
+      idEmailQueryResult[1][0] !== undefined
+    ) {
+      const nickFromId = idEmailQueryResult[0][0].user_nick;
+      const nickFromEmail = idEmailQueryResult[1][0].user_nick;
+      if (nickFromId === nickFromEmail) {
+        const token = crypto.randomBytes(64).toString('hex');
+        const authData = {
+          token,
+          userId: queryId,
+          ttl: 300
+        };
+        const timeStamp = () => {
+          const today = new Date();
+          today.setHours(today.getHours() + 9);
+          return today.toISOString().replace('T', ' ').substring(0, 19);
+        };
+        await prodDB.query(
+          'insert into user_token (token_body, created) values(?, ?)',
+          [JSON.stringify(authData), timeStamp()]
+        );
+        const subject = '비밀번호 찾기 요청 결과입니다.';
+        const html = `
+              <p>안녕하세요 ${nickFromId}님,<br>
+              비밀번호 초기화 안내 메일을 보내드립니다.</p>
+              <p>비밀번호를 초기화하시려면 아래 링크를 클릭해주세요.</p>
+              <p><a href="${process.env.CLIENT_ADDRESS}/member/reset/${token}">링크</a></p>
+            `;
+        const emailOptions = genEmailOptions(
+          `관리자 <${process.env.SWALLOWAC}>`,
+          queryEmail,
+          subject,
+          html
+        );
+        transporter.sendMail(emailOptions, (err, info) => {
+          if (err) {
+            res.send('오류가 발생했습니다');
           }
-        }
-      );
+          res.send('메일이 발송되었습니다.\n메세지 함을 확인해주세요.');
+        });
+      } else {
+        res.send('가입된 정보와 일치하지 않습니다.');
+      }
     } else {
-      prodDB.query(
-        'delete from user_token where req_id=?',
-        [tokenId],
-        (err, result) => {
-          if (err) throw err;
-          if (result.affectedRows) {
-            res.send('expired');
+      res.send('입력된 정보를 다시 확인해주세요.');
+    }
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+app.post('/member/reset', async (req, res) => {
+  try {
+    const { tokenTail, requestedTime } = decryptor(
+      req.body.postData,
+      process.env.TRACER
+    );
+    if (tokenTail && requestedTime) {
+      const [tokenQueryResult] = await prodDB.query(
+        'select * from user_token where token_body like ?',
+        [`%${tokenTail}%`]
+      );
+      if (tokenQueryResult[0] !== undefined) {
+        const requestedToken = JSON.parse(tokenQueryResult[0].token_body);
+        requestedToken.tokenId = tokenQueryResult[0].req_id;
+        const createdTime = tokenQueryResult[0].created;
+        requestedToken.originTime = createdTime;
+        const reqTimeVal = new Date(requestedTime);
+        const createdTimeVal = new Date(createdTime);
+        const timeDiff = (reqTimeVal - createdTimeVal) / 1000;
+        if (timeDiff <= requestedToken.ttl) {
+          res.send({
+            tokenState: true,
+            token: requestedToken
+          });
+        } else {
+          res.send({
+            tokenState: false
+          });
+        }
+      } else {
+        res.send({
+          tokenState: 'no_token'
+        });
+      }
+    } else {
+      res.send({
+        tokenState: 'abnormal'
+      });
+    }
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+app.post('/member/reset/pwd', async (req, res) => {
+  try {
+    const {
+      id: userId,
+      pwd: newPwd,
+      tokenId,
+      ttl,
+      reqTime,
+      originTime
+    } = decryptor(req.body.formData, process.env.TRACER);
+    const reqTimeVal = new Date(reqTime);
+    const createdTimeVal = new Date(originTime);
+    const timeDiff = (reqTimeVal - createdTimeVal) / 1000;
+    if (userId && newPwd) {
+      if (timeDiff <= ttl) {
+        const [passwordUpdateResult] = await prodDB.query(
+          'update user_info set user_pwd=? where user_id=?',
+          [newPwd, userId]
+        );
+        console.log(passwordUpdateResult.changedRows);
+        if (passwordUpdateResult.changedRows) {
+          const [tokenDeleteResult] = await prodDB.query(
+            'delete from user_token where req_id=?',
+            [tokenId]
+          );
+          if (tokenDeleteResult.affectedRows) {
+            res.send('complete');
           } else {
             res.send('error');
           }
         }
-      );
+      } else {
+        const [tokenExpiredResult] = await prodDB.query(
+          'delete from user_token where req_id=?',
+          [tokenId]
+        );
+        if (tokenExpiredResult.affectedRows) {
+          res.send('expired');
+        } else {
+          res.send('error');
+        }
+      }
+    } else {
+      res.send('error');
     }
-  } else {
-    res.send('error');
+  } catch (error) {
+    throw new Error(error);
   }
 });
 
-app.post('/verify', (req, res) => {
-  const { sofo } = req.body;
-  const { NICK, PWD } = decryptor(sofo, process.env.TRACER);
-  prodDB.query('select user_pwd from user_info where user_nick=?', [NICK], (err, result) => {
-    if (err) throw err;
-    const dbPwd = result[0].user_pwd;
+app.post('/verify', async (req, res) => {
+  try {
+    const { sofo } = req.body;
+    const { NICK, PWD } = decryptor(sofo, process.env.TRACER);
+    const [passwordQueryResult] = await prodDB.query(
+      'select user_pwd from user_info where user_nick=?',
+      [NICK]
+    );
+    const dbPwd = passwordQueryResult[0].user_pwd;
     const verifySalt = bcrypt.getSalt(PWD);
     const comparison = bcrypt.hashSync(dbPwd, verifySalt);
     if (PWD === comparison) {
@@ -476,98 +482,113 @@ app.post('/verify', (req, res) => {
     } else {
       res.send(false);
     }
-  })
-})
-
-app.put('/member/modify_option', (req, res) => {
-  const originalPackage = decryptor(req.body.pack, process.env.TRACER);
-  const modedUserInfo = JSON.parse(originalPackage);
-  prodDB.query('update user_info set `options`=? where user_nick=?', [modedUserInfo.customCatOrder, modedUserInfo.nickname], err => {
-    if (err) {
-      res.send(false);
-      throw err
-    } else {
-      res.send(true);
-    }
-  })
+  } catch (error) {
+    throw new Error(error);
+  }
 });
 
-app.put('/member/update', (req, res) => {
-  const { sofo, reqUser } = decryptor(req.body.foo, process.env.TRACER);
-  const genQueryString = (key, val) =>
-    `select mid from user_info where user_${key}='${val}'`;
-  const genExists = qString => `select exists (${qString} limit 1) as isExist`;
-  const checkQueries = Object.keys(sofo).map(key => `${genExists(genQueryString(key, sofo[key]))};`);
-  let requestedUserid = '';
-  prodDB.query(checkQueries.join(''), (err, results) => {
-    if (err) throw err;
-    const repeatedDataIdx = results.length !== 1
-      ?
-        results
-          .filter(result => result[0].isExist === 1)
-          .map(result => results.indexOf(result))
-      :
-        results
-          .filter(result => result.isExist === 1)
-          .map(result => results.indexOf(result));
-    if (repeatedDataIdx.length !== 0 && (Object.keys(sofo).length === 1 && Object.keys(sofo)[0] !== 'pwd')) {
+app.put('/member/modify_option', async (req, res) => {
+  try {
+    const originalPackage = decryptor(req.body.pack, process.env.TRACER);
+    const modedUserInfo = JSON.parse(originalPackage);
+    const [updateResult] = await prodDB.query(
+      'update user_info set `options`=? where user_nick=?',
+      [modedUserInfo.customCatOrder, modedUserInfo.nickname]
+    );
+    if (updateResult) {
+      res.send(true);
+    } else {
+      res.send(false);
+    }
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+app.put('/member/update', async (req, res) => {
+  try {
+    const { sofo, reqUser } = decryptor(req.body.foo, process.env.TRACER);
+    const genQueryString = (key, val) =>
+      `select mid from user_info where user_${key}='${val}'`;
+    const genExists = qString =>
+      `select exists (${qString} limit 1) as isExist`;
+    const checkQueries = Object.keys(sofo).map(
+      key => `${genExists(genQueryString(key, sofo[key]))};`
+    );
+    let requestedUserid = '';
+    const [existCheckResult] = await prodDB.query(checkQueries.join(''));
+    const repeatedDataIdx =
+      existCheckResult.length !== 1
+        ? existCheckResult
+            .filter(result => result[0].isExist === 1)
+            .map(result => existCheckResult.indexOf(result))
+        : existCheckResult
+            .filter(result => result.isExist === 1)
+            .map(result => existCheckResult.indexOf(result));
+    if (
+      repeatedDataIdx.length !== 0 &&
+      Object.keys(sofo).length === 1 &&
+      Object.keys(sofo)[0] !== 'pwd'
+    ) {
       const pack = {
         result: false,
         repeatedData: repeatedDataIdx.map(idx => Object.keys(sofo)[idx])
       };
       res.send(pack);
     } else {
-      prodDB.query(`select user_id from user_info where user_nick='${reqUser}'`, (err, result) => {
-        if (err) throw err;
-        requestedUserid = result[0].user_id;
-        const updateQueryStr = (key, val, origin) => `update user_info set user_${key}='${val}' where user_id='${origin}';`;
-        const updateQuery = Object.keys(sofo).map(key => updateQueryStr(key, sofo[key], requestedUserid));
-        if (sofo.nick) {
-          updateQuery.push(`rename table user_lib_${reqUser} to user_lib_${sofo.nick};`);
-        }
-        console.log(updateQuery)
-        prodDB.query(updateQuery.join(''), (err, result2) => {
-          if (err) {
-            if (err.code === 'ER_FILE_NOT_FOUND') {
-              res.send('success');
-            } else {
-              throw err;
-            }
-          } else {
-            res.send('success');
-          }
-        });
-      })
+      const [idQueryByNickResult] = await prodDB.query(
+        `select user_id from user_info where user_nick='${reqUser}'`
+      );
+      requestedUserid = idQueryByNickResult[0].user_id;
+      const updateQueryStr = (key, val, origin) =>
+        `update user_info set user_${key}='${val}' where user_id='${origin}';`;
+      const updateQuery = Object.keys(sofo).map(key =>
+        updateQueryStr(key, sofo[key], requestedUserid)
+      );
+      if (sofo.nick) {
+        updateQuery.push(
+          `rename table user_lib_${reqUser} to user_lib_${sofo.nick};`
+        );
+      }
+      const [updateUserInfoResult] = await prodDB.query(updateQuery.join(''));
+      if (updateUserInfoResult) {
+        res.send('success');
+        console.log(updateUserInfoResult);
+      }
     }
-  });
+  } catch (error) {
+    if (error.code === 'ER_NO_SUCH_TABLE') res.send('success');
+    else throw new Error(error);
+  }
 });
 
-app.delete('/member', (req, res) => {
-  const reqUser = decryptor(req.body.reqUser, process.env.TRACER);
-  const whereCond = `table_schema='${process.env.MYSQLDATABASE}'`;
-  const tableNameCond = `table_name='user_lib_${reqUser}'`;
-  const tableCheckQuery = `select 1 from Information_schema.tables where ${whereCond} and ${tableNameCond}`;
-  const delUserInfo = (reqUser, res) => {
-    prodDB.query(`delete from user_info where user_nick='${reqUser}'`, (err, result) => {
-      if (err) throw err;
-      res.send('success');
-    });
-  }
-  prodDB.query(`select exists (${tableCheckQuery}) as flag`, (err, result) => {
-    if (err) throw err;
-    if (result[0].flag === 1) {
-      prodDB.query(`drop table user_lib_${reqUser}`, (err, result2) => {
-        if (err) {
-          throw err
-        } else {
-          delUserInfo(reqUser, res);
-        }
-      })
+app.delete('/member', async (req, res) => {
+  try {
+    const reqUser = decryptor(req.body.reqUser, process.env.TRACER);
+    const whereCond = `table_schema='${process.env.MYSQLDATABASE}'`;
+    const tableNameCond = `table_name='user_lib_${reqUser}'`;
+    const tableCheckQuery = `select 1 from Information_schema.tables where ${whereCond} and ${tableNameCond}`;
+    const delUserInfo = async (reqUser, res) => {
+      const [deleteResult] = await prodDB.query(
+        `delete from user_info where user_nick='${reqUser}'`
+      );
+      if (deleteResult) res.send('success');
+    };
+    const [checkExistResult] = await prodDB.query(
+      `select exists (${tableCheckQuery}) as flag`
+    );
+    if (checkExistResult[0].flag === 1) {
+      const [dropTableResult] = await prodDB.query(
+        `drop table user_lib_${reqUser}`
+      );
+      if (dropTableResult) delUserInfo(reqUser, res);
     } else {
       delUserInfo(reqUser, res);
     }
-  })
-})
+  } catch (error) {
+    throw new Error(error);
+  }
+});
 
 /* #################### api 서버 #################### */
 
@@ -638,7 +659,9 @@ app.get(
       })
       .then(() => {
         axios
-          .post(`${process.env.SERVER_ADDRESS}/api/connect`, { execute: 'order66' })
+          .post(`${process.env.SERVER_ADDRESS}/api/connect`, {
+            execute: 'order66'
+          })
           .then(result => {
             apiCredential = result.data;
             res.redirect(`${process.env.CLIENT_ADDRESS}/api/progress`);
@@ -655,7 +678,7 @@ app.get('/storeLib', (req, res) => {
   const pack = {
     maxGames: gameList.length,
     apiKey: apiCredential
-  }
+  };
   res.send(pack);
 });
 
@@ -741,7 +764,10 @@ app.post('/meta/search', (req, res) => {
       const temp = [];
       const fail = [];
       const startsFrom = 25 * currApiCall;
-      const endsAt = currApiCall + 1 === maxApiCall ? rawData.length : 25 * (currApiCall + 1);
+      const endsAt =
+        currApiCall + 1 === maxApiCall
+          ? rawData.length
+          : 25 * (currApiCall + 1);
       statObj.total = rawData.length;
       rawData.slice(startsFrom, endsAt).forEach((steamAppId, index) => {
         setTimeout(() => {
@@ -764,7 +790,7 @@ app.post('/meta/search', (req, res) => {
               console.log(
                 `Search Result: Succeed(${temp.length}), Fail(${fail.length})`
               );
-              resolve(temp.sort((prev, next) => prev < next ? -1 : 1));
+              resolve(temp.sort((prev, next) => (prev < next ? -1 : 1)));
             }
           });
         }, index * 300);
@@ -1228,11 +1254,17 @@ wss.on('connection', ws => {
   let timer = '';
   ws.on('message', msg => {
     if (msg.toString() === 'client_connected') {
-      timer = setInterval(() => ws.send(JSON.stringify({
-        count: String(statObj.count),
-        total: String(statObj.total),
-        status: String(statObj.status)
-      })), 100);
+      timer = setInterval(
+        () =>
+          ws.send(
+            JSON.stringify({
+              count: String(statObj.count),
+              total: String(statObj.total),
+              status: String(statObj.status)
+            })
+          ),
+        100
+      );
     }
   });
   ws.on('close', () => {
