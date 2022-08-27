@@ -466,62 +466,65 @@ app.post('/member/reset/pwd', async (req, res) => {
   }
 });
 
-app.post('/verify', (req, res) => {
-  const { sofo } = req.body;
-  const { NICK, PWD } = decryptor(sofo, process.env.TRACER);
-  prodDB.query(
-    'select user_pwd from user_info where user_nick=?',
-    [NICK],
-    (err, result) => {
-      if (err) throw err;
-      const dbPwd = result[0].user_pwd;
-      const verifySalt = bcrypt.getSalt(PWD);
-      const comparison = bcrypt.hashSync(dbPwd, verifySalt);
-      if (PWD === comparison) {
-        res.send(true);
-      } else {
-        res.send(false);
-      }
+app.post('/verify', async (req, res) => {
+  try {
+    const { sofo } = req.body;
+    const { NICK, PWD } = decryptor(sofo, process.env.TRACER);
+    const [passwordQueryResult] = await prodDB.query(
+      'select user_pwd from user_info where user_nick=?',
+      [NICK]
+    );
+    const dbPwd = passwordQueryResult[0].user_pwd;
+    const verifySalt = bcrypt.getSalt(PWD);
+    const comparison = bcrypt.hashSync(dbPwd, verifySalt);
+    if (PWD === comparison) {
+      res.send(true);
+    } else {
+      res.send(false);
     }
-  );
+  } catch (error) {
+    throw new Error(error);
+  }
 });
 
-app.put('/member/modify_option', (req, res) => {
-  const originalPackage = decryptor(req.body.pack, process.env.TRACER);
-  const modedUserInfo = JSON.parse(originalPackage);
-  prodDB.query(
-    'update user_info set `options`=? where user_nick=?',
-    [modedUserInfo.customCatOrder, modedUserInfo.nickname],
-    err => {
-      if (err) {
-        res.send(false);
-        throw err;
-      } else {
-        res.send(true);
-      }
+app.put('/member/modify_option', async (req, res) => {
+  try {
+    const originalPackage = decryptor(req.body.pack, process.env.TRACER);
+    const modedUserInfo = JSON.parse(originalPackage);
+    const [updateResult] = await prodDB.query(
+      'update user_info set `options`=? where user_nick=?',
+      [modedUserInfo.customCatOrder, modedUserInfo.nickname]
+    );
+    if (updateResult) {
+      res.send(true);
+    } else {
+      res.send(false);
     }
-  );
+  } catch (error) {
+    throw new Error(error);
+  }
 });
 
-app.put('/member/update', (req, res) => {
-  const { sofo, reqUser } = decryptor(req.body.foo, process.env.TRACER);
-  const genQueryString = (key, val) =>
-    `select mid from user_info where user_${key}='${val}'`;
-  const genExists = qString => `select exists (${qString} limit 1) as isExist`;
-  const checkQueries = Object.keys(sofo).map(
-    key => `${genExists(genQueryString(key, sofo[key]))};`
-  );
-  let requestedUserid = '';
-  prodDB.query(checkQueries.join(''), (err, results) => {
-    if (err) throw err;
+app.put('/member/update', async (req, res) => {
+  try {
+    const { sofo, reqUser } = decryptor(req.body.foo, process.env.TRACER);
+    const genQueryString = (key, val) =>
+      `select mid from user_info where user_${key}='${val}'`;
+    const genExists = qString =>
+      `select exists (${qString} limit 1) as isExist`;
+    const checkQueries = Object.keys(sofo).map(
+      key => `${genExists(genQueryString(key, sofo[key]))};`
+    );
+    let requestedUserid = '';
+    const [existCheckResult] = await prodDB.query(checkQueries.join(''));
     const repeatedDataIdx =
-      results.length !== 1
-        ? results
+      existCheckResult.length !== 1
+        ? existCheckResult
             .filter(result => result[0].isExist === 1)
-            .map(result => results.indexOf(result))
-        : results
+            .map(result => existCheckResult.indexOf(result))
+        : existCheckResult
             .filter(result => result.isExist === 1)
-            .map(result => results.indexOf(result));
+            .map(result => existCheckResult.indexOf(result));
     if (
       repeatedDataIdx.length !== 0 &&
       Object.keys(sofo).length === 1 &&
@@ -533,67 +536,58 @@ app.put('/member/update', (req, res) => {
       };
       res.send(pack);
     } else {
-      prodDB.query(
-        `select user_id from user_info where user_nick='${reqUser}'`,
-        (err, result) => {
-          if (err) throw err;
-          requestedUserid = result[0].user_id;
-          const updateQueryStr = (key, val, origin) =>
-            `update user_info set user_${key}='${val}' where user_id='${origin}';`;
-          const updateQuery = Object.keys(sofo).map(key =>
-            updateQueryStr(key, sofo[key], requestedUserid)
-          );
-          if (sofo.nick) {
-            updateQuery.push(
-              `rename table user_lib_${reqUser} to user_lib_${sofo.nick};`
-            );
-          }
-          console.log(updateQuery);
-          prodDB.query(updateQuery.join(''), (err, result2) => {
-            if (err) {
-              if (err.code === 'ER_FILE_NOT_FOUND') {
-                res.send('success');
-              } else {
-                throw err;
-              }
-            } else {
-              res.send('success');
-            }
-          });
-        }
+      const [idQueryByNickResult] = await prodDB.query(
+        `select user_id from user_info where user_nick='${reqUser}'`
       );
+      requestedUserid = idQueryByNickResult[0].user_id;
+      const updateQueryStr = (key, val, origin) =>
+        `update user_info set user_${key}='${val}' where user_id='${origin}';`;
+      const updateQuery = Object.keys(sofo).map(key =>
+        updateQueryStr(key, sofo[key], requestedUserid)
+      );
+      if (sofo.nick) {
+        updateQuery.push(
+          `rename table user_lib_${reqUser} to user_lib_${sofo.nick};`
+        );
+      }
+      const [updateUserInfoResult] = await prodDB.query(updateQuery.join(''));
+      if (updateUserInfoResult) {
+        res.send('success');
+        console.log(updateUserInfoResult);
+      }
     }
-  });
+  } catch (error) {
+    if (error.code === 'ER_NO_SUCH_TABLE') res.send('success');
+    else throw new Error(error);
+  }
 });
 
-app.delete('/member', (req, res) => {
-  const reqUser = decryptor(req.body.reqUser, process.env.TRACER);
-  const whereCond = `table_schema='${process.env.MYSQLDATABASE}'`;
-  const tableNameCond = `table_name='user_lib_${reqUser}'`;
-  const tableCheckQuery = `select 1 from Information_schema.tables where ${whereCond} and ${tableNameCond}`;
-  const delUserInfo = (reqUser, res) => {
-    prodDB.query(
-      `delete from user_info where user_nick='${reqUser}'`,
-      (err, result) => {
-        if (err) throw err;
-        res.send('success');
-      }
+app.delete('/member', async (req, res) => {
+  try {
+    const reqUser = decryptor(req.body.reqUser, process.env.TRACER);
+    const whereCond = `table_schema='${process.env.MYSQLDATABASE}'`;
+    const tableNameCond = `table_name='user_lib_${reqUser}'`;
+    const tableCheckQuery = `select 1 from Information_schema.tables where ${whereCond} and ${tableNameCond}`;
+    const delUserInfo = async (reqUser, res) => {
+      const [deleteResult] = await prodDB.query(
+        `delete from user_info where user_nick='${reqUser}'`
+      );
+      if (deleteResult) res.send('success');
+    };
+    const [checkExistResult] = await prodDB.query(
+      `select exists (${tableCheckQuery}) as flag`
     );
-  };
-  prodDB.query(`select exists (${tableCheckQuery}) as flag`, (err, result) => {
-    if (err) throw err;
-    if (result[0].flag === 1) {
-      prodDB.query(`drop table user_lib_${reqUser}`, (err, result2) => {
-        if (err) {
-          throw err;
-        } else {
-          delUserInfo(reqUser, res);
-        }
-      });
+    if (checkExistResult[0].flag === 1) {
+      const [dropTableResult] = await prodDB.query(
+        `drop table user_lib_${reqUser}`
+      );
+      if (dropTableResult) delUserInfo(reqUser, res);
     } else {
       delUserInfo(reqUser, res);
     }
-  });
+  } catch (error) {
+    throw new Error(error);
+  }
 });
 
 /* #################### api 서버 #################### */
