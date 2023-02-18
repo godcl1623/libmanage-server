@@ -16,9 +16,9 @@ const igdb = require('igdb-api-node').default;
 const cookieParser = require('cookie-parser');
 const WebSocketServer = require('ws').Server;
 require('dotenv').config();
-const { dbProdOptions, prodDB } = require('../custom_modules/db');
-const { encryptor, decryptor } = require('../custom_modules/aeser');
-const { getRandom } = require('../custom_modules/utils');
+const { dbProdOptions, prodDB } = require('./custom_modules/db');
+const { encryptor, decryptor } = require('./custom_modules/aeser');
+const { getRandom } = require('./custom_modules/utils');
 
 const app = express();
 let loginInfo = {};

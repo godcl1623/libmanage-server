@@ -41,7 +41,7 @@
     "ws": "^8.5.0"
   },
   "scripts": {
-    "start": "node ./api/index.js"
+    "start": "node index.js"
   },
   "engines": {
     "node": "^16.14.0"
