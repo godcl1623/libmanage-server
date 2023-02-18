@@ -32,7 +32,7 @@ const statObj = {
   total: 0,
   status: 1
 };
-const dataPerApiCall = 5;
+const dataPerApiCall = 30;
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   port: process.env.PORT_TRANSPORTER,
@@ -913,7 +913,7 @@ app.post('/meta/search', (req, res) => {
         }
       });
     });
-  firstFilter(gameList, steamURLSearchQuery)
+  firstFilter(gameList.slice(0, 30), steamURLSearchQuery)
     .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
     .then(igdbResult => processMeta(igdbResult, coverSearch))
     .then(resultObj => writeToDB(resultObj))
