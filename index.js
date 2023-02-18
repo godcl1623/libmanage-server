@@ -913,7 +913,7 @@ app.post('/meta/search', (req, res) => {
         }
       });
     });
-  firstFilter(gameList.slice(0, 30), steamURLSearchQuery)
+  firstFilter(gameList.slice(0, 10), steamURLSearchQuery)
     .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
     .then(igdbResult => processMeta(igdbResult, coverSearch))
     .then(resultObj => writeToDB(resultObj))
