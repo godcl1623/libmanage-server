@@ -32,6 +32,7 @@ const statObj = {
   total: 0,
   status: 1
 };
+const dataPerApiCall = 5;
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   port: process.env.PORT_TRANSPORTER,
@@ -763,11 +764,11 @@ app.post('/meta/search', (req, res) => {
     new Promise((resolve, reject) => {
       const temp = [];
       const fail = [];
-      const startsFrom = 10 * currApiCall;
+      const startsFrom = dataPerApiCall * currApiCall;
       const endsAt =
         currApiCall + 1 === maxApiCall
           ? rawData.length
-          : 10 * (currApiCall + 1);
+          : dataPerApiCall * (currApiCall + 1);
       statObj.total = rawData.length;
       rawData.slice(startsFrom, endsAt).forEach((steamAppId, index) => {
         setTimeout(() => {
@@ -873,7 +874,7 @@ app.post('/meta/search', (req, res) => {
             resolve('done');
           } else {
             statObj.status = '1';
-            statObj.count = 10 * (currApiCall + 1);
+            statObj.count = dataPerApiCall * (currApiCall + 1);
             resolve('1');
           }
         })();
