@@ -763,11 +763,11 @@ app.post('/meta/search', (req, res) => {
     new Promise((resolve, reject) => {
       const temp = [];
       const fail = [];
-      const startsFrom = 25 * currApiCall;
+      const startsFrom = 10 * currApiCall;
       const endsAt =
         currApiCall + 1 === maxApiCall
           ? rawData.length
-          : 25 * (currApiCall + 1);
+          : 10 * (currApiCall + 1);
       statObj.total = rawData.length;
       rawData.slice(startsFrom, endsAt).forEach((steamAppId, index) => {
         setTimeout(() => {
@@ -873,7 +873,7 @@ app.post('/meta/search', (req, res) => {
             resolve('done');
           } else {
             statObj.status = '1';
-            statObj.count = 25 * (currApiCall + 1);
+            statObj.count = 10 * (currApiCall + 1);
             resolve('1');
           }
         })();
