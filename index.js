@@ -32,7 +32,7 @@ const statObj = {
   total: 0,
   status: 1
 };
-const dataPerApiCall = 30;
+const dataPerApiCall = 10;
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   port: process.env.PORT_TRANSPORTER,
