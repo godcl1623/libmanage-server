@@ -16,9 +16,9 @@ const igdb = require('igdb-api-node').default;
 const cookieParser = require('cookie-parser');
 const WebSocketServer = require('ws').Server;
 require('dotenv').config();
-const { dbProdOptions, prodDB } = require('../custom_modules/db');
-const { encryptor, decryptor } = require('../custom_modules/aeser');
-const { getRandom } = require('../custom_modules/utils');
+const { dbProdOptions, prodDB } = require('./custom_modules/db');
+const { encryptor, decryptor } = require('./custom_modules/aeser');
+const { getRandom } = require('./custom_modules/utils');
 
 const app = express();
 let loginInfo = {};
@@ -32,6 +32,7 @@ const statObj = {
   total: 0,
   status: 1
 };
+const dataPerApiCall = 10;
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   port: process.env.PORT_TRANSPORTER,
@@ -763,11 +764,11 @@ app.post('/meta/search', (req, res) => {
     new Promise((resolve, reject) => {
       const temp = [];
       const fail = [];
-      const startsFrom = 25 * currApiCall;
+      const startsFrom = dataPerApiCall * currApiCall;
       const endsAt =
         currApiCall + 1 === maxApiCall
           ? rawData.length
-          : 25 * (currApiCall + 1);
+          : dataPerApiCall * (currApiCall + 1);
       statObj.total = rawData.length;
       rawData.slice(startsFrom, endsAt).forEach((steamAppId, index) => {
         setTimeout(() => {
@@ -873,7 +874,7 @@ app.post('/meta/search', (req, res) => {
             resolve('done');
           } else {
             statObj.status = '1';
-            statObj.count = 25 * (currApiCall + 1);
+            statObj.count = dataPerApiCall * (currApiCall + 1);
             resolve('1');
           }
         })();
@@ -912,7 +913,7 @@ app.post('/meta/search', (req, res) => {
         }
       });
     });
-  firstFilter(gameList, steamURLSearchQuery)
+  firstFilter(gameList.slice(0, 10), steamURLSearchQuery)
     .then(gamesInIGDB => returnMeta(gamesInIGDB, igdbIDSearch))
     .then(igdbResult => processMeta(igdbResult, coverSearch))
     .then(resultObj => writeToDB(resultObj))
